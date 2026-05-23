@@ -30,11 +30,11 @@ Core loop: import bank statements → AI categorises transactions → set budget
 
 > **Update this section at the end of every session.**
 
-- **Current phase:** Phase 1 — Foundation (not started)
-- **Last session:** —
-- **Last completed item:** Initial scaffold (not done yet)
-- **Branch:** `main` (pre-feature-branch stage)
-- **Known issues / deferred:** —
+- **Current phase:** Phase 1 — Foundation (in progress)
+- **Last session:** 2026-05-23 — Auth + Household (build order item #2)
+- **Last completed item:** Auth + app shell — login page, middleware auth guard, sidebar/header shell, sign-in/sign-out flow
+- **Branch:** `feature/auth-household` (open PR → main)
+- **Known issues / deferred:** Household setup is manual SQL (see `docs/setup/household-setup.md`). Supabase local stack testing requires Docker. Node 22 required for shadcn CLI (system node is v10).
 
 ---
 
