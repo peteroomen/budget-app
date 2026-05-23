@@ -1,22 +1,29 @@
 'use client'
 
-import { useActionState, useRef } from 'react'
+import { useActionState, useState } from 'react'
 import { importCsv, type ImportResult } from '@/lib/actions/import'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import type { Account } from '@/types'
 
 const initial: ImportResult = { error: null }
 
 export function CsvImportForm({ accounts }: { accounts: Account[] }) {
   const [state, action, pending] = useActionState(importCsv, initial)
-  const formRef = useRef<HTMLFormElement>(null)
+  const [accountId, setAccountId] = useState('')
 
   const succeeded = !state.error && state.inserted !== undefined
 
   return (
-    <form ref={formRef} action={action} className="space-y-6 max-w-md">
+    <form action={action} className="space-y-6 max-w-md">
       <div className="space-y-2">
         <Label htmlFor="account_id">Account</Label>
         {accounts.length === 0 ? (
@@ -27,20 +34,22 @@ export function CsvImportForm({ accounts }: { accounts: Account[] }) {
             </a>
           </p>
         ) : (
-          <select
-            id="account_id"
-            name="account_id"
-            required
-            className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-          >
-            <option value="">Select account…</option>
-            {accounts.map((a) => (
-              <option key={a.id} value={a.id}>
-                {a.name}
-                {a.institution ? ` — ${a.institution}` : ''}
-              </option>
-            ))}
-          </select>
+          <>
+            <input type="hidden" name="account_id" value={accountId} />
+            <Select value={accountId} onValueChange={setAccountId}>
+              <SelectTrigger id="account_id">
+                <SelectValue placeholder="Select account…" />
+              </SelectTrigger>
+              <SelectContent>
+                {accounts.map((a) => (
+                  <SelectItem key={a.id} value={a.id}>
+                    {a.name}
+                    {a.institution ? ` — ${a.institution}` : ''}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </>
         )}
       </div>
 
@@ -66,7 +75,7 @@ export function CsvImportForm({ accounts }: { accounts: Account[] }) {
         </div>
       )}
 
-      <Button type="submit" disabled={pending || accounts.length === 0}>
+      <Button type="submit" disabled={pending || !accountId}>
         {pending ? 'Importing…' : 'Import'}
       </Button>
     </form>
