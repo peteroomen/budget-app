@@ -101,9 +101,16 @@ Exclude opening balance, closing balance, and any summary rows — only real tra
   const first = response.content[0]
   if (!first || first.type !== 'text') return { error: 'Unexpected response from Claude' }
 
+  // Claude sometimes wraps JSON in markdown fences despite being asked not to — strip them
+  const raw = first.text
+    .trim()
+    .replace(/^```(?:json)?\s*/i, '')
+    .replace(/\s*```$/, '')
+    .trim()
+
   let parsed: unknown
   try {
-    parsed = JSON.parse(first.text.trim())
+    parsed = JSON.parse(raw)
   } catch {
     return { error: 'Claude returned invalid JSON' }
   }
