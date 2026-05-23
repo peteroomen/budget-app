@@ -19,6 +19,7 @@ const initial: ImportResult = { error: null }
 export function ImportForm({ accounts }: { accounts: Account[] }) {
   const [state, action, pending] = useActionState(importStatement, initial)
   const [accountId, setAccountId] = useState('')
+  const [hasFile, setHasFile] = useState(false)
 
   const succeeded = !state.error && state.inserted !== undefined
 
@@ -55,7 +56,14 @@ export function ImportForm({ accounts }: { accounts: Account[] }) {
 
       <div className="space-y-2">
         <Label htmlFor="file">Statement file</Label>
-        <Input id="file" name="file" type="file" accept=".csv,.pdf" required />
+        <Input
+          id="file"
+          name="file"
+          type="file"
+          accept=".csv,.pdf"
+          required
+          onChange={(e) => setHasFile((e.target.files?.length ?? 0) > 0)}
+        />
         <p className="text-xs text-muted-foreground">
           CSV or PDF. Supported banks: ANZ, ASB, Westpac, BNZ (CSV); ANZ (PDF).
         </p>
@@ -77,7 +85,7 @@ export function ImportForm({ accounts }: { accounts: Account[] }) {
         </div>
       )}
 
-      <Button type="submit" disabled={pending || !accountId}>
+      <Button type="submit" disabled={pending || !accountId || !hasFile}>
         {pending ? 'Importing…' : 'Import'}
       </Button>
     </form>

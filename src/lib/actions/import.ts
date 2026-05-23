@@ -112,7 +112,9 @@ Exclude opening balance, closing balance, and any summary rows — only real tra
   try {
     parsed = JSON.parse(raw)
   } catch {
-    return { error: 'Claude returned invalid JSON' }
+    return {
+      error: `Claude returned invalid JSON. Raw response (first 300 chars): ${raw.slice(0, 300)}`,
+    }
   }
 
   if (!Array.isArray(parsed)) return { error: 'Claude did not return a JSON array' }
