@@ -65,28 +65,49 @@ On upload, the `importPdf` server action:
 
 ## What actually happened
 
-- Installed `pdfjs-dist` v5.7.284 and `@anthropic-ai/sdk` v0.98.0.
-- pdfjs-dist v5 main entry is `build/pdf.mjs` (ESM only). Added `serverExternalPackages: ['pdfjs-dist']` to `next.config.ts` so Next.js doesn't try to bundle it server-side, plus a webpack external for `canvas` (pdfjs-dist's optional rendering dep — not needed for text extraction).
-- `GlobalWorkerOptions.workerSrc = ''` disables the worker for server-side text extraction; the library falls back to main-thread operation.
-- TypeScript strict mode caught `response.content[0]` potentially being `undefined` (noUncheckedIndexedAccess) — fixed with a null guard before the `.type` check.
-- Wrapped the existing CSV form in shadcn Tabs alongside the new PDF form. Installed shadcn `tabs` component via `pnpm dlx shadcn@latest add tabs`.
-- `pnpm lint` and `pnpm type-check` both pass clean.
+The planned approach (pdfjs-dist text extraction → Claude parse) was abandoned entirely due to runtime failures:
+
+1. **pdfjs-dist fails server-side** — `DOMMatrix is not defined`. pdfjs-dist is a browser library; it references browser globals that don't exist in Node.js. Attempted fixes (module-level polyfill, dynamic `import()`) both failed because ES module imports are hoisted — pdfjs-dist evaluates before any polyfill body runs.
+2. **pdf-parse v2 also fails** — pdf-parse v2 wraps pdfjs-dist internally. Same webpack `Object.defineProperty called on non-object` error. No viable path with either library.
+3. **Decision: drop PDF extraction libs entirely.** Claude's API supports passing a raw PDF as a base64 `document` content block — the model reads it natively. No text extraction step needed. `next.config.ts` reverted to empty.
+
+**Architecture shift — unified import form:** Rather than two separate forms in tabs (CSV | PDF), unified into a single `ImportForm` with a `accept=".csv,.pdf"` file picker. The `importStatement` server action dispatches to `handleCsv` or `handlePdf` based on file extension. Cleaner UX, less code.
+
+**Model issues during testing:**
+
+- Started with `claude-haiku-4-5` — 8K output token ceiling truncated large multi-month statements mid-JSON.
+- Switched to Sonnet, but used `claude-sonnet-4-5-20251001` (non-existent model ID) — got 404.
+- Fixed to `claude-sonnet-4-6` (correct current ID). `max_tokens: 16000`.
+
+**Other robustness fixes discovered during testing:**
+
+- Claude occasionally wraps JSON in markdown fences despite being asked not to — added regex strip before `JSON.parse`.
+- Prompt updated to request compact single-line JSON to reduce output token count.
+- Import button stayed enabled after a failed import cleared the file input — added `hasFile` state with `onChange` tracking to fix.
+- `response.content[0]` possibly `undefined` under TypeScript strict `noUncheckedIndexedAccess` — fixed with null guard.
 
 ## Files created / modified
 
-- `next.config.ts` — added `serverExternalPackages` and webpack `canvas` external
-- `src/lib/parsers/pdf.ts` — `extractPdfText()` using pdfjs-dist (server-side, no worker)
-- `src/lib/actions/import-pdf.ts` — `importPdf` server action (extract → Claude haiku → parse → normalise → dedupe → insert)
-- `src/components/import/PdfImportForm.tsx` — client form, shadcn pattern matching CsvImportForm
-- `src/app/(app)/import/page.tsx` — updated to tabbed layout (CSV | PDF)
-- `src/components/ui/tabs.tsx` — new shadcn component
+- `src/lib/actions/import.ts` — unified server action; `handleCsv` + `handlePdf` (Claude document block); replaces separate `import-pdf.ts`
+- `src/components/import/ImportForm.tsx` — unified client form with `hasFile` state; replaces `CsvImportForm` and `PdfImportForm`
+- `src/app/(app)/import/page.tsx` — simplified (no tabs)
+- `next.config.ts` — reverted to empty (no pdfjs-dist workarounds needed)
+- `CLAUDE.md` — stack section updated to reflect Claude-native PDF approach
 - `docs/work/2026-05-24-pdf-import.md` — this plan file
+
+**Deleted:**
+
+- `src/lib/parsers/pdf.ts`
+- `src/lib/actions/import-pdf.ts`
+- `src/components/import/CsvImportForm.tsx`
+- `src/components/import/PdfImportForm.tsx`
 
 ## Deferred to next session
 
-- End-to-end manual test with a real ANZ PDF (no PDF test fixture in repo yet — Peter to add `test-data/anz-sample.pdf`)
-- Westpac/ASB PDF support (prompt is generic NZ bank format; may need tuning)
-- Transaction list UI (build order item #6)
+- End-to-end manual test with a real ANZ PDF (no PDF test fixture in repo)
+- Westpac/ASB PDF support (prompt is generic NZ bank format; may need tuning per bank)
+- Consider pre-extracting PDF text in future if Claude token costs become a concern on large statements
+- Transaction list UI (build order item #6) — next up
 
 ## Status
 

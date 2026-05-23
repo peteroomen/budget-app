@@ -31,10 +31,10 @@ Core loop: import bank statements → AI categorises transactions → set budget
 > **Update this section at the end of every session.**
 
 - **Current phase:** Phase 1 — Foundation (in progress)
-- **Last session:** 2026-05-24 — CSV import pipeline (build order item #4)
-- **Last completed item:** `/import` page — upload CSV, auto-detect ANZ/ASB/Westpac/BNZ format, parse with papaparse, deduplicate, store transactions + upload record
-- **Branch:** `feature/csv-import`
-- **Known issues / deferred:** Household setup is manual SQL (see `docs/setup/household-setup.md`). Supabase local stack testing requires Docker. Node 22 required for tooling (system node is v10) — always use `source ~/.nvm/nvm.sh && nvm use 22` before running pnpm scripts. Imported transactions have no list view yet (item #6) — PDF import (item #5) is next.
+- **Last session:** 2026-05-24 — PDF import pipeline (build order item #5)
+- **Last completed item:** Unified `/import` page — single form handles CSV and PDF by file extension. CSV uses papaparse; PDF passes raw file as base64 document block to Claude (`claude-sonnet-4-6`), which extracts transactions natively. Both paths deduplicate and store transactions + upload record.
+- **Branch:** `feature/pdf-import` (open PR, pending merge)
+- **Known issues / deferred:** Household setup is manual SQL (see `docs/setup/household-setup.md`). Supabase local stack testing requires Docker. Node 22 required for tooling (system node is v10) — always use `source ~/.nvm/nvm.sh && nvm use 22` before running pnpm scripts. Imported transactions have no list view yet — transaction list (item #6) is next.
 
 ---
 
