@@ -71,7 +71,7 @@ async function handlePdf(
   const client = new Anthropic()
   const response = await client.messages.create({
     model: 'claude-haiku-4-5-20251001',
-    max_tokens: 4096,
+    max_tokens: 8096,
     messages: [
       {
         role: 'user',
@@ -112,9 +112,7 @@ Exclude opening balance, closing balance, and any summary rows — only real tra
   try {
     parsed = JSON.parse(raw)
   } catch {
-    return {
-      error: `Claude returned invalid JSON. Raw response (first 300 chars): ${raw.slice(0, 300)}`,
-    }
+    return { error: 'Could not parse transactions from this PDF — try again or use a CSV export' }
   }
 
   if (!Array.isArray(parsed)) return { error: 'Claude did not return a JSON array' }
