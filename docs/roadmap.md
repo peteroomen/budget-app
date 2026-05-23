@@ -82,8 +82,14 @@ uploads
 
 ### Categories
 
-- [ ] Seed a default category set: Groceries, Dining Out, Takeaways, Fuel, Transport, Utilities, Insurance, Childcare, Health, Pharmacy, Shopping, Kids, Entertainment, Subscriptions, Savings, Loan Repayments, Income, Other
-- [ ] Category management UI (add, rename, recolour, delete)
+- [x] Seed a default category set: Groceries, Dining Out, Takeaways, Fuel, Transport, Utilities, Insurance, Childcare, Health, Pharmacy, Shopping, Kids, Entertainment, Subscriptions, Savings, Loan Repayments, Income, Other
+- [x] Category management UI (add, rename, recolour, delete)
+
+> **Future considerations — do not build yet, revisit in Phase 5**
+>
+> - **Unique names:** No DB-level uniqueness constraint exists yet on `(household_id, name)`. Should be added — duplicate category names are confusing and could cause weird behaviour in the AI categorisation prompt. Low-effort fix: add a `UNIQUE (household_id, name)` constraint in a migration and surface the Postgres error in the UI as a friendly "A category with that name already exists" message. _Priority: high — fix before AI categorisation ships._
+> - **Colour vs icon — visual distinction at scale:** 18 categories is pushing the limit of what colours alone can distinguish. The `icon` column already exists in the schema (nullable text) for exactly this reason. Options when this becomes a problem: (a) expand colour presets beyond 16, (b) add icon picker using Lucide icons (already a shadcn dependency — no new packages needed), (c) emoji icons as a simpler alternative. Peter's instinct: icons or more presets. Recommendation: add Lucide icon picker in Phase 5 Polish when the transaction list makes the visual density problem concrete.
+> - **Editing system categories:** Currently the UI allows renaming and recolouring system (default) categories but not deleting them. Long-term question: should system names be locked? Arguments for locking: the AI categorisation prompt references category names by name, so renaming "Groceries" to something idiosyncratic could silently degrade categorisation quality. Arguments for allowing it: it's a personal tool, household should own their data fully. Possible middle ground: allow editing but add a **"Reset to default"** button per system category. Also worth adding a `description` field to categories (e.g. "Supermarkets, fresh food, online groceries") — useful both as a UI hint and as context injected into the AI categorisation prompt to improve accuracy.
 
 ### Merchant Memory
 
