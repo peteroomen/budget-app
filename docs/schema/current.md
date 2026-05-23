@@ -57,6 +57,8 @@ Auto-created via trigger on `auth.users` insert.
 | created_at   | timestamptz | Default now()                                 |
 | updated_at   | timestamptz | Auto-updated via trigger                      |
 
+Unique constraint: `(household_id, name)`
+
 ### transactions
 
 | Column        | Type        | Notes                                       |

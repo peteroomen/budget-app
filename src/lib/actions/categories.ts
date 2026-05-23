@@ -41,7 +41,10 @@ export async function createCategory(
     is_system: false,
   })
 
-  if (error) return { error: error.message }
+  if (error) {
+    if (error.code === '23505') return { error: 'A category with that name already exists' }
+    return { error: error.message }
+  }
 
   revalidatePath('/categories')
   return { error: null }
@@ -71,7 +74,10 @@ export async function updateCategory(
     .eq('id', id)
     .eq('household_id', householdId)
 
-  if (error) return { error: error.message }
+  if (error) {
+    if (error.code === '23505') return { error: 'A category with that name already exists' }
+    return { error: error.message }
+  }
 
   revalidatePath('/categories')
   return { error: null }
