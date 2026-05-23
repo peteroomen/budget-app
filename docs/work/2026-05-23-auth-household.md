@@ -61,6 +61,14 @@ Two users can sign in (or sign up) with email/password, create a named household
 - `NavLink` is a minimal client component using `usePathname()` for active-state highlight.
 - `pnpm lint` and `pnpm type-check` both pass clean.
 
+**Follow-up (2026-05-24) — no formal plan, fixing broken outcome from this session:**
+
+- Testing revealed `household-setup.md` told Megan to "click the link and set a password" but no such route existed. Supabase invite emails land at `/auth/confirm` (token_hash flow); the callback exchanges the token and the user needs a set-password page — both were missing.
+- Also discovered `src/middleware.ts` used `@/lib/supabase/middleware` which fails in the Next.js Edge Runtime. Fixed via cherry-pick from `fix/middleware-edge-alias`.
+- Added two auth route handlers (`/auth/callback` for PKCE, `/auth/confirm` for token-hash/invite) and a `/auth/set-password` page with a `setPassword` server action.
+- Updated `household-setup.md` to document the Supabase URL config prerequisite and the correct invite flow (land on set-password, not a broken link).
+- Rolled into this session rather than opening a new one — the work is auth plumbing completing an incomplete outcome, not a new roadmap item.
+
 ## Files created / modified
 
 **Modified:**
@@ -83,9 +91,19 @@ Two users can sign in (or sign up) with email/password, create a named household
 - `src/components/ui/separator.tsx` — shadcn Separator
 - `docs/setup/household-setup.md` — one-time SQL for household + user linking
 
+**Added in follow-up:**
+
+- `src/app/auth/callback/route.ts` — PKCE code exchange (future OAuth/magic links)
+- `src/app/auth/confirm/route.ts` — token-hash exchange; invites redirect to set-password
+- `src/app/auth/set-password/page.tsx` — form for invited users to create their password
+- `src/lib/actions/auth.ts` — added `setPassword` server action
+- `src/lib/supabase/middleware.ts` — added `/auth/callback` and `/auth/confirm` to public paths
+- `src/lib/queries/profile.ts` — suppressed no-console lint warning (pre-existing)
+- `docs/setup/household-setup.md` — corrected invite flow description and added Supabase URL config step
+
 ## Deferred to next session
 
-- Household setup is manual (SQL) until real accounts exist in Supabase. See `docs/setup/household-setup.md`.
+- Household setup is still manual (SQL). See `docs/setup/household-setup.md` for the full process.
 - Supabase local stack testing still requires Docker.
 - Mobile sidebar / hamburger menu.
 
