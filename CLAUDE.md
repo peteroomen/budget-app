@@ -166,6 +166,7 @@ Full details in `docs/architecture.md`.
 - **Merchant names** — always normalise before storing or looking up (uppercase, strip trailing digits/card numbers). See `lib/parsers/normalise.ts`
 - **Errors** — use typed error returns (`{ data, error }` pattern from Supabase), don't swallow errors silently
 - **Components** — small and focused. If a component exceeds ~150 lines, split it
+- **shadcn/ui always** — never use raw HTML equivalents (`<select>`, `<input>` outside of shadcn) when a shadcn component exists. shadcn `Select` doesn't wire to native form data — use a controlled `useState` + `<input type="hidden">` pattern when inside a server-action form
 - **No `console.log` in committed code** — use `console.error` for genuine errors in server code only
 
 ---
