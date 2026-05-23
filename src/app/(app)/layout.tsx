@@ -1,21 +1,45 @@
-export default function AppLayout({ children }: { children: React.ReactNode }) {
+import { redirect } from 'next/navigation'
+import { getCurrentProfile } from '@/lib/queries/profile'
+import { NavLink } from '@/components/nav/NavLink'
+import { SignOutButton } from '@/components/auth/SignOutButton'
+import { Separator } from '@/components/ui/separator'
+
+const NAV_ITEMS = [
+  { href: '/dashboard', label: 'Dashboard' },
+  { href: '/transactions', label: 'Transactions' },
+  { href: '/accounts', label: 'Accounts' },
+  { href: '/categories', label: 'Categories' },
+  { href: '/budgets', label: 'Budgets' },
+  { href: '/chat', label: 'Chat' },
+]
+
+export default async function AppLayout({ children }: { children: React.ReactNode }) {
+  const profile = await getCurrentProfile()
+  if (!profile) redirect('/login')
+
   return (
     <div className="flex min-h-screen">
-      {/* Sidebar placeholder — will become nav in Phase 1 */}
-      <aside className="hidden w-64 border-r bg-muted/40 md:block">
-        <div className="p-6">
-          <h2 className="text-lg font-semibold">Budget App</h2>
-          <nav className="mt-6 space-y-2 text-sm text-muted-foreground">
-            <p>Dashboard</p>
-            <p>Transactions</p>
-            <p>Budgets</p>
-            <p>Accounts</p>
-            <p>Categories</p>
-            <p>Chat</p>
-          </nav>
+      <aside className="hidden w-60 flex-col border-r bg-muted/40 md:flex">
+        <div className="px-6 py-5">
+          <span className="text-lg font-semibold tracking-tight">Budget App</span>
         </div>
+        <Separator />
+        <nav className="flex-1 space-y-1 px-3 py-4">
+          {NAV_ITEMS.map(({ href, label }) => (
+            <NavLink key={href} href={href}>
+              {label}
+            </NavLink>
+          ))}
+        </nav>
       </aside>
-      <main className="flex-1 p-6">{children}</main>
+
+      <div className="flex flex-1 flex-col">
+        <header className="flex h-14 items-center justify-between border-b px-6">
+          <span className="text-sm text-muted-foreground">{profile.email}</span>
+          <SignOutButton />
+        </header>
+        <main className="flex-1 p-6">{children}</main>
+      </div>
     </div>
   )
 }
