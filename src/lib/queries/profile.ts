@@ -10,6 +10,7 @@ export async function getCurrentProfile(): Promise<Profile | null> {
   if (!user) return null
 
   const { data, error } = await supabase.from('profiles').select('*').eq('id', user.id).single()
+  // eslint-disable-next-line no-console
   if (error) console.error('getCurrentProfile:', error)
   return data ?? null
 }
