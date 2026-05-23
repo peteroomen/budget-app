@@ -31,10 +31,10 @@ Core loop: import bank statements → AI categorises transactions → set budget
 > **Update this section at the end of every session.**
 
 - **Current phase:** Phase 1 — Foundation (in progress)
-- **Last session:** 2026-05-24 — Accounts CRUD (build order item #3)
-- **Last completed item:** Accounts page — add/delete accounts via UI, shadcn Dialog + Select
-- **Branch:** `feature/accounts-crud`
-- **Known issues / deferred:** Household setup is manual SQL (see `docs/setup/household-setup.md`). Supabase local stack testing requires Docker. Node 22 required for tooling (system node is v10) — always use `source ~/.nvm/nvm.sh && nvm use 22` before running pnpm scripts.
+- **Last session:** 2026-05-24 — CSV import pipeline (build order item #4)
+- **Last completed item:** `/import` page — upload CSV, auto-detect ANZ/ASB/Westpac/BNZ format, parse with papaparse, deduplicate, store transactions + upload record
+- **Branch:** `feature/csv-import`
+- **Known issues / deferred:** Household setup is manual SQL (see `docs/setup/household-setup.md`). Supabase local stack testing requires Docker. Node 22 required for tooling (system node is v10) — always use `source ~/.nvm/nvm.sh && nvm use 22` before running pnpm scripts. Imported transactions have no list view yet (item #6) — PDF import (item #5) is next.
 
 ---
 
@@ -55,6 +55,7 @@ You must complete every step in order. Do not proceed to code until the plan fil
 **3. Plan**
 
 - [ ] Write a plan file to `docs/work/YYYY-MM-DD-{slug}.md` using the format below
+- [ ] Plan must include a **Manual test steps** section — happy path + at least one edge/failure case
 - [ ] Present the plan as a summary to the user and get explicit confirmation before writing code
 - [ ] **Do not write a single line of application code until the plan is confirmed**
 
@@ -91,6 +92,15 @@ Call out anything non-obvious or where multiple approaches were considered.
 - [ ] Step 2
 - [ ] Step 3
       (Be specific — vague steps lead to vague output)
+
+## Manual test steps
+
+How to verify this works end-to-end after the code is written.
+Cover the happy path and at least one failure/edge case.
+
+- [ ] Test step 1 (e.g. navigate to X, do Y, expect Z)
+- [ ] Test step 2
+- [ ] Edge case: what happens if …
 
 ## Out of scope for this session
 
@@ -156,6 +166,7 @@ Full details in `docs/architecture.md`.
 - **Merchant names** — always normalise before storing or looking up (uppercase, strip trailing digits/card numbers). See `lib/parsers/normalise.ts`
 - **Errors** — use typed error returns (`{ data, error }` pattern from Supabase), don't swallow errors silently
 - **Components** — small and focused. If a component exceeds ~150 lines, split it
+- **shadcn/ui always** — never use raw HTML equivalents (`<select>`, `<input>` outside of shadcn) when a shadcn component exists. shadcn `Select` doesn't wire to native form data — use a controlled `useState` + `<input type="hidden">` pattern when inside a server-action form
 - **No `console.log` in committed code** — use `console.error` for genuine errors in server code only
 
 ---
