@@ -33,7 +33,7 @@ Before sending the invite, confirm the **Site URL** in Supabase matches where th
 
 ---
 
-## Step 2 — Run this SQL in the Supabase SQL editor
+## Step 3 — Run this SQL in the Supabase SQL editor
 
 Replace the email addresses with the real ones.
 

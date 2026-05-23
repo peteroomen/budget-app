@@ -69,6 +69,14 @@ Two users can sign in (or sign up) with email/password, create a named household
 - Updated `household-setup.md` to document the Supabase URL config prerequisite and the correct invite flow (land on set-password, not a broken link).
 - Rolled into this session rather than opening a new one — the work is auth plumbing completing an incomplete outcome, not a new roadmap item.
 
+**Live testing (2026-05-24) — further fixes found during first real login:**
+
+- `.env.local` had placeholder values; updated to real Supabase cloud credentials (not committed).
+- Peter's account was created before the migration ran, so the auto-create trigger never fired — no `profiles` row existed. Fixed by running `insert into profiles (id, email) select id, email from auth.users where id not in (select id from profiles)` in the SQL editor.
+- `(app)/layout.tsx` redirected to `/login` on missing profile, causing an infinite loop (middleware bounces authenticated users back to `/dashboard`). Fixed: sign out via Supabase client before redirecting, so the user lands on `/login` unauthenticated.
+- `getCurrentProfile` used `.single()` which treats zero rows as an error (PGRST116) and logged it via `console.error` — wrong on both counts. Fixed: switched to `.maybeSingle()`, removed the error log and the eslint-disable comment.
+- `household-setup.md` had a duplicate "Step 2" heading. Fixed to Step 3.
+
 ## Files created / modified
 
 **Modified:**
@@ -98,7 +106,7 @@ Two users can sign in (or sign up) with email/password, create a named household
 - `src/app/auth/set-password/page.tsx` — form for invited users to create their password
 - `src/lib/actions/auth.ts` — added `setPassword` server action
 - `src/lib/supabase/middleware.ts` — added `/auth/callback` and `/auth/confirm` to public paths
-- `src/lib/queries/profile.ts` — suppressed no-console lint warning (pre-existing)
+- `src/lib/queries/profile.ts` — switched to `.maybeSingle()`, removed console.error and eslint-disable
 - `docs/setup/household-setup.md` — corrected invite flow description and added Supabase URL config step
 
 ## Deferred to next session

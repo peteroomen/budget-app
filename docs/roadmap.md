@@ -53,6 +53,7 @@ uploads
 - [ ] `households` table + invite link so Megan can join the same household
 - [ ] RLS policies: users only see their household's data
 - [ ] Basic app shell: sidebar nav, header, shadcn theme
+  - Design note: move profile/sign-out to bottom-left of sidebar (currently in header)
 
 ### Accounts
 

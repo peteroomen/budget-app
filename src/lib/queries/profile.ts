@@ -9,8 +9,6 @@ export async function getCurrentProfile(): Promise<Profile | null> {
   } = await supabase.auth.getUser()
   if (!user) return null
 
-  const { data, error } = await supabase.from('profiles').select('*').eq('id', user.id).single()
-  // eslint-disable-next-line no-console
-  if (error) console.error('getCurrentProfile:', error)
-  return data ?? null
+  const { data } = await supabase.from('profiles').select('*').eq('id', user.id).maybeSingle()
+  return data
 }
