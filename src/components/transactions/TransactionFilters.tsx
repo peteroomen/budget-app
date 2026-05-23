@@ -52,7 +52,7 @@ export function TransactionFilters({ accounts }: Props) {
 
   return (
     <div className="flex flex-wrap gap-4 items-end">
-      <div className="space-y-1.5 min-w-44">
+      <div className="flex flex-col gap-1.5 min-w-44">
         <Label>Account</Label>
         <Select
           value={accountId || ALL_ACCOUNTS}
@@ -73,7 +73,7 @@ export function TransactionFilters({ accounts }: Props) {
         </Select>
       </div>
 
-      <div className="space-y-1.5">
+      <div className="flex flex-col gap-1.5">
         <Label>From</Label>
         <Popover>
           <PopoverTrigger asChild>
@@ -98,7 +98,7 @@ export function TransactionFilters({ accounts }: Props) {
         </Popover>
       </div>
 
-      <div className="space-y-1.5">
+      <div className="flex flex-col gap-1.5">
         <Label>To</Label>
         <Popover>
           <PopoverTrigger asChild>
