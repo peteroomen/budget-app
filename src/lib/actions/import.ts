@@ -5,7 +5,6 @@ import Anthropic from '@anthropic-ai/sdk'
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { parseCsv } from '@/lib/parsers/csv'
-import { extractPdfText } from '@/lib/parsers/pdf'
 import { normaliseMerchant } from '@/lib/parsers/normalise'
 
 export type ImportResult = {
@@ -67,17 +66,7 @@ async function handlePdf(
   | { error: string }
 > {
   const buffer = await file.arrayBuffer()
-
-  let rawText: string
-  try {
-    rawText = await extractPdfText(buffer)
-  } catch {
-    return { error: 'Could not read PDF — ensure it is a valid, text-based (not scanned) PDF' }
-  }
-
-  if (!rawText.trim()) {
-    return { error: 'No text found in PDF — the file may be a scanned image' }
-  }
+  const base64 = Buffer.from(buffer).toString('base64')
 
   const client = new Anthropic()
   const response = await client.messages.create({
@@ -86,19 +75,25 @@ async function handlePdf(
     messages: [
       {
         role: 'user',
-        content: `You are a bank statement parser for New Zealand bank statements (ANZ format).
+        content: [
+          {
+            type: 'document',
+            source: { type: 'base64', media_type: 'application/pdf', data: base64 },
+          },
+          {
+            type: 'text',
+            text: `You are a bank statement parser for New Zealand bank statements.
 
-Extract all transactions from the following bank statement text and return ONLY a valid JSON array. No markdown, no code blocks, no explanation.
+Extract all transactions and return ONLY a valid JSON array. No markdown, no code blocks, no explanation.
 
 Each object must have exactly:
 - "date": ISO date string YYYY-MM-DD
 - "amount": number in NZD — negative for debits (money out), positive for credits (money in, e.g. salary, refunds)
 - "description": merchant/payee name exactly as in the statement
 
-Exclude opening balance, closing balance, and any summary rows — only real transactions.
-
-Bank statement text:
-${rawText}`,
+Exclude opening balance, closing balance, and any summary rows — only real transactions.`,
+          },
+        ],
       },
     ],
   })

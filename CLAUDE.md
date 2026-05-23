@@ -150,7 +150,7 @@ Do not close the session without completing these steps:
 ```
 Next.js 15 (App Router) · TypeScript (strict) · Supabase · shadcn/ui · Tailwind CSS
 Vercel AI SDK · Assistant UI · Anthropic Claude API
-papaparse (CSV) · pdfjs-dist (PDF parsing)
+papaparse (CSV) · Claude API native PDF support (PDF parsing — pass file as base64 document block, no extraction lib needed)
 pnpm · ESLint · Prettier · Husky + lint-staged · Git + GitHub · Vercel
 ```
 
