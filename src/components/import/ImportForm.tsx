@@ -1,7 +1,7 @@
 'use client'
 
 import { useActionState, useState } from 'react'
-import { importCsv, type ImportResult } from '@/lib/actions/import'
+import { importStatement, type ImportResult } from '@/lib/actions/import'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
@@ -16,8 +16,8 @@ import type { Account } from '@/types'
 
 const initial: ImportResult = { error: null }
 
-export function CsvImportForm({ accounts }: { accounts: Account[] }) {
-  const [state, action, pending] = useActionState(importCsv, initial)
+export function ImportForm({ accounts }: { accounts: Account[] }) {
+  const [state, action, pending] = useActionState(importStatement, initial)
   const [accountId, setAccountId] = useState('')
 
   const succeeded = !state.error && state.inserted !== undefined
@@ -54,9 +54,11 @@ export function CsvImportForm({ accounts }: { accounts: Account[] }) {
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="file">CSV file</Label>
-        <Input id="file" name="file" type="file" accept=".csv" required />
-        <p className="text-xs text-muted-foreground">Supported banks: ANZ, ASB, Westpac, BNZ</p>
+        <Label htmlFor="file">Statement file</Label>
+        <Input id="file" name="file" type="file" accept=".csv,.pdf" required />
+        <p className="text-xs text-muted-foreground">
+          CSV or PDF. Supported banks: ANZ, ASB, Westpac, BNZ (CSV); ANZ (PDF).
+        </p>
       </div>
 
       {state.error && <p className="text-sm text-destructive">{state.error}</p>}
