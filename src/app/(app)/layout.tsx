@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation'
 import { getCurrentProfile } from '@/lib/queries/profile'
+import { createClient } from '@/lib/supabase/server'
 import { NavLink } from '@/components/nav/NavLink'
 import { SignOutButton } from '@/components/auth/SignOutButton'
 import { Separator } from '@/components/ui/separator'
@@ -15,7 +16,11 @@ const NAV_ITEMS = [
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const profile = await getCurrentProfile()
-  if (!profile) redirect('/login')
+  if (!profile) {
+    const supabase = await createClient()
+    await supabase.auth.signOut()
+    redirect('/login')
+  }
 
   return (
     <div className="flex min-h-screen">
