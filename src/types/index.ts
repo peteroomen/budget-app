@@ -4,7 +4,7 @@
 // these can be replaced or augmented with generated types.
 // =============================================================================
 
-export type AccountType = 'checking' | 'savings' | 'credit'
+export type AccountType = 'spending' | 'saving'
 export type UploadStatus = 'pending' | 'processing' | 'complete' | 'error'
 export type FileType = 'csv' | 'pdf'
 export type TransactionSource = 'csv' | 'pdf'
