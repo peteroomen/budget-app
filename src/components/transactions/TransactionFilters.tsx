@@ -2,9 +2,12 @@
 
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useCallback } from 'react'
+import { format, parseISO } from 'date-fns'
+import { CalendarIcon } from 'lucide-react'
 import { Label } from '@/components/ui/label'
-import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
+import { Calendar } from '@/components/ui/calendar'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import {
   Select,
   SelectContent,
@@ -12,6 +15,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { cn } from '@/lib/utils'
 import type { Account } from '@/types'
 
 const ALL_ACCOUNTS = '__all__'
@@ -43,6 +47,9 @@ export function TransactionFilters({ accounts }: Props) {
   const dateFrom = searchParams.get('from') ?? ''
   const dateTo = searchParams.get('to') ?? ''
 
+  const dateFromParsed = dateFrom ? parseISO(dateFrom) : undefined
+  const dateToParsed = dateTo ? parseISO(dateTo) : undefined
+
   return (
     <div className="flex flex-wrap gap-4 items-end">
       <div className="space-y-1.5 min-w-44">
@@ -67,25 +74,53 @@ export function TransactionFilters({ accounts }: Props) {
       </div>
 
       <div className="space-y-1.5">
-        <Label htmlFor="date-from">From</Label>
-        <Input
-          id="date-from"
-          type="date"
-          value={dateFrom}
-          className="w-40"
-          onChange={(e) => push({ from: e.target.value })}
-        />
+        <Label>From</Label>
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button
+              variant="outline"
+              className={cn(
+                'w-40 justify-start text-left font-normal',
+                !dateFrom && 'text-muted-foreground'
+              )}
+            >
+              <CalendarIcon className="mr-2 h-4 w-4" />
+              {dateFromParsed ? format(dateFromParsed, 'd MMM yyyy') : 'Start date'}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-0" align="start">
+            <Calendar
+              mode="single"
+              selected={dateFromParsed}
+              onSelect={(d) => push({ from: d ? format(d, 'yyyy-MM-dd') : '' })}
+            />
+          </PopoverContent>
+        </Popover>
       </div>
 
       <div className="space-y-1.5">
-        <Label htmlFor="date-to">To</Label>
-        <Input
-          id="date-to"
-          type="date"
-          value={dateTo}
-          className="w-40"
-          onChange={(e) => push({ to: e.target.value })}
-        />
+        <Label>To</Label>
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button
+              variant="outline"
+              className={cn(
+                'w-40 justify-start text-left font-normal',
+                !dateTo && 'text-muted-foreground'
+              )}
+            >
+              <CalendarIcon className="mr-2 h-4 w-4" />
+              {dateToParsed ? format(dateToParsed, 'd MMM yyyy') : 'End date'}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-0" align="start">
+            <Calendar
+              mode="single"
+              selected={dateToParsed}
+              onSelect={(d) => push({ to: d ? format(d, 'yyyy-MM-dd') : '' })}
+            />
+          </PopoverContent>
+        </Popover>
       </div>
 
       {(accountId || dateFrom || dateTo) && (
