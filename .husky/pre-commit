@@ -1,3 +1,1 @@
-NODE="$(. "$HOME/.nvm/nvm.sh" && nvm which 22)"
-LINT_STAGED=$(ls node_modules/.pnpm/lint-staged@*/node_modules/lint-staged/bin/lint-staged.js 2>/dev/null | head -1)
-"$NODE" "$LINT_STAGED"
+pnpm exec lint-staged
