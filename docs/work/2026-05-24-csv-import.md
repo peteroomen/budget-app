@@ -36,6 +36,15 @@ Single `/import` route with a file picker (CSV only this session — PDF in item
 - [ ] Add `/import` to sidebar nav
 - [ ] `pnpm lint` + `pnpm type-check`
 
+## Manual test steps
+
+- [ ] Navigate to `/import`, confirm the page loads and shows account selector + file picker
+- [ ] With no accounts: confirm the "Add one first" prompt appears and Import button is disabled
+- [ ] Select an account, upload `test-data/anz-sample.csv` — expect: "Import complete (ANZ)", 25 transactions added, 0 duplicates
+- [ ] Re-import the same file — expect: 0 inserted, 25 duplicates skipped
+- [ ] Upload a non-CSV file (e.g. a `.txt`) — expect: error "Only CSV files are supported"
+- [ ] Upload a CSV with unrecognised headers — expect: error message listing the headers found
+
 ## Out of scope for this session
 
 - PDF import (item #5)

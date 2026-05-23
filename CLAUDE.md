@@ -55,6 +55,7 @@ You must complete every step in order. Do not proceed to code until the plan fil
 **3. Plan**
 
 - [ ] Write a plan file to `docs/work/YYYY-MM-DD-{slug}.md` using the format below
+- [ ] Plan must include a **Manual test steps** section — happy path + at least one edge/failure case
 - [ ] Present the plan as a summary to the user and get explicit confirmation before writing code
 - [ ] **Do not write a single line of application code until the plan is confirmed**
 
@@ -91,6 +92,15 @@ Call out anything non-obvious or where multiple approaches were considered.
 - [ ] Step 2
 - [ ] Step 3
       (Be specific — vague steps lead to vague output)
+
+## Manual test steps
+
+How to verify this works end-to-end after the code is written.
+Cover the happy path and at least one failure/edge case.
+
+- [ ] Test step 1 (e.g. navigate to X, do Y, expect Z)
+- [ ] Test step 2
+- [ ] Edge case: what happens if …
 
 ## Out of scope for this session
 
