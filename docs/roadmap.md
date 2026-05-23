@@ -82,10 +82,18 @@ uploads
 
 ### Categories
 
-- [ ] Seed a default category set: Groceries, Dining Out, Takeaways, Fuel, Transport, Utilities, Insurance, Childcare, Health, Pharmacy, Shopping, Kids, Entertainment, Subscriptions, Savings, Loan Repayments, Income, Other
-- [ ] Category management UI (add, rename, recolour, delete)
+- [x] Seed a default category set: Groceries, Dining Out, Takeaways, Fuel, Transport, Utilities, Insurance, Childcare, Health, Pharmacy, Shopping, Kids, Entertainment, Subscriptions, Savings, Loan Repayments, Income, Other
+- [x] Category management UI (add, rename, recolour, delete)
+
+> **Future considerations — revisit in Phase 5**
+>
+> - **Unique names** ✅ Done — `UNIQUE (household_id, name)` constraint added; UI surfaces a friendly "A category with that name already exists" error.
+> - **Colour vs icon — visual distinction at scale:** 18 categories is pushing the limit of what colours alone can distinguish. The `icon` column already exists in the schema (nullable text) for exactly this reason. Options: (a) expand colour presets beyond 16, (b) add icon picker using Lucide icons (already a shadcn dependency — no new packages needed), (c) emoji. Recommendation: add Lucide icon picker in Phase 5 Polish when the transaction list makes the visual density problem concrete.
+> - **Editing system categories:** Currently the UI allows renaming and recolouring system (default) categories but not deleting them. Long-term: the AI categorisation prompt references category names by name, so renaming "Groceries" to something idiosyncratic could silently degrade quality. Possible middle ground: allow editing but add a **"Reset to default"** button. Also worth adding a `description` field per category (e.g. "Supermarkets, fresh food, online groceries") — useful as a UI hint and as extra context in the categorisation prompt.
 
 ### Merchant Memory
+
+> **⬅ Next up** (build order item #8)
 
 - [ ] `merchant_category_map` table — stores `normalised_merchant_name → category_id` per household
 - [ ] On import: normalise merchant names (uppercase, strip card numbers/dates), check map first
