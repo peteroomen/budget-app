@@ -1,10 +1,7 @@
-import { getDocument, GlobalWorkerOptions } from 'pdfjs-dist'
-import type { TextItem, TextMarkedContent } from 'pdfjs-dist/types/src/display/api'
-
-// pdfjs-dist uses DOMMatrix for text transform calculations during getTextContent().
-// It's a browser global — not available in Node.js. This minimal stub prevents
-// crashes; the actual matrix values only affect text positioning, not which strings
-// are extracted, so identity defaults are fine for our use case.
+// pdfjs-dist uses DOMMatrix for text transform calculations (a browser global
+// not available in Node.js). This polyfill must be defined before pdfjs-dist
+// loads — ES module imports are hoisted, so we use dynamic import() below to
+// guarantee the polyfill runs first.
 if (typeof globalThis.DOMMatrix === 'undefined') {
   class DOMMatrixPolyfill {
     a = 1
@@ -98,14 +95,11 @@ if (typeof globalThis.DOMMatrix === 'undefined') {
   globalThis.DOMMatrix = DOMMatrixPolyfill as unknown as typeof DOMMatrix
 }
 
-// Disable worker for server-side use — text extraction runs in the main thread.
-GlobalWorkerOptions.workerSrc = ''
-
-function isTextItem(item: TextItem | TextMarkedContent): item is TextItem {
-  return 'str' in item
-}
-
 export async function extractPdfText(buffer: ArrayBuffer): Promise<string> {
+  // Dynamic import ensures pdfjs-dist loads after the polyfill above is set.
+  const { getDocument, GlobalWorkerOptions } = await import('pdfjs-dist')
+  GlobalWorkerOptions.workerSrc = ''
+
   const pdf = await getDocument({
     data: new Uint8Array(buffer),
     useSystemFonts: true,
@@ -119,8 +113,8 @@ export async function extractPdfText(buffer: ArrayBuffer): Promise<string> {
     const page = await pdf.getPage(i)
     const content = await page.getTextContent()
     const pageText = content.items
-      .filter(isTextItem)
-      .map((item) => item.str)
+      .filter((item): item is typeof item & { str: string } => 'str' in item)
+      .map((item) => (item as { str: string }).str)
       .join(' ')
     pageTexts.push(pageText)
   }
