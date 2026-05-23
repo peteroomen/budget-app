@@ -70,7 +70,7 @@ async function handlePdf(
 
   const client = new Anthropic()
   const response = await client.messages.create({
-    model: 'claude-sonnet-4-5-20251001',
+    model: 'claude-sonnet-4-6',
     max_tokens: 16000,
     messages: [
       {
@@ -115,6 +115,7 @@ Example of the required format (compact, no whitespace):
   try {
     parsed = JSON.parse(raw)
   } catch {
+    // eslint-disable-next-line no-console
     console.error('[importPdf] Claude response failed JSON.parse. Raw response:\n', raw)
     return { error: 'Could not parse transactions from this PDF — try again or use a CSV export' }
   }
