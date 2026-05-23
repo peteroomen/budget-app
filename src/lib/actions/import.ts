@@ -112,6 +112,7 @@ Exclude opening balance, closing balance, and any summary rows — only real tra
   try {
     parsed = JSON.parse(raw)
   } catch {
+    console.error('[importPdf] Claude response failed JSON.parse. Raw response:\n', raw)
     return { error: 'Could not parse transactions from this PDF — try again or use a CSV export' }
   }
 
