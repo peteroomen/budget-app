@@ -1,6 +1,8 @@
 import { Suspense } from 'react'
 import { getAccounts } from '@/lib/queries/accounts'
 import { getTransactions, type TransactionSortBy, type SortDir } from '@/lib/queries/transactions'
+import { getCategories } from '@/lib/queries/categories'
+import { getMappedMerchantNames } from '@/lib/queries/merchant-map'
 import { TransactionFilters } from '@/components/transactions/TransactionFilters'
 import { TransactionTable } from '@/components/transactions/TransactionTable'
 
@@ -34,7 +36,7 @@ export default async function TransactionsPage({
   const sortBy = parseSortBy(sp.sort)
   const sortDir = parseSortDir(sp.dir)
 
-  const [accounts, transactions] = await Promise.all([
+  const [accounts, transactions, categories, mappedMerchants] = await Promise.all([
     getAccounts(),
     getTransactions({
       ...(sp.account ? { accountId: sp.account } : {}),
@@ -43,6 +45,8 @@ export default async function TransactionsPage({
       sortBy,
       sortDir,
     }),
+    getCategories(),
+    getMappedMerchantNames(),
   ])
 
   const urlParams = new URLSearchParams()
@@ -66,7 +70,14 @@ export default async function TransactionsPage({
         <TransactionFilters accounts={accounts} />
       </Suspense>
 
-      <TransactionTable rows={transactions} sortBy={sortBy} sortDir={sortDir} params={urlParams} />
+      <TransactionTable
+        rows={transactions}
+        sortBy={sortBy}
+        sortDir={sortDir}
+        params={urlParams}
+        categories={categories}
+        mappedMerchants={mappedMerchants}
+      />
     </div>
   )
 }

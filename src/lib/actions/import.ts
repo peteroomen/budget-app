@@ -6,6 +6,7 @@ import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { parseCsv } from '@/lib/parsers/csv'
 import { normaliseMerchant } from '@/lib/parsers/normalise'
+import { getMerchantMappingsForImport } from '@/lib/queries/merchant-map'
 
 export type ImportResult = {
   error: string | null
@@ -157,7 +158,7 @@ export async function importStatement(
 
   const { data: account } = await supabase
     .from('accounts')
-    .select('id')
+    .select('id, household_id')
     .eq('id', accountId)
     .maybeSingle()
 
@@ -172,18 +173,30 @@ export async function importStatement(
     (existing ?? []).map((t) => dedupeKey(accountId, t.date, t.amount_cents, t.description))
   )
 
+  const normalisedNames = result.rows.map((row) => normaliseMerchant(row.description))
+  const uniqueNames = [...new Set(normalisedNames)]
+  const merchantMap = await getMerchantMappingsForImport(
+    supabase,
+    account.household_id as string,
+    uniqueNames
+  )
+
   const toInsert = result.rows
     .filter(
       (row) => !existingKeys.has(dedupeKey(accountId, row.date, row.amount_cents, row.description))
     )
-    .map((row) => ({
-      account_id: accountId,
-      date: row.date,
-      amount_cents: row.amount_cents,
-      description: row.description,
-      merchant_name: normaliseMerchant(row.description),
-      source: (isCsv ? 'csv' : 'pdf') as 'csv' | 'pdf',
-    }))
+    .map((row) => {
+      const merchant = normaliseMerchant(row.description)
+      return {
+        account_id: accountId,
+        date: row.date,
+        amount_cents: row.amount_cents,
+        description: row.description,
+        merchant_name: merchant,
+        category_id: merchantMap.get(merchant) ?? null,
+        source: (isCsv ? 'csv' : 'pdf') as 'csv' | 'pdf',
+      }
+    })
 
   const duplicates = result.rows.length - toInsert.length
 
