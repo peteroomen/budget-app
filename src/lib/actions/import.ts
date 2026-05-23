@@ -84,14 +84,17 @@ async function handlePdf(
             type: 'text',
             text: `You are a bank statement parser for New Zealand bank statements.
 
-Extract all transactions and return ONLY a valid JSON array. No markdown, no code blocks, no explanation.
+Extract all transactions and return ONLY a valid JSON array. No markdown, no code blocks, no explanation, no whitespace or indentation — compact single-line JSON only.
 
-Each object must have exactly:
+Each object must have exactly these keys:
 - "date": ISO date string YYYY-MM-DD
 - "amount": number in NZD — negative for debits (money out), positive for credits (money in, e.g. salary, refunds)
 - "description": merchant/payee name exactly as in the statement
 
-Exclude opening balance, closing balance, and any summary rows — only real transactions.`,
+Exclude opening balance, closing balance, and any summary rows — only real transactions.
+
+Example of the required format (compact, no whitespace):
+[{"date":"2024-01-15","amount":-42.50,"description":"COUNTDOWN"},{"date":"2024-01-16","amount":1500.00,"description":"SALARY"}]`,
           },
         ],
       },
