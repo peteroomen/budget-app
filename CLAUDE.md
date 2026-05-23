@@ -31,10 +31,10 @@ Core loop: import bank statements → AI categorises transactions → set budget
 > **Update this section at the end of every session.**
 
 - **Current phase:** Phase 1 — Foundation (in progress)
-- **Last session:** 2026-05-24 — Accounts CRUD (build order item #3)
-- **Last completed item:** Accounts page — add/delete accounts via UI, shadcn Dialog + Select
-- **Branch:** `feature/accounts-crud`
-- **Known issues / deferred:** Household setup is manual SQL (see `docs/setup/household-setup.md`). Supabase local stack testing requires Docker. Node 22 required for tooling (system node is v10) — always use `source ~/.nvm/nvm.sh && nvm use 22` before running pnpm scripts.
+- **Last session:** 2026-05-24 — CSV import pipeline (build order item #4)
+- **Last completed item:** `/import` page — upload CSV, auto-detect ANZ/ASB/Westpac/BNZ format, parse with papaparse, deduplicate, store transactions + upload record
+- **Branch:** `feature/csv-import`
+- **Known issues / deferred:** Household setup is manual SQL (see `docs/setup/household-setup.md`). Supabase local stack testing requires Docker. Node 22 required for tooling (system node is v10) — always use `source ~/.nvm/nvm.sh && nvm use 22` before running pnpm scripts. Imported transactions have no list view yet (item #6) — PDF import (item #5) is next.
 
 ---
 

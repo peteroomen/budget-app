@@ -8,6 +8,7 @@ import { Separator } from '@/components/ui/separator'
 const NAV_ITEMS = [
   { href: '/dashboard', label: 'Dashboard' },
   { href: '/transactions', label: 'Transactions' },
+  { href: '/import', label: 'Import' },
   { href: '/accounts', label: 'Accounts' },
   { href: '/categories', label: 'Categories' },
   { href: '/budgets', label: 'Budgets' },

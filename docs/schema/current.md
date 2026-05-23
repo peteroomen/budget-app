@@ -40,7 +40,7 @@ Auto-created via trigger on `auth.users` insert.
 | name         | text              | Not null                                      |
 | institution  | text              | Nullable                                      |
 | currency     | text              | Default 'NZD'                                 |
-| type         | account_type enum | 'checking', 'savings', 'credit'               |
+| type         | account_type enum | 'spending', 'saving'                          |
 | created_at   | timestamptz       | Default now()                                 |
 | updated_at   | timestamptz       | Auto-updated via trigger                      |
 

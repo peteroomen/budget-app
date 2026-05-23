@@ -63,7 +63,8 @@ uploads
 ### Statement Import (CSV + PDF)
 
 - [ ] Upload UI — drag & drop or file picker, accepts `.csv` and `.pdf`
-- [ ] **CSV path:** parse with papaparse, column mapping step (date / amount / description → unified schema), handle ANZ/ASB/Westpac/BNZ format variations
+- [ ] **CSV path:** parse with papaparse, auto-detect bank format by headers (ANZ/ASB/Westpac/BNZ), handle format variations
+  - Manual column mapping UI (for unrecognised bank formats) — deferred to Phase 5 Polish
 - [ ] **PDF path:** extract text with pdfjs-dist → pass raw text to Claude with a parsing prompt → Claude returns structured `{date, amount, description}[]` JSON
 - [ ] Normalise amounts: handle credit card sign conventions (credits positive, debits negative — consistent regardless of source)
 - [ ] Duplicate detection on import (same account + date + amount + description hash)
