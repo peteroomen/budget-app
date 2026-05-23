@@ -11,7 +11,7 @@ interface NavLinkProps {
 
 export function NavLink({ href, children }: NavLinkProps) {
   const pathname = usePathname()
-  const isActive = pathname.startsWith(href)
+  const isActive = pathname === href || pathname.startsWith(href + '/')
 
   return (
     <Link

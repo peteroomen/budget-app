@@ -1,6 +1,6 @@
 # Household Budget App — Architecture & Dev Process
 
-> **Docs & Obsidian:** This file lives at `docs/architecture.md`. The `docs/` folder is an Obsidian vault — open it as a vault in Obsidian to navigate all project documentation. Claude Code writes session plans to `docs/sessions/` and architecture decision records to `docs/decisions/`. See `CLAUDE.md` at the project root for Claude Code instructions.
+> **Docs & Obsidian:** This file lives at `docs/architecture.md`. The `docs/` folder is an Obsidian vault — open it as a vault in Obsidian to navigate all project documentation. Claude Code writes session plans to `docs/work/` and architecture decision records to `docs/decisions/`. See `CLAUDE.md` at the project root for Claude Code instructions.
 
 ---
 
@@ -34,44 +34,48 @@
 
 ```
 budget-app/
-├── app/                        # Next.js App Router
-│   ├── (auth)/                 # Auth route group (login, invite)
-│   │   ├── login/page.tsx
-│   │   └── invite/page.tsx
-│   ├── (app)/                  # Protected route group
-│   │   ├── layout.tsx          # App shell (sidebar, header)
-│   │   ├── dashboard/page.tsx
-│   │   ├── transactions/page.tsx
-│   │   ├── budgets/page.tsx
-│   │   ├── accounts/page.tsx
-│   │   ├── categories/page.tsx
-│   │   └── chat/page.tsx
-│   ├── api/
-│   │   ├── chat/route.ts       # Vercel AI SDK streaming endpoint
-│   │   ├── import/route.ts     # CSV/PDF upload + parse
-│   │   └── categorise/route.ts # Batch Claude categorisation
-│   └── layout.tsx              # Root layout
-├── components/
-│   ├── ui/                     # shadcn/ui components (auto-generated)
-│   ├── transactions/           # Transaction list, filters, inline edit
-│   ├── dashboard/              # Chart components, budget bars
-│   ├── import/                 # Upload UI, progress, mapping step
-│   └── chat/                   # Assistant UI wrappers
-├── lib/
-│   ├── supabase/
-│   │   ├── client.ts           # Browser Supabase client
-│   │   ├── server.ts           # Server Supabase client (cookies)
-│   │   └── middleware.ts       # Auth middleware
-│   ├── ai/
-│   │   ├── categorise.ts       # Batch categorisation logic
-│   │   ├── parse-pdf.ts        # pdfjs extract + Claude parse
-│   │   └── chat-context.ts     # Build context payload for chat
-│   ├── parsers/
-│   │   ├── csv.ts              # papaparse + normalise
-│   │   └── normalise.ts        # Shared normalisation (amounts, dates, merchants)
-│   └── utils.ts
-├── types/
-│   └── index.ts                # Shared TypeScript types (Transaction, Category, etc.)
+├── src/
+│   ├── app/                        # Next.js App Router
+│   │   ├── (auth)/                 # Auth route group (login)
+│   │   │   └── login/page.tsx
+│   │   ├── (app)/                  # Protected route group
+│   │   │   ├── layout.tsx          # App shell (sidebar, header)
+│   │   │   ├── dashboard/page.tsx
+│   │   │   ├── transactions/page.tsx
+│   │   │   ├── budgets/page.tsx
+│   │   │   ├── accounts/page.tsx
+│   │   │   ├── categories/page.tsx
+│   │   │   └── chat/page.tsx
+│   │   ├── api/
+│   │   │   ├── chat/route.ts       # Vercel AI SDK streaming endpoint
+│   │   │   ├── import/route.ts     # CSV/PDF upload + parse
+│   │   │   └── categorise/route.ts # Batch Claude categorisation
+│   │   └── layout.tsx              # Root layout
+│   ├── components/
+│   │   ├── ui/                     # shadcn/ui components (auto-generated)
+│   │   ├── transactions/           # Transaction list, filters, inline edit
+│   │   ├── dashboard/              # Chart components, budget bars
+│   │   ├── import/                 # Upload UI, progress, mapping step
+│   │   └── chat/                   # Assistant UI wrappers
+│   ├── lib/
+│   │   ├── supabase/
+│   │   │   ├── client.ts           # Browser Supabase client
+│   │   │   ├── server.ts           # Server Supabase client (cookies)
+│   │   │   └── middleware.ts       # Auth middleware
+│   │   ├── actions/                # Next.js server actions
+│   │   │   └── auth.ts
+│   │   ├── queries/                # DB query helpers (server-only)
+│   │   │   └── profile.ts
+│   │   ├── ai/
+│   │   │   ├── categorise.ts       # Batch categorisation logic
+│   │   │   ├── parse-pdf.ts        # pdfjs extract + Claude parse
+│   │   │   └── chat-context.ts     # Build context payload for chat
+│   │   ├── parsers/
+│   │   │   ├── csv.ts              # papaparse + normalise
+│   │   │   └── normalise.ts        # Shared normalisation (amounts, dates, merchants)
+│   │   └── utils.ts
+│   └── types/
+│       └── index.ts                # Shared TypeScript types (Transaction, Category, etc.)
 ├── supabase/
 │   └── migrations/             # SQL migration files (tracked in git)
 ├── .husky/
@@ -81,13 +85,12 @@ budget-app/
 │   └── workflows/              # GitHub Actions (add later)
 ├── .env.local                  # Local secrets (gitignored)
 ├── .env.example                # Template — committed to repo
-├── .eslintrc.json
+├── eslint.config.mjs
 ├── .prettierrc
-├── lint-staged.config.js
 ├── next.config.ts
 ├── tailwind.config.ts
 ├── tsconfig.json
-└── package.json
+└── package.json                # lint-staged config is inline here
 ```
 
 ---
@@ -121,7 +124,7 @@ Set all production values in Vercel → Project Settings → Environment Variabl
 // Uses Next.js recommended config + TypeScript rules
 // Key rules:
 // - @typescript-eslint/no-unused-vars: error
-// - @typescript-eslint/no-explicit-any: warn
+// - @typescript-eslint/no-explicit-any: error
 // - no-console: warn (use structured logging in server code)
 ```
 
@@ -137,12 +140,12 @@ Set all production values in Vercel → Project Settings → Environment Variabl
 }
 ```
 
-### lint-staged (`lint-staged.config.js`)
+### lint-staged (inline in `package.json`)
 
-```js
-module.exports = {
-  '*.{ts,tsx}': ['eslint --fix', 'prettier --write'],
-  '*.{json,md,css}': ['prettier --write'],
+```json
+"lint-staged": {
+  "*.{ts,tsx}": ["eslint --fix", "prettier --write"],
+  "*.{json,md,css}": ["prettier --write"]
 }
 ```
 
