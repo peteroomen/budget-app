@@ -119,7 +119,7 @@ Unique constraint: `(household_id, category_id, month)`
 
 ## Enums
 
-- `account_type`: checking, savings, credit
+- `account_type`: spending, saving
 - `upload_status`: pending, processing, complete, error
 - `file_type`: csv, pdf
 

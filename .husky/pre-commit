@@ -1,1 +1,3 @@
+. ~/.nvm/nvm.sh
+nvm use
 pnpm exec lint-staged

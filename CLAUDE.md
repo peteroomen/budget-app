@@ -31,10 +31,10 @@ Core loop: import bank statements → AI categorises transactions → set budget
 > **Update this section at the end of every session.**
 
 - **Current phase:** Phase 1 — Foundation (in progress)
-- **Last session:** 2026-05-23/24 — Auth + Household (build order item #2), including follow-up to complete invite flow
-- **Last completed item:** Auth fully wired — login, sign-out, Supabase invite flow (`/auth/confirm` → `/auth/set-password`), middleware auth guard, app shell
-- **Branch:** `feature/auth-household` (open PR → main)
-- **Known issues / deferred:** Household setup is manual SQL (see `docs/setup/household-setup.md`). Supabase local stack testing requires Docker. Node 22 required for tooling (system node is v10).
+- **Last session:** 2026-05-24 — Accounts CRUD (build order item #3)
+- **Last completed item:** Accounts page — add/delete accounts via UI, shadcn Dialog + Select
+- **Branch:** `feature/accounts-crud`
+- **Known issues / deferred:** Household setup is manual SQL (see `docs/setup/household-setup.md`). Supabase local stack testing requires Docker. Node 22 required for tooling (system node is v10) — always use `source ~/.nvm/nvm.sh && nvm use 22` before running pnpm scripts.
 
 ---
 
