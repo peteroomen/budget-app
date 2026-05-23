@@ -64,18 +64,22 @@ Seed 18 default categories for existing households and provide a /categories man
 - ColorPicker built as a controlled component (16 preset swatches + hidden input) — same pattern as shadcn Select in the accounts dialog.
 - Edit dialog resets color state to the category's current color on close.
 - No new shadcn components needed — reused Dialog, Button, Input, Label already installed.
-- Lint and type-check both pass clean.
+- **Post-review fix:** Initial dialogs used `required` on the name input, which fires the browser's native constraint-validation bubble — visually inconsistent with the rest of the app. Replaced with manual validation in the submit handler; error surfaces as `text-sm text-destructive` inline text, matching how server errors are shown everywhere else.
+- **Unique names:** Added after review. Migration `20260524000002` adds `UNIQUE (household_id, name)`. Server actions detect Postgres error code `23505` and return a friendly message rather than leaking the raw constraint error. Schema doc updated.
 
 ## Files created / modified
 
 - `supabase/migrations/20260524000001_seed_default_categories.sql` — seeds 18 default categories for all existing households
+- `supabase/migrations/20260524000002_category_unique_names.sql` — adds `UNIQUE (household_id, name)` constraint
 - `src/lib/queries/categories.ts` — `getCategories()` ordered by system-first, then name
-- `src/lib/actions/categories.ts` — `createCategory`, `updateCategory`, `deleteCategory` (server actions)
+- `src/lib/actions/categories.ts` — `createCategory`, `updateCategory`, `deleteCategory`; both write actions handle `23505` with a friendly error
 - `src/components/categories/ColorPicker.tsx` — 16-swatch color picker (controlled + hidden input)
-- `src/components/categories/AddCategoryDialog.tsx` — add category dialog
-- `src/components/categories/EditCategoryDialog.tsx` — edit name + color dialog
+- `src/components/categories/AddCategoryDialog.tsx` — add category dialog; client-side name validation (no native browser bubble)
+- `src/components/categories/EditCategoryDialog.tsx` — edit name + color dialog; same validation fix
 - `src/components/categories/DeleteCategoryButton.tsx` — delete with confirmation dialog; disabled for system categories
 - `src/app/(app)/categories/page.tsx` — replaced stub: table of categories with color chip, type, edit/delete actions
+- `docs/roadmap.md` — ticked off completed items, captured future considerations (icons, system category locking), marked Merchant Memory as next up
+- `docs/schema/current.md` — added unique constraint to categories table
 
 ## Deferred to next session
 
