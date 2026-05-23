@@ -20,6 +20,7 @@ export function AddCategoryDialog() {
   const [open, setOpen] = useState(false)
   const [color, setColor] = useState(DEFAULT_COLOR)
   const [formKey, setFormKey] = useState(0)
+  const [nameError, setNameError] = useState<string | null>(null)
   const [state, action, pending] = useActionState(createCategory, { error: null })
   const submitted = useRef(false)
 
@@ -38,6 +39,7 @@ export function AddCategoryDialog() {
     setOpen(next)
     if (!next) {
       setColor(DEFAULT_COLOR)
+      setNameError(null)
       setFormKey((k) => k + 1)
       submitted.current = false
     }
@@ -55,6 +57,12 @@ export function AddCategoryDialog() {
         <form
           key={formKey}
           action={(formData) => {
+            const name = formData.get('name')
+            if (typeof name !== 'string' || !name.trim()) {
+              setNameError('Name is required')
+              return
+            }
+            setNameError(null)
             submitted.current = true
             action(formData)
           }}
@@ -62,7 +70,8 @@ export function AddCategoryDialog() {
         >
           <div className="space-y-1.5">
             <Label htmlFor="add-name">Name</Label>
-            <Input id="add-name" name="name" placeholder="e.g. Petrol" required />
+            <Input id="add-name" name="name" placeholder="e.g. Petrol" />
+            {nameError && <p className="text-sm text-destructive">{nameError}</p>}
           </div>
 
           <div className="space-y-1.5">

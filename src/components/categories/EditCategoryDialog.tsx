@@ -23,6 +23,7 @@ export function EditCategoryDialog({ category }: EditCategoryDialogProps) {
   const [open, setOpen] = useState(false)
   const [color, setColor] = useState(category.color ?? '#6b7280')
   const [formKey, setFormKey] = useState(0)
+  const [nameError, setNameError] = useState<string | null>(null)
   const [state, action, pending] = useActionState(updateCategory, { error: null })
   const submitted = useRef(false)
 
@@ -39,6 +40,7 @@ export function EditCategoryDialog({ category }: EditCategoryDialogProps) {
     setOpen(next)
     if (!next) {
       setColor(category.color ?? '#6b7280')
+      setNameError(null)
       setFormKey((k) => k + 1)
       submitted.current = false
     }
@@ -58,6 +60,12 @@ export function EditCategoryDialog({ category }: EditCategoryDialogProps) {
         <form
           key={formKey}
           action={(formData) => {
+            const name = formData.get('name')
+            if (typeof name !== 'string' || !name.trim()) {
+              setNameError('Name is required')
+              return
+            }
+            setNameError(null)
             submitted.current = true
             action(formData)
           }}
@@ -67,12 +75,8 @@ export function EditCategoryDialog({ category }: EditCategoryDialogProps) {
 
           <div className="space-y-1.5">
             <Label htmlFor={`edit-name-${category.id}`}>Name</Label>
-            <Input
-              id={`edit-name-${category.id}`}
-              name="name"
-              defaultValue={category.name}
-              required
-            />
+            <Input id={`edit-name-${category.id}`} name="name" defaultValue={category.name} />
+            {nameError && <p className="text-sm text-destructive">{nameError}</p>}
           </div>
 
           <div className="space-y-1.5">
