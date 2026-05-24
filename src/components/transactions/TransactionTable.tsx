@@ -105,7 +105,6 @@ export function TransactionTable({
             </TableHead>
             <TableHead className="text-muted-foreground font-medium">Category</TableHead>
             <TableHead className="text-muted-foreground font-medium">Account</TableHead>
-            <TableHead className="w-8" />
             <TableHead className="text-muted-foreground font-medium text-right">
               <SortHeader
                 label="Amount"
@@ -119,17 +118,22 @@ export function TransactionTable({
         </TableHeader>
         <TableBody>
           {rows.map((tx) => (
-            <TableRow key={tx.id}>
+            <TableRow key={tx.id} className="group">
               <TableCell className="tabular-nums text-muted-foreground whitespace-nowrap">
                 {tx.date}
               </TableCell>
               <TableCell>
-                <span className="font-medium">{tx.merchant_name ?? tx.description}</span>
-                {tx.merchant_name && tx.merchant_name !== tx.description && (
-                  <span className="block text-xs text-muted-foreground truncate max-w-xs">
-                    {tx.description}
-                  </span>
-                )}
+                <div className="flex items-center gap-1.5">
+                  <div className="min-w-0">
+                    <span className="font-medium">{tx.merchant_name ?? tx.description}</span>
+                    {tx.merchant_name && tx.merchant_name !== tx.description && (
+                      <span className="block text-xs text-muted-foreground truncate max-w-xs">
+                        {tx.description}
+                      </span>
+                    )}
+                  </div>
+                  <RecurringBadge transactionId={tx.id} isRecurring={tx.is_recurring} />
+                </div>
               </TableCell>
               <TableCell>
                 <CategoryCell
@@ -144,9 +148,6 @@ export function TransactionTable({
               </TableCell>
               <TableCell className="text-sm text-muted-foreground">
                 {tx.account?.name ?? '—'}
-              </TableCell>
-              <TableCell className="px-1">
-                <RecurringBadge transactionId={tx.id} isRecurring={tx.is_recurring} />
               </TableCell>
               <TableCell
                 className={`tabular-nums text-right font-medium ${
