@@ -40,7 +40,7 @@ Single server page at `/dashboard` — reads `?month=YYYY-MM` search param (defa
 - [x] `src/components/dashboard/TopMerchantsTable.tsx` — top 5 merchants by spend
 - [x] `src/app/(app)/dashboard/page.tsx` — replace stub, wire up all components
 - [x] `pnpm lint` + `pnpm type-check`
-- [ ] Commit + push + open PR
+- [x] Commit + push + open PR
 
 ## Manual test steps
 
