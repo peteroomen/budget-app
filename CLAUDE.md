@@ -30,11 +30,11 @@ Core loop: import bank statements → AI categorises transactions → set budget
 
 > **Update this section at the end of every session.**
 
-- **Current phase:** Phase 1 — Foundation (in progress)
-- **Last session:** 2026-05-24 — PDF import pipeline (build order item #5)
-- **Last completed item:** Unified `/import` page — single form handles CSV and PDF by file extension. CSV uses papaparse; PDF passes raw file as base64 document block to Claude (`claude-sonnet-4-6`), which extracts transactions natively. Both paths deduplicate and store transactions + upload record.
-- **Branch:** `feature/pdf-import` (open PR, pending merge)
-- **Known issues / deferred:** Household setup is manual SQL (see `docs/setup/household-setup.md`). Supabase local stack testing requires Docker. Node 22 required for tooling (system node is v10) — always use `source ~/.nvm/nvm.sh && nvm use 22` before running pnpm scripts. Imported transactions have no list view yet — transaction list (item #6) is next.
+- **Current phase:** Phase 2 — AI Categorisation (in progress)
+- **Last session:** 2026-05-24 — AI categorisation (build order item #9)
+- **Last completed item:** Batch Claude categorisation for unmapped merchants on import (`src/lib/categorise.ts` + updated `import.ts`). `recategoriseAll` server action clears the merchant map and reruns Claude across all household transactions. Inline category override and merchant memory (item #8) also merged in this branch. "Re-categorise all" and admin "Delete all transactions" buttons in transaction list header. Claude prompt uses numeric indices to prevent name mangling on merchants with category words in their description (e.g. `DOMINO'S PIZZA PAPAKURA TAKEAWAYS`).
+- **Branch:** `feature/ai-categorisation` (open PR #12, pending merge). Note: `feature/merchant-memory` is also unmerged — it's included in the ai-categorisation PR as a fast-forward base.
+- **Known issues / deferred:** Manual overrides survive future imports but are wiped by "Re-categorise all" — see roadmap "Locked merchant mappings" note for the fix (`is_manual` flag). Node 22 required — always use `source ~/.nvm/nvm.sh && nvm use 22` before running pnpm scripts. Several other feature branches exist (dashboard-charts, budget-management, chat-interface) but are not merged to main.
 
 ---
 

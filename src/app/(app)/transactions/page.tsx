@@ -6,6 +6,7 @@ import { getMappedMerchantNames } from '@/lib/queries/merchant-map'
 import { createClient } from '@/lib/supabase/server'
 import { TransactionFilters } from '@/components/transactions/TransactionFilters'
 import { TransactionTable } from '@/components/transactions/TransactionTable'
+import { RecategoriseButton } from '@/components/transactions/RecategoriseButton'
 import { DeleteAllTransactionsButton } from '@/components/transactions/DeleteAllTransactionsButton'
 
 const VALID_SORT_COLS: TransactionSortBy[] = ['date', 'amount_cents', 'merchant_name']
@@ -74,7 +75,10 @@ export default async function TransactionsPage({
             {sp.account || sp.from || sp.to ? ' (filtered)' : ''}
           </p>
         </div>
-        {isAdmin && <DeleteAllTransactionsButton />}
+        <div className="flex items-center gap-2">
+          <RecategoriseButton />
+          {isAdmin && <DeleteAllTransactionsButton />}
+        </div>
       </div>
 
       <Suspense>

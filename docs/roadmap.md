@@ -117,6 +117,14 @@ uploads
 - [ ] `setCategoryOverride` sets `'manual'`; AI categorisation sets `'claude'`
 - [ ] Transaction list: small pencil icon next to category name when `category_source = 'manual'` — no icon for Claude-assigned, nothing for uncategorised
 
+### Locked merchant mappings (refinement — manual overrides survive re-categorise)
+
+> **Current behaviour:** Manual overrides via the category dropdown update `merchant_category_map` and stick for future imports. But "Re-categorise all" wipes the whole map and reruns Claude, overwriting manual choices.
+>
+> **Proposed fix:** Add `is_manual boolean default false` to `merchant_category_map`. `setCategoryOverride` sets `is_manual = true`; `recategoriseAll` skips rows where `is_manual = true` so locked mappings are preserved. A "reset to AI" option per merchant would clear the flag.
+>
+> Migration: `ALTER TABLE merchant_category_map ADD COLUMN is_manual boolean NOT NULL DEFAULT false;`
+
 **Deliverable:** Import statement, ~90%+ of transactions categorised instantly from memory, unknowns handled by Claude. Corrections stick.
 
 ---
@@ -209,14 +217,15 @@ Example queries:
 
 ## Future / Far Future
 
-| Feature                    | Notes                                                                                                              |
-| -------------------------- | ------------------------------------------------------------------------------------------------------------------ |
-| Direct bank API (Akahu)    | Akahu is the NZ open banking layer. Worth revisiting once PDF import friction is felt. Subscription cost involved. |
-| Push / email notifications | Resend for email. Good for monthly summary delivery.                                                               |
-| Axiom logging              | Only worthwhile if sharing with others or debugging production issues.                                             |
-| Mobile app                 | React Native / Expo once web is solid.                                                                             |
-| OAuth login                | Google/Apple login — useful if sharing with more people.                                                           |
-| Multi-currency support     | Not needed for NZ household.                                                                                       |
+| Feature                    | Notes                                                                                                                                                                                                                                                                                                           |
+| -------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Direct bank API (Akahu)    | Akahu is the NZ open banking layer. Worth revisiting once PDF import friction is felt. Subscription cost involved.                                                                                                                                                                                              |
+| Push / email notifications | Resend for email. Good for monthly summary delivery.                                                                                                                                                                                                                                                            |
+| Axiom logging              | Only worthwhile if sharing with others or debugging production issues.                                                                                                                                                                                                                                          |
+| Mobile app                 | React Native / Expo once web is solid.                                                                                                                                                                                                                                                                          |
+| OAuth login                | Google/Apple login — useful if sharing with more people.                                                                                                                                                                                                                                                        |
+| Multi-currency support     | Not needed for NZ household.                                                                                                                                                                                                                                                                                    |
+| Unit / automated tests     | Overkill for now — worth adding Vitest for parsing and categorisation logic once the core is stable. Key targets: `lib/parsers/` (CSV format detection, normalisation), `lib/categorise.ts` (Claude response parsing), and any pure utility functions. E2E with Playwright if the app grows to have more users. |
 
 ---
 
