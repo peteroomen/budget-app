@@ -7,6 +7,13 @@ export interface BudgetWithActual {
   actual_cents: number
 }
 
+function firstDayOfNextMonth(month: string): string {
+  const parts = month.split('-').map(Number)
+  // JS months are 0-based; passing the 1-based month value directly yields the next month
+  const next = new Date(parts[0]!, parts[1]!, 1)
+  return `${next.getFullYear()}-${String(next.getMonth() + 1).padStart(2, '0')}-01`
+}
+
 export async function getBudgetsWithActuals(month: string): Promise<BudgetWithActual[]> {
   const supabase = await createClient()
 
@@ -17,7 +24,7 @@ export async function getBudgetsWithActuals(month: string): Promise<BudgetWithAc
       .from('transactions')
       .select('category_id, amount_cents')
       .gte('date', `${month}-01`)
-      .lte('date', `${month}-31`)
+      .lt('date', firstDayOfNextMonth(month))
       .lt('amount_cents', 0),
   ])
 

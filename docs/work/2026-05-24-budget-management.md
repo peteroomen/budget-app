@@ -21,15 +21,15 @@ A user can view and set monthly budgets per category at `/budgets`, see a progre
 ## Steps
 
 - [x] Write plan file
-- [ ] `src/lib/queries/budgets.ts` — `getBudgetsWithActuals(month)`: fetches all categories, left-joins budget row, aggregates actuals from transactions
-- [ ] `src/lib/actions/budgets.ts` — `upsertBudget(prevState, formData)`: server action, upserts budget row
-- [ ] `src/components/budgets/MonthPicker.tsx` — client component: displays MMMM YYYY, prev/next buttons push URL param
-- [ ] `src/components/budgets/SetBudgetDialog.tsx` — client dialog: NZD input, hidden category_id + month fields, useActionState, inline error
-- [ ] `src/components/budgets/BudgetProgressBar.tsx` — server component: coloured progress bar with percentage
-- [ ] `src/components/budgets/OverBudgetCards.tsx` — server component: grid of callout cards for over-budget categories
-- [ ] `src/app/(app)/budgets/page.tsx` — replace stub: reads `month` searchParam, fetches data, renders MonthPicker + callout cards + budget table
-- [ ] `pnpm lint` + `pnpm type-check`
-- [ ] Commit + push + open PR
+- [x] `src/lib/queries/budgets.ts` — `getBudgetsWithActuals(month)`: fetches all categories, left-joins budget row, aggregates actuals from transactions
+- [x] `src/lib/actions/budgets.ts` — `upsertBudget(prevState, formData)`: server action, upserts budget row
+- [x] `src/components/budgets/MonthPicker.tsx` — client component: displays MMMM YYYY, prev/next buttons push URL param
+- [x] `src/components/budgets/SetBudgetDialog.tsx` — client dialog: NZD input, hidden category_id + month fields, useActionState, inline error
+- [x] `src/components/budgets/BudgetProgressBar.tsx` — server component: coloured progress bar with percentage
+- [x] `src/components/budgets/OverBudgetCards.tsx` — server component: grid of callout cards for over-budget categories
+- [x] `src/app/(app)/budgets/page.tsx` — replace stub: reads `month` searchParam, fetches data, renders MonthPicker + callout cards + budget table
+- [x] `pnpm lint` + `pnpm type-check`
+- [x] Commit + push + open PR
 
 ## Manual test steps
 
