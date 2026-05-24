@@ -37,7 +37,7 @@ Happy path:
 - [ ] Ask "What did we spend on groceries this month?" — expect Claude to reference actual grocery transactions from the household
 - [ ] Ask "How are we tracking against budget for dining out?" — expect actual budget vs spent figures
 - [ ] Ask "What are our fixed costs each month?" — expect recurring transaction list
-- [ ] Ask "How does this month's spending compare to last month?" — expect trend comparison using real data
+- [ ] Ask "How does this month's spending compare to last month?" — ⚠️ only valid once multiple months of data exist; with a single month the assistant should honestly say trend data is empty, not fabricate figures
 
 Edge cases:
 
@@ -57,18 +57,21 @@ Edge cases:
 ## What actually happened
 
 - Followed the planned approach exactly — no major surprises.
-- `getChatContext()` runs 5 parallel Supabase queries: household name, current month transactions, budgets, 3-month trend transactions, recurring transactions.
+- `getChatContext()` runs 6 parallel Supabase queries: household name, current month transactions, budgets, 3-month trend transactions, recurring transactions, and all categories.
 - Trend data is fetched in one query covering 3 prior months, then aggregated in memory by month + category (avoids 3 separate queries).
 - Recurring: queries `is_recurring = true` for current month only; deduplicated by merchant name in memory in case of split charges.
 - `formatChatContext()` renders a compact `<financial_data>` XML block: transactions as pipe-delimited rows, budget vs actual with over/under status, trend table, recurring list with total.
-- `firstDayOfNextMonth()` helper was removed — it was written but lint caught it as unused (the month utilities already cover what was needed).
 - If the user is unauthenticated or has no household, `getChatContext()` returns `null` and the route falls back to the base system prompt gracefully.
-- Route re-exports `currentMonth` from the queries module so import is clean.
+- **Post-testing fix:** initial implementation only included categories with spend or a budget this month — categories with no activity were invisible to the assistant. Added a 6th parallel query for all household categories; `budgetsVsActual` is now seeded from the full list, with `$0 spent, no budget` rows for empty categories.
+- **Bug fix (found during testing):** `SpendByCategoryChart` was dropping every other Y-axis label — Recharts auto-spaces ticks on category axes. Fixed with `interval={0}`.
+- Roadmap updated with Chat v2 future enhancements backlog (hint chips, tool calls, rich responses, write actions, historical data access).
 
 ## Files created / modified
 
-- `src/lib/queries/chat-context.ts` — new: `getChatContext()`, `formatChatContext()`, and re-export of `currentMonth`
+- `src/lib/queries/chat-context.ts` — new: `getChatContext()`, `formatChatContext()`, re-export of `currentMonth`; updated post-testing to include all categories
 - `src/app/api/chat/route.ts` — updated: calls `getChatContext(currentMonth())`, injects formatted block into expanded system prompt
+- `src/components/dashboard/SpendByCategoryChart.tsx` — fix: `interval={0}` on YAxis so all category labels render
+- `docs/roadmap.md` — Chat v2 future enhancements section added
 - `docs/work/2026-05-25-chat-context.md` — this plan file
 
 ## Deferred to next session

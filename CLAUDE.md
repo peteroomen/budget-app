@@ -31,23 +31,23 @@ Core loop: import bank statements → AI categorises transactions → set budget
 > **Update this section at the end of every session.**
 
 - **Current phase:** Phase 4 — AI Chat (in progress). Phases 1–3 fully complete.
-- **Last session:** 2026-05-24 — Chat interface (build order item #13, PR #13 merged)
+- **Last session:** 2026-05-25 — Chat context injection (build order item #14, PR #14 open for review)
 - **All merged to main (build order items #1–#13):**
   - #1 Scaffold · #2 Auth + household · #3 Accounts CRUD
   - #4 CSV import · #5 PDF import · #6 Transaction list
   - #7 Category system · #8 Merchant memory · #9 AI categorisation
   - #10 Dashboard charts · #11 Budget management
   - #13 Chat interface (Assistant UI + Vercel AI SDK, streaming, markdown rendering)
+- **In review (PR #14):**
+  - #14 Chat context injection — `src/lib/queries/chat-context.ts` fetches transactions, budgets, all categories, 3-month trends, and recurring; injected as a structured `<financial_data>` block in the system prompt. Also fixed dashboard Y-axis label skipping.
 - **Remaining build order items:**
   - **#12** Recurring detection — `is_recurring` column exists; detection logic + UI not built
-  - **#14** Chat agent / context injection — chat works but system prompt has no real data
   - **#15** Monthly summary — Claude-generated recap page (Phase 5)
   - **#16** Polish pass — responsive, dark mode, empty states, search, export (Phase 5)
 - **Deferred Phase 2 refinements (not blocking, nice to have):**
   - `category_source` column on `transactions` — track 'claude' vs 'manual' overrides
   - `is_manual` flag on `merchant_category_map` — so "Re-categorise all" preserves manual overrides
 - **Known issues:** Node 22 required — always `source ~/.nvm/nvm.sh && nvm use 22` before pnpm scripts.
-- **Architecture note:** `src/lib/ai/` directory shown in `docs/architecture.md` doesn't exist; real layout is `src/lib/categorise.ts` (categorisation logic) and `src/lib/queries/` (all DB query helpers). Update architecture.md when building #14.
 
 ---
 
