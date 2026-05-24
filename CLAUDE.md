@@ -30,19 +30,24 @@ Core loop: import bank statements → AI categorises transactions → set budget
 
 > **Update this section at the end of every session.**
 
-- **Current phase:** Phase 4 — AI Chat (in progress). Phases 1–3 fully complete.
-- **Last session:** 2026-05-24 — Chat interface (build order item #13, PR #13 merged)
+- **Current phase:** Phase 5 — Polish (in progress). Phases 1–4 fully complete.
+- **Last session:** 2026-05-25 — Polish pass (build order item #16, PR open)
 - **All merged to main (build order items #1–#13):**
   - #1 Scaffold · #2 Auth + household · #3 Accounts CRUD
   - #4 CSV import · #5 PDF import · #6 Transaction list
   - #7 Category system · #8 Merchant memory · #9 AI categorisation
   - #10 Dashboard charts · #11 Budget management
   - #13 Chat interface (Assistant UI + Vercel AI SDK, streaming, markdown rendering)
+- **In PR / not yet merged:**
+  - **#16** Polish pass — loading skeletons (6 pages), dashboard empty state, mobile table overflow, error logging in queries, type-cast fixes, aria-label on sort headers
 - **Remaining build order items:**
   - **#12** Recurring detection — `is_recurring` column exists; detection logic + UI not built
   - **#14** Chat agent / context injection — chat works but system prompt has no real data
   - **#15** Monthly summary — Claude-generated recap page (Phase 5)
-  - **#16** Polish pass — responsive, dark mode, empty states, search, export (Phase 5)
+- **Polish pass notes (#16):**
+  - ESLint `no-console` rule now explicitly allows `console.error` — query files use it for Supabase errors
+  - All 3 table pages (transactions, budgets, categories) have `overflow-x-auto` wrappers
+  - All 6 async pages have `loading.tsx` skeletons (shadcn Skeleton component)
 - **Deferred Phase 2 refinements (not blocking, nice to have):**
   - `category_source` column on `transactions` — track 'claude' vs 'manual' overrides
   - `is_manual` flag on `merchant_category_map` — so "Re-categorise all" preserves manual overrides

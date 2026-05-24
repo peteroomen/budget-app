@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { getDashboardData } from '@/lib/queries/dashboard'
 import { currentMonth, formatMonthLabel } from '@/lib/utils/month'
 import { MonthSelector } from '@/components/dashboard/MonthSelector'
@@ -21,6 +22,16 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
         <h1 className="text-2xl font-semibold">{formatMonthLabel(month)}</h1>
         <MonthSelector month={month} />
       </div>
+
+      {data.summary.income_cents === 0 && data.summary.spend_cents === 0 && (
+        <div className="rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground">
+          No transactions for {formatMonthLabel(month)}.{' '}
+          <Link href="/import" className="underline underline-offset-4 hover:text-foreground">
+            Import a statement
+          </Link>{' '}
+          to get started.
+        </div>
+      )}
 
       <IncomeVsSpendCards summary={data.summary} />
 

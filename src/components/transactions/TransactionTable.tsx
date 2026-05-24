@@ -38,11 +38,15 @@ function SortHeader({ label, column, currentSort, currentDir, params }: SortHead
   next.set('dir', nextDir)
 
   const indicator = isActive ? (currentDir === 'desc' ? ' ↓' : ' ↑') : ''
+  const ariaLabel = isActive
+    ? `${label}, sorted ${currentDir === 'desc' ? 'descending' : 'ascending'}, click to sort ${currentDir === 'desc' ? 'ascending' : 'descending'}`
+    : `Sort by ${label}`
 
   return (
     <Link
       href={`/transactions?${next.toString()}`}
       className="hover:text-foreground transition-colors"
+      aria-label={ariaLabel}
     >
       {label}
       {indicator}
@@ -80,7 +84,7 @@ export function TransactionTable({
   }
 
   return (
-    <div className="rounded-md border">
+    <div className="overflow-x-auto rounded-md border">
       <Table>
         <TableHeader>
           <TableRow>

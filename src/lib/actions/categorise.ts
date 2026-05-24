@@ -44,7 +44,9 @@ export async function recategoriseAll(): Promise<RecategoriseResult> {
     .in('account_id', accountIds)
     .not('merchant_name', 'is', null)
 
-  const merchantNames = [...new Set((txRows ?? []).map((r) => r.merchant_name as string))]
+  const merchantNames = [
+    ...new Set((txRows ?? []).map((r) => r.merchant_name).filter((n): n is string => n !== null)),
+  ]
   if (merchantNames.length === 0) return { error: null, updated: 0 }
 
   // 3. Clear the existing merchant map so this is a clean AI-only run
