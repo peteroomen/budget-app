@@ -7,12 +7,14 @@ import { prevMonth, nextMonth, formatMonthLabel, currentMonth } from '@/lib/util
 
 interface MonthSelectorProps {
   month: string
+  allowFuture?: boolean
 }
 
-export function MonthSelector({ month }: MonthSelectorProps) {
+export function MonthSelector({ month, allowFuture = false }: MonthSelectorProps) {
   const router = useRouter()
   const now = currentMonth()
   const isCurrentMonth = month === now
+  const nextDisabled = isCurrentMonth && !allowFuture
 
   function navigate(target: string) {
     router.push(`/dashboard?month=${target}`)
@@ -31,7 +33,7 @@ export function MonthSelector({ month }: MonthSelectorProps) {
         variant="outline"
         size="icon"
         onClick={() => navigate(nextMonth(month))}
-        disabled={isCurrentMonth}
+        disabled={nextDisabled}
       >
         <ChevronRight className="h-4 w-4" />
         <span className="sr-only">Next month</span>

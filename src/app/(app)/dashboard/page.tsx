@@ -1,6 +1,7 @@
 import { getDashboardData } from '@/lib/queries/dashboard'
 import { getFixedCostsSummary } from '@/lib/queries/recurring'
 import { currentMonth, formatMonthLabel } from '@/lib/utils/month'
+import { createClient } from '@/lib/supabase/server'
 import { MonthSelector } from '@/components/dashboard/MonthSelector'
 import { IncomeVsSpendCards } from '@/components/dashboard/IncomeVsSpendCards'
 import { SpendByCategoryChart } from '@/components/dashboard/SpendByCategoryChart'
@@ -15,6 +16,12 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
   const { month: monthParam } = await searchParams
   const month = monthParam && /^\d{4}-\d{2}$/.test(monthParam) ? monthParam : currentMonth()
 
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  const isAdmin = user?.app_metadata?.role === 'admin'
+
   const [data, fixedCosts] = await Promise.all([
     getDashboardData(month),
     getFixedCostsSummary(month),
@@ -24,7 +31,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <h1 className="text-2xl font-semibold">{formatMonthLabel(month)}</h1>
-        <MonthSelector month={month} />
+        <MonthSelector month={month} allowFuture={isAdmin} />
       </div>
 
       <IncomeVsSpendCards summary={data.summary} />
