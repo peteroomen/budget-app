@@ -6,6 +6,27 @@ import { upsertMerchantMapping } from '@/lib/actions/merchant-map'
 
 type ActionResult = { error: string | null }
 
+export async function deleteAllTransactions(): Promise<ActionResult> {
+  const supabase = await createClient()
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user) return { error: 'Not authenticated' }
+  if (user.app_metadata?.role !== 'admin') return { error: 'Not authorised' }
+
+  const { data: accounts } = await supabase.from('accounts').select('id')
+  const accountIds = (accounts ?? []).map((a) => a.id as string)
+
+  if (accountIds.length > 0) {
+    const { error } = await supabase.from('transactions').delete().in('account_id', accountIds)
+    if (error) return { error: error.message }
+  }
+
+  revalidatePath('/transactions')
+  return { error: null }
+}
+
 // null categoryId clears the transaction category without touching the merchant map.
 export async function setCategoryOverride(
   transactionId: string,
