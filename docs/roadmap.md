@@ -207,14 +207,15 @@ Example queries:
 
 ## Future / Far Future
 
-| Feature                    | Notes                                                                                                              |
-| -------------------------- | ------------------------------------------------------------------------------------------------------------------ |
-| Direct bank API (Akahu)    | Akahu is the NZ open banking layer. Worth revisiting once PDF import friction is felt. Subscription cost involved. |
-| Push / email notifications | Resend for email. Good for monthly summary delivery.                                                               |
-| Axiom logging              | Only worthwhile if sharing with others or debugging production issues.                                             |
-| Mobile app                 | React Native / Expo once web is solid.                                                                             |
-| OAuth login                | Google/Apple login — useful if sharing with more people.                                                           |
-| Multi-currency support     | Not needed for NZ household.                                                                                       |
+| Feature                    | Notes                                                                                                                                                                                                                                                                                                           |
+| -------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Direct bank API (Akahu)    | Akahu is the NZ open banking layer. Worth revisiting once PDF import friction is felt. Subscription cost involved.                                                                                                                                                                                              |
+| Push / email notifications | Resend for email. Good for monthly summary delivery.                                                                                                                                                                                                                                                            |
+| Axiom logging              | Only worthwhile if sharing with others or debugging production issues.                                                                                                                                                                                                                                          |
+| Mobile app                 | React Native / Expo once web is solid.                                                                                                                                                                                                                                                                          |
+| OAuth login                | Google/Apple login — useful if sharing with more people.                                                                                                                                                                                                                                                        |
+| Multi-currency support     | Not needed for NZ household.                                                                                                                                                                                                                                                                                    |
+| Unit / automated tests     | Overkill for now — worth adding Vitest for parsing and categorisation logic once the core is stable. Key targets: `lib/parsers/` (CSV format detection, normalisation), `lib/categorise.ts` (Claude response parsing), and any pure utility functions. E2E with Playwright if the app grows to have more users. |
 
 ---
 
