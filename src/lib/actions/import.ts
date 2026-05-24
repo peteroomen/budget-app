@@ -185,13 +185,15 @@ export async function importStatement(
     )
     .map((row) => {
       const merchant = normaliseMerchant(row.description)
+      const categoryId = merchantMap.get(merchant) ?? null
       return {
         account_id: accountId,
         date: row.date,
         amount_cents: row.amount_cents,
         description: row.description,
         merchant_name: merchant,
-        category_id: merchantMap.get(merchant) ?? null,
+        category_id: categoryId,
+        category_source: (categoryId ? 'map' : null) as 'claude' | 'map' | null,
         source: (isCsv ? 'csv' : 'pdf') as 'csv' | 'pdf',
       }
     })
@@ -208,7 +210,9 @@ export async function importStatement(
     // Apply AI categories to rows and build new merchant_category_map entries
     for (const row of toInsert) {
       if (row.category_id === null && row.merchant_name) {
-        row.category_id = aiMap.get(row.merchant_name) ?? null
+        const aiCategory = aiMap.get(row.merchant_name) ?? null
+        row.category_id = aiCategory
+        if (aiCategory) row.category_source = 'claude'
       }
     }
 
@@ -217,6 +221,7 @@ export async function importStatement(
         household_id: householdId,
         merchant_name: merchant,
         category_id: categoryId,
+        is_manual: false,
       }))
       await supabase
         .from('merchant_category_map')

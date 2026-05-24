@@ -2,8 +2,8 @@
 
 > Auto-maintained. Update this file after every migration.
 
-**Migration:** `20260522000000_initial_schema.sql`
-**Last updated:** 2026-05-22
+**Migrations:** up to `20260525000001_merchant_map_is_manual.sql`
+**Last updated:** 2026-05-25
 
 ---
 
@@ -61,31 +61,33 @@ Unique constraint: `(household_id, name)`
 
 ### transactions
 
-| Column        | Type        | Notes                                       |
-| ------------- | ----------- | ------------------------------------------- |
-| id            | uuid (PK)   | Default gen_random_uuid()                   |
-| account_id    | uuid        | FK → accounts(id), cascade delete, not null |
-| date          | date        | Not null                                    |
-| amount_cents  | integer     | Not null. Natural sign: income +, expense − |
-| description   | text        | Not null (raw from statement)               |
-| merchant_name | text        | Nullable (normalised)                       |
-| category_id   | uuid        | FK → categories(id), set null on delete     |
-| is_recurring  | boolean     | Default false                               |
-| notes         | text        | Nullable                                    |
-| source        | text        | 'csv' or 'pdf'                              |
-| created_at    | timestamptz | Default now()                               |
-| updated_at    | timestamptz | Auto-updated via trigger                    |
+| Column          | Type        | Notes                                                               |
+| --------------- | ----------- | ------------------------------------------------------------------- |
+| id              | uuid (PK)   | Default gen_random_uuid()                                           |
+| account_id      | uuid        | FK → accounts(id), cascade delete, not null                         |
+| date            | date        | Not null                                                            |
+| amount_cents    | integer     | Not null. Natural sign: income +, expense −                         |
+| description     | text        | Not null (raw from statement)                                       |
+| merchant_name   | text        | Nullable (normalised)                                               |
+| category_id     | uuid        | FK → categories(id), set null on delete                             |
+| category_source | text        | Nullable. 'claude' \| 'manual' \| 'map' — how category was assigned |
+| is_recurring    | boolean     | Default false                                                       |
+| notes           | text        | Nullable                                                            |
+| source          | text        | 'csv' or 'pdf'                                                      |
+| created_at      | timestamptz | Default now()                                                       |
+| updated_at      | timestamptz | Auto-updated via trigger                                            |
 
 ### merchant_category_map
 
-| Column        | Type        | Notes                                         |
-| ------------- | ----------- | --------------------------------------------- |
-| id            | uuid (PK)   | Default gen_random_uuid()                     |
-| household_id  | uuid        | FK → households(id), cascade delete, not null |
-| merchant_name | text        | Not null (normalised)                         |
-| category_id   | uuid        | FK → categories(id), cascade delete, not null |
-| created_at    | timestamptz | Default now()                                 |
-| updated_at    | timestamptz | Auto-updated via trigger                      |
+| Column        | Type        | Notes                                                                                       |
+| ------------- | ----------- | ------------------------------------------------------------------------------------------- |
+| id            | uuid (PK)   | Default gen_random_uuid()                                                                   |
+| household_id  | uuid        | FK → households(id), cascade delete, not null                                               |
+| merchant_name | text        | Not null (normalised)                                                                       |
+| category_id   | uuid        | FK → categories(id), cascade delete, not null                                               |
+| is_manual     | boolean     | Default false. True when set via manual override; prevents recategoriseAll from overwriting |
+| created_at    | timestamptz | Default now()                                                                               |
+| updated_at    | timestamptz | Auto-updated via trigger                                                                    |
 
 Unique constraint: `(household_id, merchant_name)`
 
