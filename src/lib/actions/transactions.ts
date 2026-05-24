@@ -6,11 +6,7 @@ import { upsertMerchantMapping } from '@/lib/actions/merchant-map'
 
 type ActionResult = { error: string | null }
 
-/**
- * Set the category on a transaction and update the merchant map so future imports
- * for the same merchant are pre-categorised.
- * Pass categoryId = null to clear the category (does not affect the merchant map).
- */
+// null categoryId clears the transaction category without touching the merchant map.
 export async function setCategoryOverride(
   transactionId: string,
   merchantName: string | null,

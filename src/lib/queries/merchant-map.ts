@@ -1,11 +1,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase/server'
 
-/**
- * Batch-fetch merchant→category mappings for a household.
- * Returns a Map keyed by normalised merchant_name → category_id.
- * Filters to only the merchant names present in the given list so the query is bounded.
- */
+// Filters to only the provided names so the query is bounded, not a full-table scan.
 export async function getMerchantMappingsForImport(
   supabase: SupabaseClient,
   householdId: string,
@@ -26,11 +22,6 @@ export async function getMerchantMappingsForImport(
   return map
 }
 
-/**
- * Returns the set of all normalised merchant names that have a mapping for
- * the current user's household. Used in the transaction list to show/hide the
- * "forget mapping" button.
- */
 export async function getMappedMerchantNames(): Promise<Set<string>> {
   const supabase = await createClient()
 
