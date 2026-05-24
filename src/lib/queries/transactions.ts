@@ -19,6 +19,7 @@ export interface TransactionRow {
   description: string
   merchant_name: string | null
   category_id: string | null
+  category_source: string | null
   is_recurring: boolean
   notes: string | null
   source: string | null
