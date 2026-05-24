@@ -94,6 +94,7 @@ export function TransactionTable({
                 params={params}
               />
             </TableHead>
+            <TableHead className="w-8 pr-0" />
             <TableHead className="text-muted-foreground font-medium">
               <SortHeader
                 label="Merchant / Description"
@@ -122,18 +123,16 @@ export function TransactionTable({
               <TableCell className="tabular-nums text-muted-foreground whitespace-nowrap">
                 {tx.date}
               </TableCell>
+              <TableCell className="pr-0">
+                <RecurringBadge transactionId={tx.id} isRecurring={tx.is_recurring} />
+              </TableCell>
               <TableCell>
-                <div className="flex items-center gap-1.5">
-                  <div className="min-w-0">
-                    <span className="font-medium">{tx.merchant_name ?? tx.description}</span>
-                    {tx.merchant_name && tx.merchant_name !== tx.description && (
-                      <span className="block text-xs text-muted-foreground truncate max-w-xs">
-                        {tx.description}
-                      </span>
-                    )}
-                  </div>
-                  <RecurringBadge transactionId={tx.id} isRecurring={tx.is_recurring} />
-                </div>
+                <span className="font-medium">{tx.merchant_name ?? tx.description}</span>
+                {tx.merchant_name && tx.merchant_name !== tx.description && (
+                  <span className="block text-xs text-muted-foreground truncate max-w-xs">
+                    {tx.description}
+                  </span>
+                )}
               </TableCell>
               <TableCell>
                 <CategoryCell
