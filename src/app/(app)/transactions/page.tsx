@@ -75,8 +75,10 @@ export default async function TransactionsPage({
             {sp.account || sp.from || sp.to ? ' (filtered)' : ''}
           </p>
         </div>
-        <RecategoriseButton />
-        {isAdmin && <DeleteAllTransactionsButton />}
+        <div className="flex items-center gap-2">
+          <RecategoriseButton />
+          {isAdmin && <DeleteAllTransactionsButton />}
+        </div>
       </div>
 
       <Suspense>
