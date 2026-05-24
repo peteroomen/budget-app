@@ -25,13 +25,13 @@ Merchant memory (item #8) already handles the happy path: known merchants get th
 ## Steps
 
 - [x] Write plan file
-- [ ] `src/lib/categorise.ts` — `categoriseMerchantsWithClaude(names, categories)` → `Map<string, string>`
-- [ ] `src/lib/actions/categorise.ts` — `recategoriseAll()` server action
-- [ ] Update `src/lib/actions/import.ts` — call Claude for unmapped merchants post-import
-- [ ] `src/components/transactions/RecategoriseButton.tsx` — client button with pending state
-- [ ] Update `src/app/(app)/transactions/page.tsx` — render RecategoriseButton in heading area
-- [ ] `pnpm lint` + `pnpm type-check` — fix any errors
-- [ ] Commit + push + open PR
+- [x] `src/lib/categorise.ts` — `categoriseMerchantsWithClaude(names, categories)` → `Map<string, string>`
+- [x] `src/lib/actions/categorise.ts` — `recategoriseAll()` server action
+- [x] Update `src/lib/actions/import.ts` — call Claude for unmapped merchants post-import
+- [x] `src/components/transactions/RecategoriseButton.tsx` — client button with pending state
+- [x] Update `src/app/(app)/transactions/page.tsx` — render RecategoriseButton in heading area
+- [x] `pnpm lint` + `pnpm type-check` — fix any errors
+- [x] Commit + push + open PR
 
 ## Manual test steps
 

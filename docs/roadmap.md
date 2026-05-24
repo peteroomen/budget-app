@@ -116,6 +116,14 @@ uploads
 - [ ] `setCategoryOverride` sets `'manual'`; AI categorisation sets `'claude'`
 - [ ] Transaction list: small pencil icon next to category name when `category_source = 'manual'` — no icon for Claude-assigned, nothing for uncategorised
 
+### Locked merchant mappings (refinement — manual overrides survive re-categorise)
+
+> **Current behaviour:** Manual overrides via the category dropdown update `merchant_category_map` and stick for future imports. But "Re-categorise all" wipes the whole map and reruns Claude, overwriting manual choices.
+>
+> **Proposed fix:** Add `is_manual boolean default false` to `merchant_category_map`. `setCategoryOverride` sets `is_manual = true`; `recategoriseAll` skips rows where `is_manual = true` so locked mappings are preserved. A "reset to AI" option per merchant would clear the flag.
+>
+> Migration: `ALTER TABLE merchant_category_map ADD COLUMN is_manual boolean NOT NULL DEFAULT false;`
+
 **Deliverable:** Import statement, ~90%+ of transactions categorised instantly from memory, unknowns handled by Claude. Corrections stick.
 
 ---
