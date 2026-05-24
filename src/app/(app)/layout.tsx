@@ -24,8 +24,8 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   }
 
   return (
-    <div className="flex min-h-screen">
-      <aside className="hidden w-60 flex-col border-r bg-muted/40 md:flex">
+    <div className="flex h-screen overflow-hidden">
+      <aside className="hidden w-60 flex-col overflow-y-auto border-r bg-muted/40 md:flex">
         <div className="px-6 py-5">
           <span className="text-lg font-semibold tracking-tight">Budget App</span>
         </div>
@@ -39,12 +39,12 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         </nav>
       </aside>
 
-      <div className="flex flex-1 flex-col">
-        <header className="flex h-14 items-center justify-between border-b px-6">
+      <div className="flex flex-1 flex-col overflow-hidden">
+        <header className="flex h-14 shrink-0 items-center justify-between border-b px-6">
           <span className="text-sm text-muted-foreground">{profile.email}</span>
           <SignOutButton />
         </header>
-        <main className="flex-1 p-6">{children}</main>
+        <main className="flex flex-1 flex-col overflow-y-auto p-6">{children}</main>
       </div>
     </div>
   )
