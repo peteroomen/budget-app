@@ -39,7 +39,7 @@ budget-app/
 │   │   ├── (auth)/                 # Auth route group (login)
 │   │   │   └── login/page.tsx
 │   │   ├── (app)/                  # Protected route group
-│   │   │   ├── layout.tsx          # App shell (sidebar, header)
+│   │   │   ├── layout.tsx          # App shell — h-screen/overflow-hidden for chat layout
 │   │   │   ├── dashboard/page.tsx
 │   │   │   ├── transactions/page.tsx
 │   │   │   ├── budgets/page.tsx
@@ -47,50 +47,64 @@ budget-app/
 │   │   │   ├── categories/page.tsx
 │   │   │   └── chat/page.tsx
 │   │   ├── api/
-│   │   │   ├── chat/route.ts       # Vercel AI SDK streaming endpoint
-│   │   │   ├── import/route.ts     # CSV/PDF upload + parse
-│   │   │   └── categorise/route.ts # Batch Claude categorisation
+│   │   │   └── chat/route.ts       # Vercel AI SDK streaming (streamText + Anthropic)
+│   │   ├── auth/                   # Supabase auth callbacks (callback, confirm, set-password)
 │   │   └── layout.tsx              # Root layout
 │   ├── components/
-│   │   ├── ui/                     # shadcn/ui components (auto-generated)
-│   │   ├── transactions/           # Transaction list, filters, inline edit
-│   │   ├── dashboard/              # Chart components, budget bars
-│   │   ├── import/                 # Upload UI, progress, mapping step
-│   │   └── chat/                   # Assistant UI wrappers
+│   │   ├── ui/                     # shadcn/ui components (auto-generated, copy-owned)
+│   │   ├── accounts/               # AccountCard, AddAccountDialog
+│   │   ├── auth/                   # LoginForm, SignOutButton
+│   │   ├── budgets/                # BudgetProgressBar, MonthPicker, OverBudgetCards, SetBudgetDialog
+│   │   ├── categories/             # AddCategoryDialog, ColorPicker, DeleteCategoryButton, EditCategoryDialog
+│   │   ├── chat/                   # Thread.tsx (assistant-ui primitives), ChatPanel.tsx (runtime + clear)
+│   │   ├── dashboard/              # IncomeVsSpendCards, MonthSelector, SpendByCategoryChart, TopMerchantsTable
+│   │   ├── import/                 # ImportForm
+│   │   ├── nav/                    # NavLink
+│   │   └── transactions/           # CategoryCell, DeleteAllTransactionsButton, RecategoriseButton, TransactionFilters, TransactionTable
 │   ├── lib/
 │   │   ├── supabase/
 │   │   │   ├── client.ts           # Browser Supabase client
 │   │   │   ├── server.ts           # Server Supabase client (cookies)
 │   │   │   └── middleware.ts       # Auth middleware
-│   │   ├── actions/                # Next.js server actions
-│   │   │   └── auth.ts
-│   │   ├── queries/                # DB query helpers (server-only)
-│   │   │   └── profile.ts
-│   │   ├── ai/
-│   │   │   ├── categorise.ts       # Batch categorisation logic
-│   │   │   ├── parse-pdf.ts        # pdfjs extract + Claude parse
-│   │   │   └── chat-context.ts     # Build context payload for chat
+│   │   ├── actions/                # Next.js server actions (all DB writes go through here)
+│   │   │   ├── auth.ts
+│   │   │   ├── accounts.ts
+│   │   │   ├── budgets.ts          # upsertBudget
+│   │   │   ├── categories.ts
+│   │   │   ├── categorise.ts       # recategoriseAll (server action wrapper)
+│   │   │   ├── import.ts           # CSV/PDF upload → parse → categorise pipeline
+│   │   │   ├── merchant-map.ts     # setCategoryOverride, forgetMapping
+│   │   │   └── transactions.ts     # deleteAllTransactions
+│   │   ├── queries/                # DB query helpers — server-only, never import from client components
+│   │   │   ├── accounts.ts
+│   │   │   ├── budgets.ts          # getBudgetsWithActuals
+│   │   │   ├── categories.ts
+│   │   │   ├── dashboard.ts        # getDashboardData (aggregations for charts)
+│   │   │   ├── merchant-map.ts
+│   │   │   ├── profile.ts
+│   │   │   └── transactions.ts
 │   │   ├── parsers/
-│   │   │   ├── csv.ts              # papaparse + normalise
+│   │   │   ├── bank-formats.ts     # ANZ/ASB/Westpac/BNZ column mappings
+│   │   │   ├── csv.ts              # papaparse + format detection + normalise
 │   │   │   └── normalise.ts        # Shared normalisation (amounts, dates, merchants)
-│   │   └── utils.ts
+│   │   ├── categorise.ts           # Batch Claude categorisation logic (called from import pipeline)
+│   │   ├── utils.ts
+│   │   └── utils/
+│   │       └── month.ts            # Pure date helpers: prevMonth, nextMonth, formatMonthLabel, monthDateRange
 │   └── types/
-│       └── index.ts                # Shared TypeScript types (Transaction, Category, etc.)
+│       └── index.ts                # Shared TypeScript types (Transaction, Category, Budget, etc.)
 ├── supabase/
-│   └── migrations/             # SQL migration files (tracked in git)
+│   └── migrations/             # SQL migration files (source of truth for schema)
+├── test-data/                  # Sample ANZ CSV files for manual import testing
+├── docs/                       # Obsidian vault — roadmap, ADRs, schema, session work logs
 ├── .husky/
-│   ├── pre-commit              # Runs lint-staged
-│   └── commit-msg              # (optional) Conventional commit check
-├── .github/
-│   └── workflows/              # GitHub Actions (add later)
+│   └── pre-commit              # Runs lint-staged (eslint --fix + prettier --write)
 ├── .env.local                  # Local secrets (gitignored)
 ├── .env.example                # Template — committed to repo
 ├── eslint.config.mjs
-├── .prettierrc
-├── next.config.ts
 ├── tailwind.config.ts
 ├── tsconfig.json
-└── package.json                # lint-staged config is inline here
+└── package.json                # Dependencies + lint-staged config
 ```
 
 ---
