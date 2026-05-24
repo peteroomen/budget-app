@@ -60,41 +60,50 @@ export async function getChatContext(month: string): Promise<ChatContext | null>
   const trendStart = firstDayOfMonth(trendMonths[0]!)
   const trendEnd = firstDayOfMonth(month) // exclusive
 
-  const [householdResult, txResult, budgetsResult, trendTxResult, recurringResult] =
-    await Promise.all([
-      supabase.from('households').select('name').eq('id', profile.household_id).single(),
+  const [
+    householdResult,
+    txResult,
+    budgetsResult,
+    trendTxResult,
+    recurringResult,
+    categoriesResult,
+  ] = await Promise.all([
+    supabase.from('households').select('name').eq('id', profile.household_id).single(),
 
-      // Current month transactions (expenses + income)
-      supabase
-        .from('transactions')
-        .select('date, amount_cents, merchant_name, description, category:categories(name)')
-        .gte('date', dateFrom)
-        .lte('date', dateTo)
-        .order('date', { ascending: false }),
+    // Current month transactions (expenses + income)
+    supabase
+      .from('transactions')
+      .select('date, amount_cents, merchant_name, description, category:categories(name)')
+      .gte('date', dateFrom)
+      .lte('date', dateTo)
+      .order('date', { ascending: false }),
 
-      // Budgets for current month
-      supabase
-        .from('budgets')
-        .select('category_id, amount_cents, category:categories(name)')
-        .eq('month', month),
+    // Budgets for current month
+    supabase
+      .from('budgets')
+      .select('category_id, amount_cents, category:categories(name)')
+      .eq('month', month),
 
-      // Trend: last 3 months of expense transactions
-      supabase
-        .from('transactions')
-        .select('date, amount_cents, category:categories(name)')
-        .gte('date', trendStart)
-        .lt('date', trendEnd)
-        .lt('amount_cents', 0),
+    // Trend: last 3 months of expense transactions
+    supabase
+      .from('transactions')
+      .select('date, amount_cents, category:categories(name)')
+      .gte('date', trendStart)
+      .lt('date', trendEnd)
+      .lt('amount_cents', 0),
 
-      // Recurring transactions this month
-      supabase
-        .from('transactions')
-        .select('merchant_name, description, amount_cents')
-        .gte('date', dateFrom)
-        .lte('date', dateTo)
-        .eq('is_recurring', true)
-        .lt('amount_cents', 0),
-    ])
+    // Recurring transactions this month
+    supabase
+      .from('transactions')
+      .select('merchant_name, description, amount_cents')
+      .gte('date', dateFrom)
+      .lte('date', dateTo)
+      .eq('is_recurring', true)
+      .lt('amount_cents', 0),
+
+    // All categories — so Claude knows every category even with $0 activity
+    supabase.from('categories').select('name').order('name', { ascending: true }),
+  ])
 
   const householdName = householdResult.data?.name ?? 'Household'
 
@@ -114,40 +123,37 @@ export async function getChatContext(month: string): Promise<ChatContext | null>
     amount_cents: t.amount_cents,
   }))
 
-  // Budget vs actual
+  // Budget vs actual — seed from all known categories so $0-activity ones are included
+  const allCategoryNames: string[] = (categoriesResult.data ?? []).map(
+    (c: { name: string }) => c.name
+  )
+
+  const actualMap = new Map<string, number>()
+  for (const t of rawTx) {
+    if (t.amount_cents >= 0) continue
+    const name = t.category?.name ?? 'Uncategorised'
+    actualMap.set(name, (actualMap.get(name) ?? 0) + Math.abs(t.amount_cents))
+  }
+
   type RawBudget = {
     category_id: string
     amount_cents: number
     category: { name: string } | null
   }
   const rawBudgets = (budgetsResult.data ?? []) as unknown as RawBudget[]
-
-  // Compute actuals from current month expense transactions
-  const actualMap = new Map<string, { name: string; cents: number }>()
-  for (const t of rawTx) {
-    if (t.amount_cents >= 0) continue
-    const name = t.category?.name ?? 'Uncategorised'
-    const existing = actualMap.get(name)
-    if (existing) {
-      existing.cents += Math.abs(t.amount_cents)
-    } else {
-      actualMap.set(name, { name, cents: Math.abs(t.amount_cents) })
-    }
-  }
-
-  // Merge budget rows with actuals; include categories with spend but no budget
   const budgetMap = new Map<string, number>()
   for (const b of rawBudgets) {
     const name = b.category?.name
     if (name) budgetMap.set(name, b.amount_cents)
   }
 
-  const allCategories = new Set([...budgetMap.keys(), ...actualMap.keys()])
-  const budgetsVsActual = Array.from(allCategories)
+  // Union of all categories: seeded list + any with spend or budget not in the list
+  const categorySet = new Set([...allCategoryNames, ...budgetMap.keys(), ...actualMap.keys()])
+  const budgetsVsActual = Array.from(categorySet)
     .map((cat) => ({
       category: cat,
       budget_cents: budgetMap.get(cat) ?? null,
-      actual_cents: actualMap.get(cat)?.cents ?? 0,
+      actual_cents: actualMap.get(cat) ?? 0,
     }))
     .sort((a, b) => b.actual_cents - a.actual_cents)
 
@@ -186,7 +192,6 @@ export async function getChatContext(month: string): Promise<ChatContext | null>
     amount_cents: number
   }
   const rawRecurring = (recurringResult.data ?? []) as unknown as RawRecurring[]
-  // Deduplicate by merchant name
   const recurringMap = new Map<string, number>()
   for (const r of rawRecurring) {
     const key = r.merchant_name ?? r.description
@@ -234,16 +239,12 @@ export function formatChatContext(ctx: ChatContext): string {
   }
   lines.push('')
 
-  // Budget vs actual
+  // Budget vs actual — all categories, sorted by spend descending
   lines.push(`## Budget vs Actual (${monthLabel})`)
-  const budgetedRows = ctx.budgetsVsActual.filter(
-    (r) => r.budget_cents !== null || r.actual_cents > 0
-  )
-  if (budgetedRows.length === 0) {
-    lines.push('No budgets set.')
+  if (ctx.budgetsVsActual.length === 0) {
+    lines.push('No categories found.')
   } else {
-    for (const r of budgetedRows) {
-      const budget = r.budget_cents !== null ? centsToNZD(r.budget_cents) : 'no budget'
+    for (const r of ctx.budgetsVsActual) {
       const actual = centsToNZD(r.actual_cents)
       if (r.budget_cents !== null) {
         const remaining = r.budget_cents - r.actual_cents
@@ -251,9 +252,13 @@ export function formatChatContext(ctx: ChatContext): string {
           remaining < 0
             ? `OVER by ${centsToNZD(Math.abs(remaining))}`
             : `${centsToNZD(remaining)} remaining`
-        lines.push(`${r.category}: budget ${budget} | spent ${actual} | ${status}`)
-      } else {
+        lines.push(
+          `${r.category}: budget ${centsToNZD(r.budget_cents)} | spent ${actual} | ${status}`
+        )
+      } else if (r.actual_cents > 0) {
         lines.push(`${r.category}: spent ${actual} (no budget set)`)
+      } else {
+        lines.push(`${r.category}: $0 spent, no budget`)
       }
     }
   }
