@@ -48,20 +48,48 @@ Auto-detect recurring transactions by merchant pattern, add a manual flag toggle
 
 ## Manual test steps
 
-Happy path:
+**Test data:** use the three files in `test-data/` — import all three to the same account (create a checking account first if needed):
 
-- [ ] Import transactions spanning 2+ months with the same merchant (e.g. a subscription). Click "Detect recurring" on the transactions page → confirm those transactions show the recurring icon highlighted.
-- [ ] Click the recurring icon on a non-recurring transaction → confirm it turns blue (is_recurring toggled on).
-- [ ] Click it again → confirm it turns off.
-- [ ] Navigate to the dashboard → confirm the "Fixed Costs" card shows the correct monthly recurring total and merchant count.
-- [ ] Switch month on dashboard → confirm Fixed Costs updates to that month's recurring total.
+1. `test-data/anz-may-2026.csv`
+2. `test-data/anz-june-2026.csv`
+3. `test-data/anz-july-2026.csv`
 
-Edge cases:
+> `anz-sample.csv` also exists but overlaps with May dates — skip it for this test.
 
-- [ ] Merchant appears in only 1 month → not flagged as recurring after detection.
-- [ ] Merchant appears in 2+ months but amounts vary >10% → not flagged.
-- [ ] Month with no recurring transactions → Fixed Costs card shows $0.00 / 0 merchants.
-- [ ] After detection, manually toggle a non-detected transaction to recurring → it should appear in Fixed Costs.
+---
+
+### Happy path
+
+- [ ] Import all three CSVs above to the same account via `/import`
+- [ ] Navigate to `/transactions` → click **"Detect recurring"**
+- [ ] Confirm exactly these **10 merchants** have a blue recurring icon on their rows:
+  - NETFLIX ($22.99 — identical across all months)
+  - SPOTIFY ($11.99 — identical)
+  - DISNEY PLUS ($15.99 — identical)
+  - ANZ HOMELOAN ($1,250.00 — identical)
+  - ELC PAPAKURA ($620.00 — identical)
+  - IAG INSURANCE ($185.00 — identical)
+  - VODAFONE NZ ($79.00 — identical)
+  - GENESIS ENERGY ($143/138.50/151 — 8.3% spread, within 10%)
+  - Z ENERGY TAKANINI ($95/91/96 — 5.2% spread)
+  - BP TAKANINI ($88/85.50/92 — 7.1% spread)
+- [ ] Navigate to `/dashboard` → set month to **July 2026** → Fixed Costs card should show **$2,523.97** / 10 recurring merchants
+- [ ] Switch to **June 2026** → Fixed Costs card should show **$2,499.97** / 10 recurring merchants
+- [ ] Switch to **May 2026** → Fixed Costs card should show **$2,510.97** / 10 recurring merchants
+
+### Manual toggle
+
+- [ ] Find a HELL PIZZA PAPAKURA row (should have a faded icon — not recurring) → click its icon → confirm it turns blue
+- [ ] Dashboard → May 2026 → Fixed Costs should now show **$2,552.97** (added $42.00) / 11 merchants
+- [ ] Click the HELL PIZZA icon again → confirm it reverts to faded
+- [ ] Dashboard → May 2026 → Fixed Costs should drop back to $2,510.97 / 10 merchants
+
+### Edge cases
+
+- [ ] **Single month only:** AMAZON PRIME ($8.99) appears only in May → icon should be faded after detection (not flagged — only one month)
+- [ ] **Amounts >10% apart:** PAKNSAVE PAPAKURA normalises to the same name across all three months (card numbers stripped) with amounts $112.87/$104.62/$119.40 — that's a 12.4% spread → should NOT be flagged
+- [ ] **Just over 10%:** DOMINO'S PIZZA PAPAKURA appears in June ($31.90) and July ($35.90) — 11.1% spread → should NOT be flagged
+- [ ] **Empty month:** navigate to a month with no imported data (e.g. April 2026) → Fixed Costs card shows $0.00 / "No recurring transactions detected"
 
 ## Out of scope for this session
 
