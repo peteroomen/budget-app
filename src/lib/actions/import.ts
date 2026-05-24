@@ -7,6 +7,8 @@ import { createClient } from '@/lib/supabase/server'
 import { parseCsv } from '@/lib/parsers/csv'
 import { normaliseMerchant } from '@/lib/parsers/normalise'
 import { getMerchantMappingsForImport } from '@/lib/queries/merchant-map'
+import { getCategories } from '@/lib/queries/categories'
+import { categoriseMerchantsWithClaude } from '@/lib/categorise'
 
 export type ImportResult = {
   error: string | null
@@ -175,11 +177,8 @@ export async function importStatement(
 
   const normalisedNames = result.rows.map((row) => normaliseMerchant(row.description))
   const uniqueNames = [...new Set(normalisedNames)]
-  const merchantMap = await getMerchantMappingsForImport(
-    supabase,
-    account.household_id as string,
-    uniqueNames
-  )
+  const householdId = account.household_id as string
+  const merchantMap = await getMerchantMappingsForImport(supabase, householdId, uniqueNames)
 
   const toInsert = result.rows
     .filter(
@@ -197,6 +196,34 @@ export async function importStatement(
         source: (isCsv ? 'csv' : 'pdf') as 'csv' | 'pdf',
       }
     })
+
+  // Call Claude to categorise merchants not found in the map
+  const unmappedNames = [
+    ...new Set(toInsert.filter((r) => r.category_id === null).map((r) => r.merchant_name)),
+  ]
+
+  if (unmappedNames.length > 0) {
+    const categories = await getCategories()
+    const aiMap = await categoriseMerchantsWithClaude(unmappedNames, categories)
+
+    // Apply AI categories to rows and build new merchant_category_map entries
+    for (const row of toInsert) {
+      if (row.category_id === null && row.merchant_name) {
+        row.category_id = aiMap.get(row.merchant_name) ?? null
+      }
+    }
+
+    if (aiMap.size > 0) {
+      const mapRows = [...aiMap.entries()].map(([merchant, categoryId]) => ({
+        household_id: householdId,
+        merchant_name: merchant,
+        category_id: categoryId,
+      }))
+      await supabase
+        .from('merchant_category_map')
+        .upsert(mapRows, { onConflict: 'household_id,merchant_name' })
+    }
+  }
 
   const duplicates = result.rows.length - toInsert.length
 
