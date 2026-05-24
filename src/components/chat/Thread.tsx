@@ -8,6 +8,7 @@ import {
 } from '@assistant-ui/react'
 import { MarkdownTextPrimitive } from '@assistant-ui/react-markdown'
 import { ArrowUpIcon } from 'lucide-react'
+import remarkGfm from 'remark-gfm'
 import { cn } from '@/lib/utils'
 
 export function Thread() {
@@ -58,7 +59,10 @@ function AssistantMessage() {
 
 function AssistantText() {
   return (
-    <MarkdownTextPrimitive className="prose prose-sm prose-neutral max-w-none dark:prose-invert [&_pre]:overflow-x-auto [&_code]:text-xs" />
+    <MarkdownTextPrimitive
+      remarkPlugins={[remarkGfm]}
+      className="prose prose-sm prose-neutral max-w-none dark:prose-invert [&_pre]:overflow-x-auto [&_code]:text-xs"
+    />
   )
 }
 
