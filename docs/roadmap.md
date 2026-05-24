@@ -111,6 +111,12 @@ uploads
 - [ ] Inline category override in transaction list
 - [ ] "Re-categorise all" button (clears map and reruns — useful if categories change)
 
+### Category source indicator (refinement — build after auto-categorisation)
+
+- [ ] Add `category_source` column to `transactions` — `'claude' | 'manual'`, nullable (uncategorised)
+- [ ] `setCategoryOverride` sets `'manual'`; AI categorisation sets `'claude'`
+- [ ] Transaction list: small pencil icon next to category name when `category_source = 'manual'` — no icon for Claude-assigned, nothing for uncategorised
+
 **Deliverable:** Import statement, ~90%+ of transactions categorised instantly from memory, unknowns handled by Claude. Corrections stick.
 
 ---

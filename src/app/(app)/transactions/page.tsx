@@ -1,8 +1,12 @@
 import { Suspense } from 'react'
 import { getAccounts } from '@/lib/queries/accounts'
 import { getTransactions, type TransactionSortBy, type SortDir } from '@/lib/queries/transactions'
+import { getCategories } from '@/lib/queries/categories'
+import { getMappedMerchantNames } from '@/lib/queries/merchant-map'
+import { createClient } from '@/lib/supabase/server'
 import { TransactionFilters } from '@/components/transactions/TransactionFilters'
 import { TransactionTable } from '@/components/transactions/TransactionTable'
+import { DeleteAllTransactionsButton } from '@/components/transactions/DeleteAllTransactionsButton'
 
 const VALID_SORT_COLS: TransactionSortBy[] = ['date', 'amount_cents', 'merchant_name']
 const VALID_DIRS: SortDir[] = ['asc', 'desc']
@@ -34,7 +38,13 @@ export default async function TransactionsPage({
   const sortBy = parseSortBy(sp.sort)
   const sortDir = parseSortDir(sp.dir)
 
-  const [accounts, transactions] = await Promise.all([
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  const isAdmin = user?.app_metadata?.role === 'admin'
+
+  const [accounts, transactions, categories, mappedMerchants] = await Promise.all([
     getAccounts(),
     getTransactions({
       ...(sp.account ? { accountId: sp.account } : {}),
@@ -43,6 +53,8 @@ export default async function TransactionsPage({
       sortBy,
       sortDir,
     }),
+    getCategories(),
+    getMappedMerchantNames(),
   ])
 
   const urlParams = new URLSearchParams()
@@ -54,19 +66,29 @@ export default async function TransactionsPage({
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold">Transactions</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          {transactions.length} transaction{transactions.length !== 1 ? 's' : ''}
-          {sp.account || sp.from || sp.to ? ' (filtered)' : ''}
-        </p>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-semibold">Transactions</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {transactions.length} transaction{transactions.length !== 1 ? 's' : ''}
+            {sp.account || sp.from || sp.to ? ' (filtered)' : ''}
+          </p>
+        </div>
+        {isAdmin && <DeleteAllTransactionsButton />}
       </div>
 
       <Suspense>
         <TransactionFilters accounts={accounts} />
       </Suspense>
 
-      <TransactionTable rows={transactions} sortBy={sortBy} sortDir={sortDir} params={urlParams} />
+      <TransactionTable
+        rows={transactions}
+        sortBy={sortBy}
+        sortDir={sortDir}
+        params={urlParams}
+        categories={categories}
+        mappedMerchants={mappedMerchants}
+      />
     </div>
   )
 }

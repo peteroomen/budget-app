@@ -8,6 +8,8 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import type { TransactionRow, TransactionSortBy, SortDir } from '@/lib/queries/transactions'
+import type { Category } from '@/types'
+import { CategoryCell } from './CategoryCell'
 
 const nzd = new Intl.NumberFormat('en-NZ', {
   style: 'currency',
@@ -53,9 +55,18 @@ interface Props {
   sortBy: TransactionSortBy
   sortDir: SortDir
   params: URLSearchParams
+  categories: Category[]
+  mappedMerchants: Set<string>
 }
 
-export function TransactionTable({ rows, sortBy, sortDir, params }: Props) {
+export function TransactionTable({
+  rows,
+  sortBy,
+  sortDir,
+  params,
+  categories,
+  mappedMerchants,
+}: Props) {
   if (rows.length === 0) {
     return (
       <p className="text-sm text-muted-foreground py-8 text-center">
@@ -118,8 +129,16 @@ export function TransactionTable({ rows, sortBy, sortDir, params }: Props) {
                   </span>
                 )}
               </TableCell>
-              <TableCell className="text-sm text-muted-foreground">
-                {tx.category?.name ?? 'Uncategorised'}
+              <TableCell>
+                <CategoryCell
+                  transactionId={tx.id}
+                  merchantName={tx.merchant_name}
+                  categoryId={tx.category_id}
+                  hasMerchantMapping={
+                    tx.merchant_name !== null && mappedMerchants.has(tx.merchant_name)
+                  }
+                  categories={categories}
+                />
               </TableCell>
               <TableCell className="text-sm text-muted-foreground">
                 {tx.account?.name ?? '—'}
