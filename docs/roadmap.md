@@ -197,6 +197,20 @@ Example queries:
 
 **Deliverable:** Natural conversation about your finances without opening a spreadsheet.
 
+### Chat v2 — Future Enhancements (deferred — revisit with requirements)
+
+The chat interface is v1. Before building any of these, sit down and properly define what a great chat experience looks like for this household. Ideas captured so far:
+
+- **Conversation hint chips** — suggested prompts shown below the input to help users discover what to ask
+- **Historical data access** — current context only injects the current month; the agent needs a way to look up any month (or all-time summaries) to answer trend questions, year-to-date totals, or "how does this compare to six months ago?". Tool calls are probably the right mechanism — let Claude request the data it needs rather than injecting everything upfront
+- **Tool calls** — live DB queries per message instead of a static context block
+- **Rich responses** — inline charts and trend graphs rendered inside the chat thread
+- **Summary cards** — structured cards for balances, budget snapshots, recurring costs
+- **Write actions** — Claude adjusts budgets, recategorises transactions, or flags recurring items on request (with confirmation)
+- **Account balances** — include current balances in context (requires balance tracking)
+
+> Treat this whole section as a backlog to be shaped, not a build list.
+
 ---
 
 ## Phase 5: Polish & Quality of Life
