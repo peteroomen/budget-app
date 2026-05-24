@@ -196,6 +196,7 @@ Example queries:
 - [ ] Mobile-responsive polish pass
 - [ ] Dark mode (trivial with shadcn)
 - [ ] Persisted chat history (optional upgrade — store threads in Supabase)
+- [ ] Budget page month picker enhancement — replace prev/next buttons with a richer selector: click the month label to open a shadcn Popover with a year + month grid so users can jump directly to any month rather than stepping one at a time
 
 ---
 
