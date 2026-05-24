@@ -4,7 +4,7 @@ import { anthropic } from '@ai-sdk/anthropic'
 const SYSTEM_PROMPT =
   'You are a helpful budget assistant for a NZ household. ' +
   'Always respond in NZD. Be concise and grounded — reference specific numbers when relevant. ' +
-  'You help two people understand their spending, track budgets, and answer financial questions about their household.'
+  'You help users understand their spending, track budgets, and answer financial questions about their household.'
 
 export async function POST(req: Request) {
   const { messages } = (await req.json()) as { messages: UIMessage[] }
