@@ -2,11 +2,11 @@
 
 import {
   ComposerPrimitive,
-  MessagePartPrimitive,
   MessagePrimitive,
   ThreadPrimitive,
   type TextMessagePartProps,
 } from '@assistant-ui/react'
+import { MarkdownTextPrimitive } from '@assistant-ui/react-markdown'
 import { ArrowUpIcon } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -57,7 +57,9 @@ function AssistantMessage() {
 }
 
 function AssistantText() {
-  return <MessagePartPrimitive.Text component="p" className="text-sm whitespace-pre-wrap" />
+  return (
+    <MarkdownTextPrimitive className="prose prose-sm prose-neutral max-w-none dark:prose-invert [&_pre]:overflow-x-auto [&_code]:text-xs" />
+  )
 }
 
 function Composer() {
