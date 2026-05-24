@@ -37,8 +37,25 @@ Admin-only "Delete all transactions" button on the transactions page for wiping 
 - Deleting uploads, accounts, or merchant map
 - Non-admin visibility
 
+## What actually happened
+
+- `deleteAllTransactions()` added to existing `src/lib/actions/transactions.ts` — checks `user.app_metadata.role === 'admin'` from Supabase Auth JWT, fetches account IDs (RLS-scoped), deletes all transactions in one `.in()` call
+- `DeleteAllTransactionsButton` uses `useTransition` for pending state; Dialog shows "Deleting…" on the confirm button while in-flight
+- Admin check is server-side in the page — button is not rendered in the DOM at all for non-admin users (not just hidden)
+- app_metadata set manually in Supabase dashboard by Peter (one-time, no migration)
+
+## Files created / modified
+
+- `src/lib/actions/transactions.ts` — added `deleteAllTransactions()`
+- `src/components/transactions/DeleteAllTransactionsButton.tsx` — new confirm dialog component
+- `src/app/(app)/transactions/page.tsx` — admin check + conditional button render
+
+## Deferred to next session
+
+Nothing.
+
 ## Status
 
 - [ ] In progress
-- [ ] Complete
+- [x] Complete
 - [ ] Partial — see deferred
