@@ -1,23 +1,17 @@
 import Anthropic from '@anthropic-ai/sdk'
 import type { Category } from '@/types'
 
-type RawResult = { merchant: string; category: string }
+type RawResult = { index: number; category: string }
 
 function isRawResult(val: unknown): val is RawResult {
   return (
     typeof val === 'object' &&
     val !== null &&
-    typeof (val as RawResult).merchant === 'string' &&
+    typeof (val as RawResult).index === 'number' &&
     typeof (val as RawResult).category === 'string'
   )
 }
 
-/**
- * Calls Claude to categorise a list of normalised merchant names.
- * Returns a map of merchant_name → category_id for all merchants Claude
- * could confidently assign. Merchants Claude couldn't classify are omitted
- * (caller should treat them as uncategorised).
- */
 export async function categoriseMerchantsWithClaude(
   merchantNames: string[],
   categories: Category[]
@@ -25,7 +19,10 @@ export async function categoriseMerchantsWithClaude(
   if (merchantNames.length === 0) return new Map()
 
   const categoryNames = categories.map((c) => c.name).join('\n- ')
-  const nameIndex = new Map(categories.map((c) => [c.name.toLowerCase(), c.id]))
+  const categoryIdByName = new Map(categories.map((c) => [c.name.toLowerCase(), c.id]))
+
+  // Use numeric indices so Claude can't mangle the merchant name when echoing it back.
+  const indexedList = merchantNames.map((name, i) => `${i}: ${name}`).join('\n')
 
   const client = new Anthropic()
   const response = await client.messages.create({
@@ -34,23 +31,28 @@ export async function categoriseMerchantsWithClaude(
     messages: [
       {
         role: 'user',
-        content: `You are a NZ household budget categoriser. Assign each bank statement merchant name to the best matching category from the list below.
+        content: `You are a NZ household budget categoriser. Assign each numbered merchant to the best matching category.
 
 Categories (use these names exactly):
 - ${categoryNames}
 
 Rules:
-- Return exactly one category per merchant, chosen from the list above
+- Return exactly one category per merchant
 - If a merchant is clearly income (salary, wages, government payment, tax refund, IRD credit), use "Income"
 - If genuinely unsure, use "Other"
-- Return ONLY a compact JSON array — no markdown, no code blocks, no explanation
+- Return ONLY a compact JSON array using the merchant's index number — no markdown, no explanation
 
 NZ examples:
-Input: ["COUNTDOWN", "PAKNSAVE", "KFC", "BP 2GO", "SPARK NZ", "NETFLIX", "VIVID WAGES", "IRD TAXCREDIT", "THE WAREHOUSE"]
-Output: [{"merchant":"COUNTDOWN","category":"Groceries"},{"merchant":"PAKNSAVE","category":"Groceries"},{"merchant":"KFC","category":"Takeaways"},{"merchant":"BP 2GO","category":"Fuel"},{"merchant":"SPARK NZ","category":"Utilities"},{"merchant":"NETFLIX","category":"Subscriptions"},{"merchant":"VIVID WAGES","category":"Income"},{"merchant":"IRD TAXCREDIT","category":"Income"},{"merchant":"THE WAREHOUSE","category":"Shopping"}]
+Merchants:
+0: COUNTDOWN
+1: KFC
+2: BP 2GO
+3: SPARK NZ
+4: VIVID WAGES
+Output: [{"index":0,"category":"Groceries"},{"index":1,"category":"Takeaways"},{"index":2,"category":"Fuel"},{"index":3,"category":"Utilities"},{"index":4,"category":"Income"}]
 
-Merchants to categorise:
-${JSON.stringify(merchantNames)}`,
+Merchants:
+${indexedList}`,
       },
     ],
   })
@@ -78,9 +80,11 @@ ${JSON.stringify(merchantNames)}`,
   const result = new Map<string, string>()
   for (const item of parsed) {
     if (!isRawResult(item)) continue
-    const categoryId = nameIndex.get(item.category.toLowerCase())
+    const merchantName = merchantNames[item.index]
+    if (!merchantName) continue
+    const categoryId = categoryIdByName.get(item.category.toLowerCase())
     if (categoryId) {
-      result.set(item.merchant, categoryId)
+      result.set(merchantName, categoryId)
     }
   }
 
