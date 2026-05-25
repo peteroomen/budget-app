@@ -18,7 +18,7 @@
 | Charts          | shadcn Charts (Recharts)             | Already in the shadcn ecosystem                                  |
 | AI SDK          | Vercel AI SDK                        | Streaming, `useChat` hook, Next.js API route helpers             |
 | Chat UI         | Assistant UI                         | shadcn-compatible chat components built on Vercel AI SDK         |
-| AI Model        | Anthropic Claude (claude-sonnet-4-5) | Categorisation + chat + PDF parsing                              |
+| AI Model        | Anthropic Claude (claude-sonnet-4-6) | Categorisation + chat + PDF parsing                              |
 | CSV Parsing     | papaparse                            | Best-in-class browser/Node CSV parser                            |
 | PDF Parsing     | pdfjs-dist                           | Mozilla's PDF.js — extract raw text from bank PDFs               |
 | Package Manager | pnpm                                 | Faster installs, better disk usage than npm/yarn                 |
@@ -79,6 +79,7 @@ budget-app/
 │   │   │   ├── accounts.ts
 │   │   │   ├── budgets.ts          # getBudgetsWithActuals
 │   │   │   ├── categories.ts
+│   │   │   ├── chat-context.ts     # getChatContext + formatChatContext — builds system prompt data block
 │   │   │   ├── dashboard.ts        # getDashboardData (aggregations for charts)
 │   │   │   ├── merchant-map.ts
 │   │   │   ├── profile.ts

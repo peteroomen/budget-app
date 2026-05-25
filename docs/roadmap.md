@@ -149,9 +149,20 @@ uploads
 
 ### Recurring Transactions
 
-- [ ] Auto-detect recurring: same merchant + similar amount appearing monthly
-- [ ] Manual flag toggle on any transaction
-- [ ] "Fixed costs" summary card: total confirmed recurring per month (rent, ELC, loans, insurance, subscriptions)
+- [x] Auto-detect recurring: same merchant + similar amount appearing monthly
+- [x] Manual flag toggle on any transaction
+- [x] "Fixed costs" summary card: total confirmed recurring per month (rent, ELC, loans, insurance, subscriptions)
+
+> **Future enhancements to the Fixed Costs card — revisit in Phase 5**
+>
+> The current card shows a total + merchant count. Possible directions:
+>
+> - **Merchant breakdown list:** expand the card (or link to a panel) showing each recurring merchant with its typical amount — so you can see at a glance that it's Netflix $22.99, ELC $620, ANZ Homeloan $1,250, etc. rather than just a total.
+> - **Month-over-month delta:** flag when a recurring amount changes (e.g. power bill went up $15 vs last month) — useful for catching subscription price creep.
+> - **"Expected vs arrived" status:** for the current month, show which recurring payments have already hit vs which are still expected (based on historical day-of-month patterns). Helps with cash flow planning mid-month.
+> - **Auto-run detection on import:** currently triggered manually; could run automatically after each CSV/PDF import.
+> - **Category breakdown:** split fixed costs by category (Insurance, Subscriptions, Loans, Childcare, Utilities) so you can see the composition, not just the total.
+> - **Annual projection:** fixed costs × 12 shown as a "committed annual spend" figure.
 
 **Deliverable:** Open the app mid-month and know exactly where you stand.
 
@@ -196,6 +207,20 @@ Example queries:
 - _"How does this month's groceries compare to last month?"_
 
 **Deliverable:** Natural conversation about your finances without opening a spreadsheet.
+
+### Chat v2 — Future Enhancements (deferred — revisit with requirements)
+
+The chat interface is v1. Before building any of these, sit down and properly define what a great chat experience looks like for this household. Ideas captured so far:
+
+- **Conversation hint chips** — suggested prompts shown below the input to help users discover what to ask
+- **Historical data access** — current context only injects the current month; the agent needs a way to look up any month (or all-time summaries) to answer trend questions, year-to-date totals, or "how does this compare to six months ago?". Tool calls are probably the right mechanism — let Claude request the data it needs rather than injecting everything upfront
+- **Tool calls** — live DB queries per message instead of a static context block
+- **Rich responses** — inline charts and trend graphs rendered inside the chat thread
+- **Summary cards** — structured cards for balances, budget snapshots, recurring costs
+- **Write actions** — Claude adjusts budgets, recategorises transactions, or flags recurring items on request (with confirmation)
+- **Account balances** — include current balances in context (requires balance tracking)
+
+> Treat this whole section as a backlog to be shaped, not a build list.
 
 ---
 

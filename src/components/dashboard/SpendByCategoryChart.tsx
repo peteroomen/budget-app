@@ -86,6 +86,7 @@ export function SpendByCategoryChart({ data }: SpendByCategoryChartProps) {
               tickLine={false}
               axisLine={false}
               tick={{ fontSize: 12 }}
+              interval={0}
             />
             <XAxis
               type="number"
