@@ -49,26 +49,26 @@ uploads
 
 ### Auth & Household
 
-- [ ] Supabase Auth (email/password — no OAuth needed yet)
-- [ ] `households` table + invite link so Megan can join the same household
-- [ ] RLS policies: users only see their household's data
-- [ ] Basic app shell: sidebar nav, header, shadcn theme
+- [x] Supabase Auth (email/password — no OAuth needed yet)
+- [x] `households` table + invite link so Megan can join the same household
+- [x] RLS policies: users only see their household's data
+- [x] Basic app shell: sidebar nav, header, shadcn theme
   - Design note: move profile/sign-out to bottom-left of sidebar (currently in header)
 
 ### Accounts
 
-- [ ] "Add account" form (name, bank/institution, type)
-- [ ] Account list view
+- [x] "Add account" form (name, bank/institution, type)
+- [x] Account list view
 
 ### Statement Import (CSV + PDF)
 
-- [ ] Upload UI — drag & drop or file picker, accepts `.csv` and `.pdf`
-- [ ] **CSV path:** parse with papaparse, auto-detect bank format by headers (ANZ/ASB/Westpac/BNZ), handle format variations
+- [x] Upload UI — drag & drop or file picker, accepts `.csv` and `.pdf`
+- [x] **CSV path:** parse with papaparse, auto-detect bank format by headers (ANZ/ASB/Westpac/BNZ), handle format variations
   - Manual column mapping UI (for unrecognised bank formats) — deferred to Phase 5 Polish
-- [ ] **PDF path:** extract text with pdfjs-dist → pass raw text to Claude with a parsing prompt → Claude returns structured `{date, amount, description}[]` JSON
-- [ ] Normalise amounts: handle credit card sign conventions (credits positive, debits negative — consistent regardless of source)
-- [ ] Duplicate detection on import (same account + date + amount + description hash)
-- [ ] Transaction list view (sortable, filterable by account/date)
+- [x] **PDF path:** extract text with pdfjs-dist → pass raw text to Claude with a parsing prompt → Claude returns structured `{date, amount, description}[]` JSON
+- [x] Normalise amounts: handle credit card sign conventions (credits positive, debits negative — consistent regardless of source)
+- [x] Duplicate detection on import (same account + date + amount + description hash)
+- [x] Transaction list view (sortable, filterable by account/date)
 
 > **ANZ note:** PDF format is consistent across statements (as confirmed from real statement). CSV is available from online banking but not reliably from the mobile app — PDF is the more practical regular import path.
 
@@ -94,28 +94,26 @@ uploads
 
 ### Merchant Memory
 
-> **⬅ Next up** (build order item #8)
-
-- [ ] `merchant_category_map` table — stores `normalised_merchant_name → category_id` per household
-- [ ] On import: normalise merchant names (uppercase, strip card numbers/dates), check map first
-- [ ] If found in map: apply category instantly, no Claude call needed
-- [ ] If not found: add to Claude batch
-- [ ] On manual override: update the map (so it's remembered for next import)
-- [ ] "Forget this mapping" option per merchant if needed
+- [x] `merchant_category_map` table — stores `normalised_merchant_name → category_id` per household
+- [x] On import: normalise merchant names (uppercase, strip card numbers/dates), check map first
+- [x] If found in map: apply category instantly, no Claude call needed
+- [x] If not found: add to Claude batch
+- [x] On manual override: update the map (so it's remembered for next import)
+- [x] "Forget this mapping" option per merchant if needed
 
 ### Auto-categorisation (for unmapped merchants)
 
-- [ ] Batch Claude API call with unrecognised merchant descriptions + category list
-- [ ] Prompt: few-shot NZ examples + full category list → return `{description, category}[]` JSON
-- [ ] Store result and populate merchant map for future imports
-- [ ] Inline category override in transaction list
-- [ ] "Re-categorise all" button (clears map and reruns — useful if categories change)
+- [x] Batch Claude API call with unrecognised merchant descriptions + category list
+- [x] Prompt: few-shot NZ examples + full category list → return `{description, category}[]` JSON
+- [x] Store result and populate merchant map for future imports
+- [x] Inline category override in transaction list
+- [x] "Re-categorise all" button (clears map and reruns — useful if categories change)
 
 ### Category source indicator (refinement — build after auto-categorisation)
 
-- [ ] Add `category_source` column to `transactions` — `'claude' | 'manual'`, nullable (uncategorised)
-- [ ] `setCategoryOverride` sets `'manual'`; AI categorisation sets `'claude'`
-- [ ] Transaction list: small pencil icon next to category name when `category_source = 'manual'` — no icon for Claude-assigned, nothing for uncategorised
+- [x] Add `category_source` column to `transactions` — `'claude' | 'manual'`, nullable (uncategorised)
+- [x] `setCategoryOverride` sets `'manual'`; AI categorisation sets `'claude'`
+- [x] Transaction list: small pencil icon next to category name when `category_source = 'manual'` — no icon for Claude-assigned, nothing for uncategorised
 
 ### Locked merchant mappings (refinement — manual overrides survive re-categorise)
 
@@ -135,16 +133,16 @@ uploads
 
 ### Monthly Dashboard
 
-- [ ] Current month spending by category (bar chart or donut — shadcn Charts)
-- [ ] Total spent vs total income this month
-- [ ] Month selector (navigate back through history)
-- [ ] Top 5 merchants this month
+- [x] Current month spending by category (bar chart or donut — shadcn Charts)
+- [x] Total spent vs total income this month
+- [x] Month selector (navigate back through history)
+- [x] Top 5 merchants this month
 
 ### Budgets
 
-- [ ] Set a monthly budget per category (amount input, saved per month)
-- [ ] Budget vs actual bar for each category (green → amber → red as you approach/exceed)
-- [ ] "Over budget" callout cards on dashboard
+- [x] Set a monthly budget per category (amount input, saved per month)
+- [x] Budget vs actual bar for each category (green → amber → red as you approach/exceed)
+- [x] "Over budget" callout cards on dashboard
 - [ ] Rollover toggle (Phase 3b): unspent budget rolls to next month
 
 ### Recurring Transactions
@@ -174,11 +172,11 @@ uploads
 
 ### Chat Interface
 
-- [ ] Dedicated `/chat` route (or collapsible side panel — TBD)
-- [ ] Built with **Assistant UI** components (shadcn-compatible, sits on Vercel AI SDK)
-- [ ] Single conversation per session — **Clear chat** button resets it
-- [ ] No chat history persistence (session memory only — simpler, private)
-- [ ] Streaming responses via Vercel AI SDK
+- [x] Dedicated `/chat` route (or collapsible side panel — TBD)
+- [x] Built with **Assistant UI** components (shadcn-compatible, sits on Vercel AI SDK)
+- [x] Single conversation per session — **Clear chat** button resets it
+- [x] No chat history persistence (session memory only — simpler, private)
+- [x] Streaming responses via Vercel AI SDK
 
 ### Context Injection (RAG approach — no tool calls in v1)
 
@@ -230,7 +228,7 @@ The chat interface is v1. Before building any of these, sit down and properly de
 
 - [ ] **Transaction pagination** — the transaction list will get unwieldy once several months of data are loaded. Two approaches to decide between: (a) show one month at a time (month selector like the dashboard, clean mental model), or (b) traditional pagination with the existing filters still in play. Approach TBD — revisit once real data volume makes the problem concrete.
 - [ ] **Import summary** — after an upload completes, show a breakdown of what happened: X transactions imported, X duplicates skipped, X categorised from merchant memory, X categorised by Claude, X flagged as recurring, X uncategorised. Becomes more useful as more AI detection runs on import (recurring, anomaly flagging, etc.). Display inline on the import page or as a modal — don't navigate away.
-- [ ] Monthly summary view — Claude-generated one-page recap (spend vs budget, vs prior month, notable patterns)
+- [x] Monthly summary view — Claude-generated one-page recap (spend vs budget, vs prior month, notable patterns)
 - [ ] In-app budget alerts: "You're 80% through Dining Out"
 - [ ] Multi-account view (net position across all accounts)
 - [ ] Full-text transaction search

@@ -31,7 +31,7 @@ Core loop: import bank statements → AI categorises transactions → set budget
 > **Update this section at the end of every session.**
 
 - **Current phase:** Phase 5 — Polish (in progress). Phases 1–4 fully complete.
-- **Last session:** 2026-05-25 — Monthly summary page (build order item #15, PR #17 open)
+- **Last session:** 2026-05-25 — Monthly summary page (build order item #15, merged to main)
 - **All merged to main (build order items #1–#16 + extras):**
   - #1 Scaffold · #2 Auth + household · #3 Accounts CRUD
   - #4 CSV import · #5 PDF import · #6 Transaction list
@@ -41,10 +41,9 @@ Core loop: import bank statements → AI categorises transactions → set budget
   - #14 Chat context injection — `src/lib/queries/chat-context.ts` fetches transactions, budgets, categories, 3-month trends, and recurring; injected as a structured `<financial_data>` block in the system prompt
   - #12 Recurring detection — auto-detect by merchant pattern (2+ months, ≤10% amount spread), manual toggle per row, Fixed Costs dashboard card. Also: dashboard loading skeleton, month-change Suspense, "This month" link, admin future-month navigation, all 4 summary cards in one row.
   - #16 Polish pass — loading skeletons (6 pages), dashboard empty state, mobile table overflow, error logging in queries, type-cast fixes, aria-label on sort headers
-  - category_source + is_manual tracking columns (PR #16 merged)
-  - Admin page — `/admin` route (role-gated), delete-all-transactions + delete-all-merchant-mappings (PR #19 merged)
-- **Open PRs:**
-  - **PR #17** `feature/monthly-summary` — `/summary` page: Claude-generated recap (headline, spend overview, over-budget, biggest merchant, vs last month, notable patterns). Suspense skeleton on month change, admin future-month nav, roadmap design direction section.
+  - category_source + is_manual tracking columns (merged)
+  - Admin page — `/admin` route (role-gated), delete-all-transactions + delete-all-merchant-mappings (merged)
+  - #15 Monthly summary — `/summary` page: Claude-generated recap (headline, spend overview, over-budget, biggest merchant, vs last month, notable patterns). Suspense skeleton on month change, admin future-month nav.
 - **Remaining build order items:**
   - **#17** Import summary — post-upload breakdown (imported / duplicates / from map / from Claude / recurring / uncategorised)
 - **Deferred (not blocking):**
