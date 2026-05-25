@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { ArrowUpRight } from 'lucide-react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import type { MerchantSpend } from '@/lib/queries/dashboard'
 
@@ -19,13 +19,22 @@ function formatNZD(cents: number): string {
 export function TopMerchantsTable({ merchants }: TopMerchantsTableProps) {
   return (
     <Card>
-      <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle className="text-base">Top Merchants</CardTitle>
-        <Button variant="ghost" size="sm" asChild>
-          <Link href="/transactions" className="flex items-center gap-1">
-            All <ArrowUpRight className="h-3 w-3" />
-          </Link>
-        </Button>
+      <CardHeader>
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <CardTitle className="text-display-card-title font-medium">Top merchants</CardTitle>
+            <CardDescription className="mt-0.5 text-body-xs">
+              {merchants.length === 0
+                ? 'No expenses this month'
+                : `${merchants.length} merchant${merchants.length !== 1 ? 's' : ''} this month`}
+            </CardDescription>
+          </div>
+          <Button variant="ghost" size="sm" asChild className="-mt-1 -mr-2 shrink-0">
+            <Link href="/transactions" className="flex items-center gap-1 text-[13px]">
+              All <ArrowUpRight className="h-3.5 w-3.5" />
+            </Link>
+          </Button>
+        </div>
       </CardHeader>
       <CardContent>
         {merchants.length === 0 ? (
