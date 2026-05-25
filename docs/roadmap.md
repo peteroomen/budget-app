@@ -226,17 +226,42 @@ The chat interface is v1. Before building any of these, sit down and properly de
 
 > Goal: An app you actually want to open every month.
 
+### Tide design system (in progress)
+
+- [x] Foundation — CSS tokens, dark mode (next-themes), Fraunces + JetBrains Mono, primitives (Badge, Button, Progress, Card, Tabs, Input)
+- [x] Per-page typography pass — Dashboard, Transactions, Budgets, Summary, Chat, Import, Settings
+- [x] Budgets layout — desktop table with progress bars + pacing badges; mobile card grid
+- [ ] **Transaction search + category filter** — merchant text search (ilike) and category dropdown; URL param driven; extends `getTransactions` and `TransactionFilters`
+- [ ] **Import dropzone** — replace plain file input with drag-drop zone (dashed border, hover state, upload icon); same form action underneath
+- [ ] **Import "What we support" card** — static 2×2 grid showing ANZ/ASB/Westpac/BNZ and their supported formats
+- [ ] **Import success redesign** — centred stat grid (Imported / Duplicates / AI-categorised) + "Review transactions" CTA; matches design prototype
+- [ ] **Import history list** — log each import to a new `uploads` table (filename, account, timestamp, row_count, source format); surface as "Recent imports" card on the import page. Requires migration. Schema column already stubbed in data model above.
+- [ ] **Chat assistant bubble style** — remove `bg-muted` bubble from assistant messages; replace with sparkle avatar (28px circle) + plain text layout matching prototype
+- [ ] **Chat prompt chips** — 4 suggested prompts in the empty/initial state; clickable to auto-send
+- [ ] **Budgets KPI stats row** — 4 mini stat cards at top of Budgets page (Total budget / Spent / Remaining / Over budget count); computed from existing data, no new query
+- [ ] **Summary inline stats** — Spend / Income / Net mini-stat row inside the Spend Overview card; delta arrows vs prior month
+- [ ] **Summary compare bars** — horizontal bar chart in the "vs last month" card comparing prior and current month spend
+- [ ] **Summary sparkles header** — Sparkles icon + month label (label-caps) above the headline paragraph in the hero card
+- [ ] **Summary regenerate button** — "Regenerate" ghost button in the page header that clears the cached result and re-calls Claude. Needs a client-side trigger mechanism (route handler or revalidate)
+- [ ] **Summary export** — "Export" ghost button downloads the summary as plain text or copies to clipboard
+- [ ] **Dashboard quick-action links** — "Manage budgets ↗" link in the spend chart card header; "All ↗" link in the top merchants card header
+- [ ] **Dashboard bottom row** — "Recent transactions" preview (8 rows, Avatar-style) + "Quick actions" panel (Import statement / Set a budget / Ask the assistant) as a 7/5 column split. Low priority — adds noise unless the rest of the page feels sparse
+
+### Other Phase 5 items
+
 - [ ] **Transaction pagination** — the transaction list will get unwieldy once several months of data are loaded. Two approaches to decide between: (a) show one month at a time (month selector like the dashboard, clean mental model), or (b) traditional pagination with the existing filters still in play. Approach TBD — revisit once real data volume makes the problem concrete.
 - [ ] **Import summary** — after an upload completes, show a breakdown of what happened: X transactions imported, X duplicates skipped, X categorised from merchant memory, X categorised by Claude, X flagged as recurring, X uncategorised. Becomes more useful as more AI detection runs on import (recurring, anomaly flagging, etc.). Display inline on the import page or as a modal — don't navigate away.
 - [x] Monthly summary view — Claude-generated one-page recap (spend vs budget, vs prior month, notable patterns)
+- [ ] **Auto-run recurring detection after import** — currently manual trigger only; run automatically as a post-import step
 - [ ] In-app budget alerts: "You're 80% through Dining Out"
 - [ ] Multi-account view (net position across all accounts)
-- [ ] Full-text transaction search
+- [x] Full-text transaction search ← being done as part of Tide layout pass
 - [ ] CSV export of filtered transactions
 - [ ] Mobile-responsive polish pass
-- [ ] Dark mode (trivial with shadcn)
+- [ ] Dark mode (trivial with shadcn) ✓ shipped in Tide foundation
 - [ ] Persisted chat history (optional upgrade — store threads in Supabase)
 - [ ] Budget page month picker enhancement — replace prev/next buttons with a richer selector: click the month label to open a shadcn Popover with a year + month grid so users can jump directly to any month rather than stepping one at a time
+- [ ] **Category icon picker** — add Lucide icon picker to category management UI; `icon` column already exists in schema (nullable); improves visual distinction at scale (18+ categories)
 
 ---
 

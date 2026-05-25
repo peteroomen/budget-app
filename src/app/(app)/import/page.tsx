@@ -7,8 +7,8 @@ export default async function ImportPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold">Import Statement</h1>
-        <p className="text-sm text-muted-foreground mt-1">
+        <h1 className="font-display text-display-h1 font-medium">Import</h1>
+        <p className="mt-0.5 text-body-sm text-muted-foreground">
           Upload a CSV or PDF bank statement. Duplicates are detected and skipped automatically.
         </p>
       </div>

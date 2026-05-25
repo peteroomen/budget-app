@@ -19,12 +19,14 @@ export function FixedCostsCard({ summary }: Props) {
   return (
     <Card>
       <CardHeader className="pb-2">
-        <CardTitle className="text-sm font-medium text-muted-foreground">
-          Fixed Costs This Month
+        <CardTitle className="text-body-xs font-sans font-medium text-muted-foreground">
+          Fixed Costs
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <p className="text-2xl font-semibold">{formatNZD(total_cents)}</p>
+        <p className="font-display text-display-hero font-medium tabular-nums">
+          {formatNZD(total_cents)}
+        </p>
         <p className="mt-1 text-xs text-muted-foreground">
           {merchant_count === 0
             ? 'No recurring transactions detected'

@@ -28,6 +28,8 @@ interface SearchParams {
   to?: string
   sort?: string
   dir?: string
+  q?: string
+  cat?: string
 }
 
 export default async function TransactionsPage({
@@ -45,6 +47,8 @@ export default async function TransactionsPage({
       ...(sp.account ? { accountId: sp.account } : {}),
       ...(sp.from ? { dateFrom: sp.from } : {}),
       ...(sp.to ? { dateTo: sp.to } : {}),
+      ...(sp.q ? { search: sp.q } : {}),
+      ...(sp.cat ? { categoryId: sp.cat } : {}),
       sortBy,
       sortDir,
     }),
@@ -56,17 +60,21 @@ export default async function TransactionsPage({
   if (sp.account) urlParams.set('account', sp.account)
   if (sp.from) urlParams.set('from', sp.from)
   if (sp.to) urlParams.set('to', sp.to)
+  if (sp.q) urlParams.set('q', sp.q)
+  if (sp.cat) urlParams.set('cat', sp.cat)
   urlParams.set('sort', sortBy)
   urlParams.set('dir', sortDir)
+
+  const isFiltered = !!(sp.account || sp.from || sp.to || sp.q || sp.cat)
 
   return (
     <div className="space-y-6">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold">Transactions</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
+          <h1 className="font-display text-display-h1 font-medium">Transactions</h1>
+          <p className="mt-1 text-body-sm text-muted-foreground">
             {transactions.length} transaction{transactions.length !== 1 ? 's' : ''}
-            {sp.account || sp.from || sp.to ? ' (filtered)' : ''}
+            {isFiltered ? ' (filtered)' : ''}
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -76,7 +84,7 @@ export default async function TransactionsPage({
       </div>
 
       <Suspense>
-        <TransactionFilters accounts={accounts} />
+        <TransactionFilters accounts={accounts} categories={categories} />
       </Suspense>
 
       {/* Mobile: day-grouped list */}
