@@ -31,13 +31,15 @@ Core loop: import bank statements → AI categorises transactions → set budget
 > **Update this section at the end of every session.**
 
 - **Current phase:** Phase 4 — AI Chat (in progress). Phases 1–3 fully complete.
-- **Last session:** 2026-05-24 — Chat interface (build order item #13, PR #13 merged)
+- **Last session:** 2026-05-25 — Budget auto-seed (refinement to #11, PR pending)
 - **All merged to main (build order items #1–#13):**
   - #1 Scaffold · #2 Auth + household · #3 Accounts CRUD
   - #4 CSV import · #5 PDF import · #6 Transaction list
   - #7 Category system · #8 Merchant memory · #9 AI categorisation
   - #10 Dashboard charts · #11 Budget management
   - #13 Chat interface (Assistant UI + Vercel AI SDK, streaming, markdown rendering)
+- **In review / pending merge:**
+  - Budget auto-seed — when navigating to a month with no budgets, silently copies from the most recent month that has budgets; shadcn Alert banner shown on first seed, dismissible
 - **Remaining build order items:**
   - **#12** Recurring detection — `is_recurring` column exists; detection logic + UI not built
   - **#14** Chat agent / context injection — chat works but system prompt has no real data

@@ -1,9 +1,14 @@
 import { Suspense } from 'react'
-import { getBudgetsWithActuals } from '@/lib/queries/budgets'
+import {
+  getBudgetsWithActuals,
+  findMostRecentBudgetMonth,
+  seedBudgetsFromMonth,
+} from '@/lib/queries/budgets'
 import { MonthPicker } from '@/components/budgets/MonthPicker'
 import { BudgetProgressBar } from '@/components/budgets/BudgetProgressBar'
 import { SetBudgetDialog } from '@/components/budgets/SetBudgetDialog'
 import { OverBudgetCards } from '@/components/budgets/OverBudgetCards'
+import { SeededFromBanner } from '@/components/budgets/SeededFromBanner'
 
 function currentMonth(): string {
   const now = new Date()
@@ -29,7 +34,17 @@ export default async function BudgetsPage({ searchParams }: BudgetsPageProps) {
   const month =
     typeof params.month === 'string' && isValidMonth(params.month) ? params.month : currentMonth()
 
-  const items = await getBudgetsWithActuals(month)
+  let items = await getBudgetsWithActuals(month)
+  let seededFrom: string | null = null
+
+  if (!items.some((item) => item.budget !== null)) {
+    const sourceMonth = await findMostRecentBudgetMonth(month)
+    if (sourceMonth) {
+      await seedBudgetsFromMonth(sourceMonth, month)
+      items = await getBudgetsWithActuals(month)
+      seededFrom = sourceMonth
+    }
+  }
 
   const hasAnyBudget = items.some((item) => item.budget !== null)
 
@@ -46,6 +61,8 @@ export default async function BudgetsPage({ searchParams }: BudgetsPageProps) {
           <MonthPicker month={month} />
         </Suspense>
       </div>
+
+      {seededFrom && <SeededFromBanner sourceMonth={seededFrom} />}
 
       <OverBudgetCards items={items} />
 

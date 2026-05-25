@@ -14,6 +14,50 @@ function firstDayOfNextMonth(month: string): string {
   return `${next.getFullYear()}-${String(next.getMonth() + 1).padStart(2, '0')}-01`
 }
 
+/** Returns the most recent month string (YYYY-MM) that has any budget rows before `beforeMonth`, or null. */
+export async function findMostRecentBudgetMonth(beforeMonth: string): Promise<string | null> {
+  const supabase = await createClient()
+  const { data } = await supabase
+    .from('budgets')
+    .select('month')
+    .lt('month', beforeMonth)
+    .order('month', { ascending: false })
+    .limit(1)
+    .maybeSingle()
+  return data?.month ?? null
+}
+
+/**
+ * Copies budget rows from sourceMonth into targetMonth for all categories that have a budget in
+ * sourceMonth but not yet in targetMonth. Uses upsert so it's safe to call more than once.
+ */
+export async function seedBudgetsFromMonth(
+  sourceMonth: string,
+  targetMonth: string
+): Promise<number> {
+  const supabase = await createClient()
+  const { data: sourceRows } = await supabase
+    .from('budgets')
+    .select('household_id, category_id, amount_cents')
+    .eq('month', sourceMonth)
+
+  if (!sourceRows || sourceRows.length === 0) return 0
+
+  const newRows = sourceRows.map((row) => ({
+    household_id: row.household_id,
+    category_id: row.category_id,
+    month: targetMonth,
+    amount_cents: row.amount_cents,
+  }))
+
+  const { error } = await supabase
+    .from('budgets')
+    .upsert(newRows, { onConflict: 'household_id,category_id,month', ignoreDuplicates: true })
+
+  if (error) throw new Error(error.message)
+  return newRows.length
+}
+
 export async function getBudgetsWithActuals(month: string): Promise<BudgetWithActual[]> {
   const supabase = await createClient()
 
