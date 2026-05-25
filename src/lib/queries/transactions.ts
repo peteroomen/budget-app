@@ -47,6 +47,7 @@ export async function getTransactions(filters: TransactionFilters = {}): Promise
     query = query.lte('date', dateTo)
   }
 
-  const { data } = await query
+  const { data, error } = await query
+  if (error) console.error('getTransactions:', error.message)
   return (data as TransactionRow[]) ?? []
 }
