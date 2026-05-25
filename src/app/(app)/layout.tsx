@@ -13,6 +13,7 @@ const NAV_ITEMS = [
   { href: '/categories', label: 'Categories' },
   { href: '/budgets', label: 'Budgets' },
   { href: '/chat', label: 'Chat' },
+  { href: '/summary', label: 'Summary' },
 ]
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
