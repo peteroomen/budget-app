@@ -1,3 +1,4 @@
+import { ArrowDown, ArrowUp, TrendingUp } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import type { DashboardSummary } from '@/lib/queries/dashboard'
 
@@ -21,9 +22,12 @@ export function IncomeVsSpendCards({ summary }: IncomeVsSpendCardsProps) {
     <>
       <Card>
         <CardHeader className="pb-2">
-          <CardTitle className="text-body-xs font-sans font-medium text-muted-foreground">
-            Total Income
-          </CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-body-xs font-sans font-medium text-muted-foreground">
+              Income
+            </CardTitle>
+            <ArrowDown className="h-4 w-4 text-muted-foreground/50" />
+          </div>
         </CardHeader>
         <CardContent>
           <p className="font-display text-display-hero font-medium tabular-nums text-success">
@@ -34,9 +38,12 @@ export function IncomeVsSpendCards({ summary }: IncomeVsSpendCardsProps) {
 
       <Card>
         <CardHeader className="pb-2">
-          <CardTitle className="text-body-xs font-sans font-medium text-muted-foreground">
-            Total Spent
-          </CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-body-xs font-sans font-medium text-muted-foreground">
+              Spend
+            </CardTitle>
+            <ArrowUp className="h-4 w-4 text-muted-foreground/50" />
+          </div>
         </CardHeader>
         <CardContent>
           <p className="font-display text-display-hero font-medium tabular-nums">
@@ -47,15 +54,18 @@ export function IncomeVsSpendCards({ summary }: IncomeVsSpendCardsProps) {
 
       <Card>
         <CardHeader className="pb-2">
-          <CardTitle className="text-body-xs font-sans font-medium text-muted-foreground">
-            Net
-          </CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-body-xs font-sans font-medium text-muted-foreground">
+              Net
+            </CardTitle>
+            <TrendingUp className="h-4 w-4 text-muted-foreground/50" />
+          </div>
         </CardHeader>
         <CardContent>
           <p
             className={`font-display text-display-hero font-medium tabular-nums ${netPositive ? 'text-success' : ''}`}
           >
-            {netPositive ? '' : '−'}
+            {netPositive ? '+' : '−'}
             {formatNZD(Math.abs(net_cents))}
           </p>
         </CardContent>
