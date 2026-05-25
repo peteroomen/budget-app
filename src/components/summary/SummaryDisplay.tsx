@@ -24,8 +24,6 @@ function formatNZD(cents: number): string {
 }
 
 export function SummaryDisplay({ summary, ctx }: SummaryDisplayProps) {
-  const netPositive = ctx.net_cents >= 0
-
   return (
     <div className="space-y-6">
       {/* Headline */}
@@ -34,43 +32,6 @@ export function SummaryDisplay({ summary, ctx }: SummaryDisplayProps) {
           <p className="text-lg font-medium leading-relaxed">{summary.headline}</p>
         </CardContent>
       </Card>
-
-      {/* Summary numbers */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Total Income
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-semibold text-green-600">{formatNZD(ctx.income_cents)}</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Total Spent</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-semibold text-red-600">{formatNZD(ctx.spend_cents)}</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Net</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p
-              className={`text-2xl font-semibold ${netPositive ? 'text-green-600' : 'text-red-600'}`}
-            >
-              {netPositive ? '' : '−'}
-              {formatNZD(Math.abs(ctx.net_cents))}
-            </p>
-          </CardContent>
-        </Card>
-      </div>
 
       {/* Spend note + vs last month */}
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
@@ -93,7 +54,7 @@ export function SummaryDisplay({ summary, ctx }: SummaryDisplayProps) {
                 {summary.vsLastMonthNote}
               </p>
               {ctx.priorMonthSpend !== null && (
-                <p className="mt-3 text-xl font-semibold">
+                <p className="mt-3 text-xl font-semibold text-red-600">
                   {formatNZD(ctx.priorMonthSpend)}
                   <span className="ml-2 text-sm font-normal text-muted-foreground">
                     {ctx.priorMonthLabel} spend
@@ -134,7 +95,7 @@ export function SummaryDisplay({ summary, ctx }: SummaryDisplayProps) {
               {ctx.topMerchants[0] && (
                 <p className="mb-2 text-xl font-semibold">
                   {ctx.topMerchants[0].merchant}
-                  <span className="ml-2 text-base font-normal text-muted-foreground">
+                  <span className="ml-2 text-base font-normal text-red-600">
                     {formatNZD(ctx.topMerchants[0].spend_cents)}
                   </span>
                 </p>
