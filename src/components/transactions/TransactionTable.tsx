@@ -161,14 +161,9 @@ export function TransactionTable({
                 {formatRelativeDate(tx.date)}
               </TableCell>
 
-              {/* Merchant + optional raw description + chips */}
+              {/* Merchant + chips */}
               <TableCell className="pt-2.5">
                 <p className="font-medium leading-snug">{tx.merchant_name ?? tx.description}</p>
-                {tx.merchant_name && tx.merchant_name !== tx.description && (
-                  <p className="text-xs text-muted-foreground truncate max-w-xs leading-snug">
-                    {tx.description}
-                  </p>
-                )}
                 {(tx.is_recurring || tx.category_source === 'manual') && (
                   <div className="mt-1.5 flex flex-wrap gap-1.5">
                     <RecurringBadge transactionId={tx.id} isRecurring={tx.is_recurring} />
@@ -182,7 +177,6 @@ export function TransactionTable({
                   transactionId={tx.id}
                   merchantName={tx.merchant_name}
                   categoryId={tx.category_id}
-                  categorySource={tx.category_source}
                   hasMerchantMapping={
                     tx.merchant_name !== null && mappedMerchants.has(tx.merchant_name)
                   }
