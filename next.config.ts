@@ -15,11 +15,13 @@ const nextConfig: NextConfig = {
        * built-ins, so the bundle throws `ReferenceError: __dirname is not defined`
        * on every cold start.
        *
-       * NormalModuleReplacementPlugin intercepts the normal module factory for
-       * testmode/context before webpack ever sees the node:async_hooks import,
-       * so the external is never created. The result is baked into webpack's
-       * persistent cache — this fix survives Vercel's build cache.
+       * Disable webpack's persistent cache for the edge compilation so Vercel's
+       * restored build cache cannot serve a stale middleware chunk compiled before
+       * this plugin was added. Without cache: false, webpack sees identical source
+       * hashes and skips recompilation, serving the old broken bundle even though
+       * the NormalModuleReplacementPlugin is now in the config.
        */
+      config.cache = false
       config.plugins.push(
         new webpack.NormalModuleReplacementPlugin(
           /experimental[/\\]testmode[/\\]context/,
