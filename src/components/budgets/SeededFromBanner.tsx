@@ -19,22 +19,26 @@ export function SeededFromBanner({ sourceMonth }: SeededFromBannerProps) {
   if (dismissed) return null
 
   return (
-    <Alert className="flex items-start justify-between gap-2 border-blue-200 bg-blue-50 text-blue-900 dark:border-blue-800 dark:bg-blue-950 dark:text-blue-100">
-      <Info className="mt-0.5 h-4 w-4 shrink-0 text-blue-600 dark:text-blue-400" />
-      <AlertDescription className="flex-1">
-        Budgets auto-copied from{' '}
-        <span className="font-medium">{formatMonthLabel(sourceMonth)}</span>. Edit any amount to
-        override for this month.
+    <Alert className="border-blue-200 bg-blue-50 text-blue-900 dark:border-blue-800 dark:bg-blue-950 dark:text-blue-100">
+      <AlertDescription>
+        <div className="flex items-center gap-3">
+          <Info className="h-4 w-4 shrink-0 text-blue-600 dark:text-blue-400" />
+          <span className="flex-1 text-sm">
+            Budgets auto-copied from{' '}
+            <span className="font-medium">{formatMonthLabel(sourceMonth)}</span>. Edit any amount to
+            override for this month.
+          </span>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-6 w-6 shrink-0 text-blue-600 hover:bg-blue-100 hover:text-blue-800 dark:text-blue-400 dark:hover:bg-blue-900"
+            onClick={() => setDismissed(true)}
+            aria-label="Dismiss"
+          >
+            <X className="h-3.5 w-3.5" />
+          </Button>
+        </div>
       </AlertDescription>
-      <Button
-        variant="ghost"
-        size="icon"
-        className="h-6 w-6 shrink-0 text-blue-600 hover:bg-blue-100 hover:text-blue-800 dark:text-blue-400 dark:hover:bg-blue-900"
-        onClick={() => setDismissed(true)}
-        aria-label="Dismiss"
-      >
-        <X className="h-3.5 w-3.5" />
-      </Button>
     </Alert>
   )
 }
