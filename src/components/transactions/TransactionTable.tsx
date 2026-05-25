@@ -143,6 +143,7 @@ export function TransactionTable({
                   transactionId={tx.id}
                   merchantName={tx.merchant_name}
                   categoryId={tx.category_id}
+                  categorySource={tx.category_source}
                   hasMerchantMapping={
                     tx.merchant_name !== null && mappedMerchants.has(tx.merchant_name)
                   }

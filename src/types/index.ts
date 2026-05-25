@@ -8,6 +8,7 @@ export type AccountType = 'spending' | 'saving'
 export type UploadStatus = 'pending' | 'processing' | 'complete' | 'error'
 export type FileType = 'csv' | 'pdf'
 export type TransactionSource = 'csv' | 'pdf'
+export type CategorySource = 'claude' | 'manual' | 'map'
 
 export interface Household {
   id: string
@@ -55,6 +56,7 @@ export interface Transaction {
   description: string
   merchant_name: string | null
   category_id: string | null
+  category_source: CategorySource | null
   is_recurring: boolean
   notes: string | null
   source: TransactionSource | null
@@ -67,6 +69,7 @@ export interface MerchantCategoryMap {
   household_id: string
   merchant_name: string
   category_id: string
+  is_manual: boolean
   created_at: string
   updated_at: string
 }

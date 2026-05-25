@@ -16,6 +16,7 @@ interface Props {
   transactionId: string
   merchantName: string | null
   categoryId: string | null
+  categorySource: string | null
   hasMerchantMapping: boolean
   categories: Category[]
 }
@@ -24,6 +25,7 @@ export function CategoryCell({
   transactionId,
   merchantName,
   categoryId,
+  categorySource,
   hasMerchantMapping,
   categories,
 }: Props) {
@@ -88,6 +90,28 @@ export function CategoryCell({
           ))}
         </SelectContent>
       </Select>
+
+      {categorySource === 'manual' && (
+        <span
+          title="Manually overridden"
+          className="text-muted-foreground flex-shrink-0"
+          aria-label="Manually categorised"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="12"
+            height="12"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
+          </svg>
+        </span>
+      )}
 
       {hasMerchantMapping && merchantName && (
         <button

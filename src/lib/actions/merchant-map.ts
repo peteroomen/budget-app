@@ -23,7 +23,8 @@ async function getHouseholdId(): Promise<string | null> {
 
 export async function upsertMerchantMapping(
   merchantName: string,
-  categoryId: string
+  categoryId: string,
+  isManual: boolean = false
 ): Promise<ActionResult> {
   const supabase = await createClient()
   const householdId = await getHouseholdId()
@@ -34,6 +35,7 @@ export async function upsertMerchantMapping(
       household_id: householdId,
       merchant_name: merchantName,
       category_id: categoryId,
+      is_manual: isManual,
     },
     { onConflict: 'household_id,merchant_name' }
   )
