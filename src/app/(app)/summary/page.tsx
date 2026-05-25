@@ -43,7 +43,7 @@ export default async function SummaryPage({ searchParams }: SummaryPageProps) {
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <h1 className="text-2xl font-semibold">Monthly Summary</h1>
-        <SummaryMonthSelector month={month} isAdmin={isAdmin} />
+        <SummaryMonthSelector month={month} allowFuture={isAdmin} />
       </div>
 
       <Suspense key={month} fallback={<SummaryLoadingSkeleton />}>

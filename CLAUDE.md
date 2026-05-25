@@ -31,8 +31,8 @@ Core loop: import bank statements → AI categorises transactions → set budget
 > **Update this section at the end of every session.**
 
 - **Current phase:** Phase 5 — Polish (in progress). Phases 1–4 fully complete.
-- **Last session:** 2026-05-25 — Category tracking + admin page (PRs #16 and #19, pending merge)
-- **All merged to main (build order items #1–#16):**
+- **Last session:** 2026-05-25 — Monthly summary page (build order item #15, PR #17 open)
+- **All merged to main (build order items #1–#16 + extras):**
   - #1 Scaffold · #2 Auth + household · #3 Accounts CRUD
   - #4 CSV import · #5 PDF import · #6 Transaction list
   - #7 Category system · #8 Merchant memory · #9 AI categorisation
@@ -41,16 +41,18 @@ Core loop: import bank statements → AI categorises transactions → set budget
   - #14 Chat context injection — `src/lib/queries/chat-context.ts` fetches transactions, budgets, categories, 3-month trends, and recurring; injected as a structured `<financial_data>` block in the system prompt
   - #12 Recurring detection — auto-detect by merchant pattern (2+ months, ≤10% amount spread), manual toggle per row, Fixed Costs dashboard card. Also: dashboard loading skeleton, month-change Suspense, "This month" link, admin future-month navigation, all 4 summary cards in one row.
   - #16 Polish pass — loading skeletons (6 pages), dashboard empty state, mobile table overflow, error logging in queries, type-cast fixes, aria-label on sort headers
-- **Open PRs (not yet merged):**
-  - **PR #16** `feature/category-tracking` — `category_source` on transactions + `is_manual` on merchant_category_map + ManualBadge UI
-  - **PR #19** `feature/admin-page` — `/admin` page (role-gated), delete-all-transactions + delete-all-merchant-mappings, `ManualBadge` column (blue pencil, tooltip, matches RecurringBadge pattern)
+  - category_source + is_manual tracking columns (PR #16 merged)
+  - Admin page — `/admin` route (role-gated), delete-all-transactions + delete-all-merchant-mappings (PR #19 merged)
+- **Open PRs:**
+  - **PR #17** `feature/monthly-summary` — `/summary` page: Claude-generated recap (headline, spend overview, over-budget, biggest merchant, vs last month, notable patterns). Suspense skeleton on month change, admin future-month nav, roadmap design direction section.
 - **Remaining build order items:**
-  - **#15** Monthly summary — Claude-generated recap page (Phase 5)
   - **#17** Import summary — post-upload breakdown (imported / duplicates / from map / from Claude / recurring / uncategorised)
 - **Deferred (not blocking):**
   - Auto-run recurring detection after each import (currently manual-trigger only)
+  - Dashboard vs Summary redesign — see "Design Direction" section in `docs/roadmap.md`
 - **Known issues:** Node 22 required — always `source ~/.nvm/nvm.sh && nvm use 22` before pnpm scripts.
-- **Tooltip + Skeleton components:** both installed (`src/components/ui/tooltip.tsx`, `src/components/ui/skeleton.tsx`) — available for reuse.
+- **Components available:** `Skeleton` (`src/components/ui/skeleton.tsx`), `Tooltip` (`src/components/ui/tooltip.tsx`).
+- **Prop convention:** `MonthSelector` and `SummaryMonthSelector` use `allowFuture` (not `isAdmin`) — the page passes `allowFuture={isAdmin}` so the selector stays role-agnostic.
 
 ---
 

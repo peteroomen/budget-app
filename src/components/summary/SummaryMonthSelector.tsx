@@ -8,10 +8,10 @@ import { prevMonth, nextMonth, formatMonthLabel, currentMonth } from '@/lib/util
 
 interface SummaryMonthSelectorProps {
   month: string
-  isAdmin?: boolean
+  allowFuture?: boolean
 }
 
-export function SummaryMonthSelector({ month, isAdmin }: SummaryMonthSelectorProps) {
+export function SummaryMonthSelector({ month, allowFuture = false }: SummaryMonthSelectorProps) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const now = currentMonth()
@@ -41,7 +41,7 @@ export function SummaryMonthSelector({ month, isAdmin }: SummaryMonthSelectorPro
         variant="outline"
         size="icon"
         onClick={() => navigate(nextMonth(month))}
-        disabled={(isCurrentMonth && !isAdmin) || isPending}
+        disabled={(isCurrentMonth && !allowFuture) || isPending}
       >
         <ChevronRight className="h-4 w-4" />
         <span className="sr-only">Next month</span>

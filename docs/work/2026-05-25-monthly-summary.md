@@ -54,7 +54,7 @@ This is a pure server page — no streaming, no chat. On each page load:
 - [x] `src/components/ui/skeleton.tsx` — added via `pnpm dlx shadcn@latest add skeleton`
 - [x] `src/app/(app)/layout.tsx` — add Summary to NAV_ITEMS
 - [x] `pnpm lint` + `pnpm type-check`
-- [ ] Commit + push + open PR
+- [x] Commit + push + open PR
 
 ## Manual test steps
 
@@ -87,20 +87,24 @@ Edge cases:
 
 - `getSummaryContext` reuses the same Supabase query pattern as `getDashboardData` but additionally fetches budget amounts for the month and prior-month transactions for comparison.
 - `buildSummaryPrompt` formats the context as human-readable text with NZD amounts and returns it with an explicit JSON schema instruction. Claude is asked to return bare JSON (no markdown fences) to simplify parsing.
-- The page splits into two async server components: `SummaryPage` (fetches context, renders month selector + empty state) and `SummaryContent` (calls `generateText`, parses JSON, hands off to `SummaryDisplay`). This ensures the month selector renders immediately while the Claude call loads.
-- `loading.tsx` provides a skeleton layout using the shadcn `Skeleton` component, installed via `pnpm dlx shadcn@latest add skeleton`.
-- Removed `month` prop from `SummaryContent` (unused — `ctx.month` has it) to satisfy the `@typescript-eslint/no-unused-vars` lint rule.
-- Lint and type-check both pass clean.
+- Page restructured with `<Suspense key={month} fallback={<SummaryLoadingSkeleton />}>` wrapping `SummaryContent` — this is what makes the skeleton appear on every month change, not just initial load. `loading.tsx` alone only fires on fresh navigation to the route.
+- `useTransition` added to `SummaryMonthSelector` so buttons dim immediately on click, before the Suspense skeleton appears.
+- Admin future-month navigation added to both dashboard and summary selectors (`app_metadata.role === 'admin'` check, same pattern as transactions page).
+- Duplicate income/spend/net cards removed from summary — headline covers those figures, cards were redundant with dashboard.
+- Design direction for a future dashboard/summary purpose-split captured in `docs/roadmap.md`.
 
 ## Files created / modified
 
 - `src/lib/queries/summary.ts` — new: `getSummaryContext()`, `buildSummaryPrompt()`, related types
-- `src/components/summary/SummaryMonthSelector.tsx` — new: client component for month navigation
-- `src/components/summary/SummaryDisplay.tsx` — new: renders parsed summary JSON as cards
+- `src/components/summary/SummaryMonthSelector.tsx` — new: client component, month nav + `useTransition` for immediate feedback
+- `src/components/summary/SummaryDisplay.tsx` — new: renders parsed summary JSON as cards (no duplicate number cards)
 - `src/components/ui/skeleton.tsx` — new: added via shadcn
-- `src/app/(app)/summary/page.tsx` — new: server page, calls `generateText`, renders summary
-- `src/app/(app)/summary/loading.tsx` — new: skeleton loading state
+- `src/app/(app)/summary/page.tsx` — new: server page with `Suspense` boundary, calls `generateText`
+- `src/app/(app)/summary/loading.tsx` — new: skeleton for initial page load
 - `src/app/(app)/layout.tsx` — added "Summary" to NAV_ITEMS
+- `src/app/(app)/dashboard/page.tsx` — added `isAdmin` check, passed to `MonthSelector`
+- `src/components/dashboard/MonthSelector.tsx` — added `isAdmin` prop, unlocks future-month nav for admins
+- `docs/roadmap.md` — added "Design Direction: Dashboard vs Summary" section
 - `docs/work/2026-05-25-monthly-summary.md` — this plan file
 
 ## Deferred to next session
