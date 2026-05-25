@@ -31,7 +31,7 @@ Core loop: import bank statements → AI categorises transactions → set budget
 > **Update this section at the end of every session.**
 
 - **Current phase:** Phase 5 — Polish (in progress). Phases 1–4 fully complete.
-- **Last session:** 2026-05-25 — Tide/Editorial theme foundation (PR #21 open on `feature/tide-foundation`)
+- **Last session:** 2026-05-26 — Tide layout + feature pass (all 6 areas). PR #22 open on `feature/tide-pages`.
 - **All merged to main (build order items #1–#16 + extras):**
   - #1 Scaffold · #2 Auth + household · #3 Accounts CRUD
   - #4 CSV import · #5 PDF import · #6 Transaction list
@@ -47,17 +47,23 @@ Core loop: import bank statements → AI categorises transactions → set budget
   - Budget auto-seed — budgets auto-copied from previous month on first view; dismissible shadcn Alert banner shows source month
   - Nav/layout restructure — sidebar primary/secondary split, mobile bottom tab bar + Sheet drawer, `/settings` consolidates Accounts + Categories + Danger zone
 - **Open PRs:**
-  - **PR #21** `feature/tide-foundation` — Tide theme foundation: tokens, dark mode, fonts, all shared primitives
-  - **In progress** `feature/tide-pages` — Chunk 2: per-page visual passes (Dashboard, Transactions, Budgets) — branched off `feature/tide-foundation`
-- **Tide/Editorial theme — what's landed / in flight:**
+  - **PR #21** `feature/tide-foundation` — Tide theme foundation (tokens, dark mode, fonts, primitives) — merge this first
+  - **PR #22** `feature/tide-pages` — all per-page Tide passes (Chunks 2 + 3 + layout/feature pass) — depends on PR #21
+- **Tide/Editorial theme — what's in PRs #21 + #22:**
   - **Chunk 1 (PR #21):** CSS tokens (warm paper + near-black dark), `next-themes` + ThemeToggle, Fraunces + JetBrains Mono fonts, brand rename → "Tide", primitives (Button density, Card, Badge variants, Progress, Tabs segmented control, Input)
-  - **Chunk 2 (in progress):** Per-page passes — Dashboard, Transactions, Budgets
-  - **Chunk 3 (pending):** Summary, Chat, Import, Settings verify, polish pass
+  - **Chunk 2+3 + layout/feature pass (PR #22):**
+    - Dashboard: "Manage budgets ↗" + "All ↗" card header links
+    - Transactions: merchant search input + category filter dropdown (URL-param driven, debounced)
+    - Budgets: 4 KPI stat cards (Total budget / Spent / Remaining / Over budget) + desktop table + mobile cards
+    - Summary: Sparkles headline card, BigStat inline stats (Spend/Income/Net), CompareBar vs-last-month, "Monthly recap" H1
+    - Chat: sparkle avatar on assistant messages (no bubble), 4 prompt chips on empty state, "Chat with your finances" H1
+    - Import: drag-drop DropZone (DataTransfer API), "What we support" card, redesigned success state
 - **Remaining build order items:**
-  - **#17** Import summary — post-upload breakdown (imported / duplicates / from map / from Claude / recurring / uncategorised)
+  - **#17** Import summary — post-upload breakdown (imported / duplicates / from map / from Claude / recurring / uncategorised). Needs `import_history` table.
 - **Deferred (not blocking):**
   - Auto-run recurring detection after each import (currently manual-trigger only)
-  - Dashboard vs Summary redesign — see "Design Direction" section in `docs/roadmap.md`
+  - Summary "Regenerate" button
+  - Dashboard bottom row (recent transactions + quick actions)
   - Sidebar collapse to 64px (optional per design spec, skipped)
   - Header search, notification bell (roadmapped, intentionally not built yet)
 - **Known issues:** Node 22 required — always `source ~/.nvm/nvm.sh && nvm use 22` before pnpm scripts.

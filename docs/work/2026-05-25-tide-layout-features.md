@@ -159,12 +159,50 @@ Work in `../budget-app-tide-pages` worktree. Pure UI/structural pass except for 
 
 ## What actually happened
 
-(fill in post-session)
+All 6 steps completed in a single commit (`8057a73`). Key decisions and surprises:
+
+- **DropZone + DataTransfer**: The core challenge for drag-drop was making a dropped file appear in FormData. Solved by having `DropZone` own the `<input name="file">` and populating `inputRef.current.files` via `new DataTransfer()` on drop. No changes to the server action needed — the input is inside the `<form>` and submits normally.
+
+- **Prompt chips via `useAui()`**: `@assistant-ui/react` doesn't export a simple `sendMessage` hook. `SuggestionPrimitive.Trigger` requires a complex suggestions context wrapper. Used `useAui()` (publicly exported) with `aui.thread().append()` — same pattern used internally by `SuggestionPrimitiveTrigger`. Cast `runConfig` via `as any` with a comment since the public type doesn't expose it.
+
+- **`aiCategorised` removed from success grid**: `ImportResult` only returns `inserted`, `duplicates`, `format` — there's no `aiCategorised` count. Trimmed success grid to 2 columns (Imported / Duplicates skipped). Worth adding a richer `ImportResult` in a future session.
+
+- **`h-13` not in Tailwind scale**: spacing jumps 12→14. Used `h-14 w-14` for the success icon circle instead.
+
+- **`ctx.monthLabel.split(' ')[0]` typed as `string | undefined`**: Fixed with `?? ctx.monthLabel` fallback.
+
+- **`SpendByCategoryChart.tsx` had duplicate `CardTitle`** (empty state + populated state) — used `replace_all: true` to patch both at once.
+
+- **`useCallback` imported then immediately removed** in `TransactionFilters` — unused import was caught before commit.
+
+## Files created / modified
+
+**New:**
+
+- `src/components/import/DropZone.tsx`
+
+**Modified:**
+
+- `src/lib/queries/transactions.ts` — added `search` + `categoryId` filter params
+- `src/app/(app)/transactions/page.tsx` — wire `q`/`cat` search params to query + filter component
+- `src/components/transactions/TransactionFilters.tsx` — full rewrite: search input + category select + clear-all
+- `src/app/(app)/budgets/page.tsx` — 4 KPI stat cards at top
+- `src/app/(app)/summary/page.tsx` — H1 copy + dateline subtitle
+- `src/components/summary/SummaryDisplay.tsx` — full rewrite: Sparkles headline, BigStat, CompareBar sub-components
+- `src/components/chat/ChatPanel.tsx` — H1 + subtitle copy
+- `src/components/chat/Thread.tsx` — sparkle avatar for assistant, prompt chips in empty state
+- `src/components/import/ImportForm.tsx` — full rewrite: uses DropZone, "What we support" card, redesigned success state
+- `src/components/dashboard/SpendByCategoryChart.tsx` — "Manage budgets ↗" action link in header
+- `src/components/dashboard/TopMerchantsTable.tsx` — "All ↗" action link in header
 
 ## Deferred to next session
 
+- Richer `ImportResult` with per-source counts (AI / merchant map / manual) — needs #17 import summary work
+- Import recent-history list (`import_history` table not yet in schema)
+- Summary "Regenerate" button (server component, needs a route handler or client boundary)
+- Auto-run recurring detection after import
+- Dashboard bottom row (recent transactions + quick actions)
+
 ## Status
 
-- [ ] In progress
-- [ ] Complete
-- [ ] Partial — see deferred
+- [x] Complete
