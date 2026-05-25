@@ -47,14 +47,53 @@ Two new columns: `transactions.category_source` tracks how a category was assign
 - [ ] `pnpm lint` + `pnpm type-check`
 - [ ] Commit + push + open PR
 
+## Test data
+
+**Available files in `test-data/`:**
+
+| File                | Rows | Notes                                                              |
+| ------------------- | ---- | ------------------------------------------------------------------ |
+| `anz-may-2026.csv`  | 37   | Full May — ~30 unique merchants, good for first import             |
+| `anz-june-2026.csv` | 24   | All merchants already in May → exercises the map path              |
+| `anz-july-2026.csv` | 25   | Same merchants again, different month                              |
+| `anz-sample.csv`    | 25   | Subset of May, has card-number suffixes (`PAKNSAVE PAPAKURA 1234`) |
+
+**Use `anz-may-2026.csv` and `anz-june-2026.csv` (same account).**
+
+Note: June's `PAKNSAVE PAPAKURA 9821 4455` normalises to `PAKNSAVE PAPAKURA` — it should hit the map from the May import (tests the normaliser + map lookup chain).
+
 ## Manual test steps
 
-- [ ] Import a CSV — confirm newly inserted transactions have `category_source = 'map'` or `'claude'` in Supabase (no manual overrides yet, so none should be 'manual')
-- [ ] In transaction list, change a category — confirm `category_source` updates to 'manual' in Supabase, and the pencil icon appears next to that transaction's category
-- [ ] Check `merchant_category_map` — confirm the manually-overridden merchant has `is_manual = true`
-- [ ] Click "Re-categorise all" — confirm manually-overridden transactions keep their category (not overwritten), while AI-assigned ones may change
-- [ ] After re-categorise, confirm `is_manual = true` entries in `merchant_category_map` are still there
-- [ ] Edge case: import a statement with a merchant that was previously manually overridden — confirm it picks up the manual map entry (category_source = 'map' since it came from the map, not AI) with the correct category
+**Step 1 — Import May (exercises `category_source = 'claude'`)**
+
+- [ ] Go to `/import`, select your ANZ account, upload `test-data/anz-may-2026.csv`
+- [ ] Go to `/transactions` — confirm 37 rows appear, all with a category assigned
+- [ ] In Supabase → Table editor → `transactions`, filter by `account_id`: confirm all new rows have `category_source = 'claude'`
+- [ ] In `merchant_category_map`, confirm all new entries have `is_manual = false`
+
+**Step 2 — Manual override (exercises `category_source = 'manual'` + pencil icon)**
+
+- [ ] Find the `COUNTDOWN TAKANINI` row (01/05/2026, -$89.43) in the transaction list
+- [ ] Change its category to something wrong (e.g. "Shopping") — the dropdown is in the Category column
+- [ ] Confirm a small pencil icon appears next to "Shopping" in that row
+- [ ] In Supabase → `transactions`, confirm that row now has `category_source = 'manual'`
+- [ ] In Supabase → `merchant_category_map`, find `COUNTDOWN TAKANINI` — confirm `is_manual = true`
+
+**Step 3 — Import June (exercises `category_source = 'map'`)**
+
+- [ ] Upload `test-data/anz-june-2026.csv` against the same account
+- [ ] Confirm 24 new rows appear (no duplicates — different month)
+- [ ] In Supabase → `transactions` for June rows: confirm `category_source = 'map'` on all of them
+- [ ] Confirm `COUNTDOWN TAKANINI` (Jun) has `category_source = 'map'` and inherits the wrong category ("Shopping") — expected, since the map entry was set by the manual override in Step 2
+- [ ] Confirm `PAKNSAVE PAPAKURA 9821 4455` normalised correctly and also got `category_source = 'map'`
+
+**Step 4 — Re-categorise all (exercises `is_manual` preservation)**
+
+- [ ] Click "Re-categorise all" on the transactions page
+- [ ] After it completes, find the `COUNTDOWN TAKANINI` rows — confirm they still show "Shopping" (manual override preserved)
+- [ ] Confirm `COUNTDOWN TAKANINI` in `merchant_category_map` still has `is_manual = true`
+- [ ] Confirm other merchants (e.g. `NETFLIX`, `ELC PAPAKURA`) were re-categorised (may or may not change, but `category_source` on their transactions should now be `'claude'`)
+- [ ] Edge case: confirm no `is_manual = true` entries were deleted from `merchant_category_map`
 
 ## Out of scope for this session
 
