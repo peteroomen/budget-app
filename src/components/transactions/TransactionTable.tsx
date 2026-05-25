@@ -11,6 +11,7 @@ import type { TransactionRow, TransactionSortBy, SortDir } from '@/lib/queries/t
 import type { Category } from '@/types'
 import { CategoryCell } from './CategoryCell'
 import { RecurringBadge } from './RecurringBadge'
+import { ManualBadge } from './ManualBadge'
 
 const nzd = new Intl.NumberFormat('en-NZ', {
   style: 'currency',
@@ -108,6 +109,7 @@ export function TransactionTable({
                 params={params}
               />
             </TableHead>
+            <TableHead className="w-8 pr-0" />
             <TableHead className="text-muted-foreground font-medium">Category</TableHead>
             <TableHead className="text-muted-foreground font-medium">Account</TableHead>
             <TableHead className="text-muted-foreground font-medium text-right">
@@ -137,6 +139,9 @@ export function TransactionTable({
                     {tx.description}
                   </span>
                 )}
+              </TableCell>
+              <TableCell className="pr-0">
+                <ManualBadge isManual={tx.category_source === 'manual'} />
               </TableCell>
               <TableCell>
                 <CategoryCell
