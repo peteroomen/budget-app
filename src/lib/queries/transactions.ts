@@ -5,6 +5,8 @@ export type SortDir = 'asc' | 'desc'
 
 export interface TransactionFilters {
   accountId?: string
+  /** YYYY-MM — when set, overrides dateFrom/dateTo and scopes to the full calendar month */
+  month?: string
   dateFrom?: string
   dateTo?: string
   search?: string
@@ -35,6 +37,7 @@ export async function getTransactions(filters: TransactionFilters = {}): Promise
   const supabase = await createClient()
   const {
     accountId,
+    month,
     dateFrom,
     dateTo,
     search,
@@ -48,14 +51,23 @@ export async function getTransactions(filters: TransactionFilters = {}): Promise
     .select('*, account:accounts(name, institution), category:categories(name)')
     .order(sortBy, { ascending: sortDir === 'asc' })
 
+  if (month) {
+    // Scope to the full calendar month, e.g. "2026-05" → [2026-05-01, 2026-06-01)
+    const [yearStr, mStr] = month.split('-')
+    const year = parseInt(yearStr ?? '0', 10)
+    const m = parseInt(mStr ?? '1', 10)
+    const firstDay = `${year}-${String(m).padStart(2, '0')}-01`
+    const nextMonthYear = m === 12 ? year + 1 : year
+    const nextMonthM = m === 12 ? 1 : m + 1
+    const nextMonthFirst = `${nextMonthYear}-${String(nextMonthM).padStart(2, '0')}-01`
+    query = query.gte('date', firstDay).lt('date', nextMonthFirst)
+  } else {
+    if (dateFrom) query = query.gte('date', dateFrom)
+    if (dateTo) query = query.lte('date', dateTo)
+  }
+
   if (accountId) {
     query = query.eq('account_id', accountId)
-  }
-  if (dateFrom) {
-    query = query.gte('date', dateFrom)
-  }
-  if (dateTo) {
-    query = query.lte('date', dateTo)
   }
   if (search) {
     query = query.ilike('merchant_name', `%${search}%`)

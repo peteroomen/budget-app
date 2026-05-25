@@ -24,6 +24,31 @@ function formatAmount(cents: number): string {
   return nzd.format(cents / 100)
 }
 
+/**
+ * Formats a YYYY-MM-DD date string as a human-friendly relative label:
+ * - "Today" / "Yesterday" / "2 days ago" … "7 days ago"
+ * - Older same-year dates: "15 May"
+ * - Different-year dates: "15 May 2024"
+ */
+function formatRelativeDate(dateStr: string): string {
+  const [yearStr, mStr, dStr] = dateStr.split('-')
+  const txDate = new Date(parseInt(yearStr!), parseInt(mStr!) - 1, parseInt(dStr!))
+
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  const diffDays = Math.round((today.getTime() - txDate.getTime()) / 86_400_000)
+
+  if (diffDays === 0) return 'Today'
+  if (diffDays === 1) return 'Yesterday'
+  if (diffDays <= 7) return `${diffDays} days ago`
+
+  return txDate.toLocaleDateString('en-NZ', {
+    day: 'numeric',
+    month: 'short',
+    ...(txDate.getFullYear() !== today.getFullYear() ? { year: 'numeric' } : {}),
+  })
+}
+
 interface SortHeaderProps {
   label: string
   column: TransactionSortBy
@@ -93,7 +118,7 @@ export function TransactionTable({
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead className="text-label-caps uppercase text-muted-foreground font-medium">
+            <TableHead className="text-label-caps uppercase text-muted-foreground font-medium w-28">
               <SortHeader
                 label="Date"
                 column="date"
@@ -102,17 +127,15 @@ export function TransactionTable({
                 params={params}
               />
             </TableHead>
-            <TableHead className="w-8 pr-0" />
             <TableHead className="text-label-caps uppercase text-muted-foreground font-medium">
               <SortHeader
-                label="Merchant / Description"
+                label="Merchant"
                 column="merchant_name"
                 currentSort={sortBy}
                 currentDir={sortDir}
                 params={params}
               />
             </TableHead>
-            <TableHead className="w-8 pr-0" />
             <TableHead className="text-label-caps uppercase text-muted-foreground font-medium">
               Category
             </TableHead>
@@ -132,25 +155,29 @@ export function TransactionTable({
         </TableHeader>
         <TableBody>
           {rows.map((tx) => (
-            <TableRow key={tx.id} className="group h-12 hover:bg-muted/40">
-              <TableCell className="font-mono text-body-sm tabular-nums text-muted-foreground whitespace-nowrap">
-                {tx.date}
+            <TableRow key={tx.id} className="group hover:bg-muted/40 align-top">
+              {/* Date — relative label, monospaced, muted */}
+              <TableCell className="font-mono text-body-sm tabular-nums text-muted-foreground whitespace-nowrap pt-3">
+                {formatRelativeDate(tx.date)}
               </TableCell>
-              <TableCell className="pr-0">
-                <RecurringBadge transactionId={tx.id} isRecurring={tx.is_recurring} />
-              </TableCell>
-              <TableCell>
-                <span className="font-medium">{tx.merchant_name ?? tx.description}</span>
+
+              {/* Merchant + optional raw description + chips */}
+              <TableCell className="pt-2.5">
+                <p className="font-medium leading-snug">{tx.merchant_name ?? tx.description}</p>
                 {tx.merchant_name && tx.merchant_name !== tx.description && (
-                  <span className="block text-xs text-muted-foreground truncate max-w-xs">
+                  <p className="text-xs text-muted-foreground truncate max-w-xs leading-snug">
                     {tx.description}
-                  </span>
+                  </p>
+                )}
+                {(tx.is_recurring || tx.category_source === 'manual') && (
+                  <div className="mt-1.5 flex flex-wrap gap-1.5">
+                    <RecurringBadge transactionId={tx.id} isRecurring={tx.is_recurring} />
+                    <ManualBadge isManual={tx.category_source === 'manual'} />
+                  </div>
                 )}
               </TableCell>
-              <TableCell className="pr-0">
-                <ManualBadge isManual={tx.category_source === 'manual'} />
-              </TableCell>
-              <TableCell>
+
+              <TableCell className="pt-3">
                 <CategoryCell
                   transactionId={tx.id}
                   merchantName={tx.merchant_name}
@@ -162,11 +189,13 @@ export function TransactionTable({
                   categories={categories}
                 />
               </TableCell>
-              <TableCell className="text-sm text-muted-foreground">
+
+              <TableCell className="text-sm text-muted-foreground pt-3">
                 {tx.account?.name ?? '—'}
               </TableCell>
+
               <TableCell
-                className={`font-mono text-body-sm tabular-nums text-right font-medium ${
+                className={`font-mono text-body-sm tabular-nums text-right font-medium pt-3 ${
                   tx.amount_cents > 0 ? 'text-success' : ''
                 }`}
               >

@@ -8,6 +8,7 @@ import { TransactionTable } from '@/components/transactions/TransactionTable'
 import { TransactionDayList } from '@/components/transactions/TransactionDayList'
 import { RecategoriseButton } from '@/components/transactions/RecategoriseButton'
 import { DetectRecurringButton } from '@/components/transactions/DetectRecurringButton'
+import { MonthPicker } from '@/components/budgets/MonthPicker'
 
 const VALID_SORT_COLS: TransactionSortBy[] = ['date', 'amount_cents', 'merchant_name']
 const VALID_DIRS: SortDir[] = ['asc', 'desc']
@@ -22,10 +23,24 @@ function parseSortDir(value: string | undefined): SortDir {
   return VALID_DIRS.includes(value as SortDir) ? (value as SortDir) : 'desc'
 }
 
+function currentMonth(): string {
+  const now = new Date()
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
+}
+
+function isValidMonth(value: string): boolean {
+  return /^\d{4}-\d{2}$/.test(value)
+}
+
+function formatMonthLabel(month: string): string {
+  const [yearStr, mStr] = month.split('-')
+  const date = new Date(parseInt(yearStr!), parseInt(mStr!) - 1, 1)
+  return date.toLocaleDateString('en-NZ', { month: 'long', year: 'numeric' })
+}
+
 interface SearchParams {
+  month?: string
   account?: string
-  from?: string
-  to?: string
   sort?: string
   dir?: string
   q?: string
@@ -38,48 +53,62 @@ export default async function TransactionsPage({
   searchParams: Promise<SearchParams>
 }) {
   const sp = await searchParams
+  const month = typeof sp.month === 'string' && isValidMonth(sp.month) ? sp.month : currentMonth()
   const sortBy = parseSortBy(sp.sort)
   const sortDir = parseSortDir(sp.dir)
 
-  const [accounts, transactions, categories, mappedMerchants] = await Promise.all([
-    getAccounts(),
-    getTransactions({
-      ...(sp.account ? { accountId: sp.account } : {}),
-      ...(sp.from ? { dateFrom: sp.from } : {}),
-      ...(sp.to ? { dateTo: sp.to } : {}),
-      ...(sp.q ? { search: sp.q } : {}),
-      ...(sp.cat ? { categoryId: sp.cat } : {}),
-      sortBy,
-      sortDir,
-    }),
-    getCategories(),
-    getMappedMerchantNames(),
-  ])
+  const hasFilters = !!(sp.account || sp.q || sp.cat)
 
+  // Two parallel fetches: total for the month (unfiltered) + filtered rows.
+  // When no filters are active we skip the filtered query and reuse allMonth.
+  const [accounts, allMonthTransactions, filteredTransactions, categories, mappedMerchants] =
+    await Promise.all([
+      getAccounts(),
+      getTransactions({ month, sortBy, sortDir }),
+      hasFilters
+        ? getTransactions({
+            month,
+            ...(sp.account ? { accountId: sp.account } : {}),
+            ...(sp.q ? { search: sp.q } : {}),
+            ...(sp.cat ? { categoryId: sp.cat } : {}),
+            sortBy,
+            sortDir,
+          })
+        : null,
+      getCategories(),
+      getMappedMerchantNames(),
+    ])
+
+  const transactions = filteredTransactions ?? allMonthTransactions
+  const totalCount = allMonthTransactions.length
+  const filteredCount = transactions.length
+
+  // URL params for sort link generation — preserve filters, keep month
   const urlParams = new URLSearchParams()
+  urlParams.set('month', month)
   if (sp.account) urlParams.set('account', sp.account)
-  if (sp.from) urlParams.set('from', sp.from)
-  if (sp.to) urlParams.set('to', sp.to)
   if (sp.q) urlParams.set('q', sp.q)
   if (sp.cat) urlParams.set('cat', sp.cat)
   urlParams.set('sort', sortBy)
   urlParams.set('dir', sortDir)
 
-  const isFiltered = !!(sp.account || sp.from || sp.to || sp.q || sp.cat)
+  const subheading = hasFilters
+    ? `${filteredCount} of ${totalCount} · ${formatMonthLabel(month)}`
+    : `${totalCount} · ${formatMonthLabel(month)}`
 
   return (
     <div className="space-y-6">
       <div className="flex items-start justify-between gap-4">
         <div>
           <h1 className="font-display text-display-h1 font-medium">Transactions</h1>
-          <p className="mt-1 text-body-sm text-muted-foreground">
-            {transactions.length} transaction{transactions.length !== 1 ? 's' : ''}
-            {isFiltered ? ' (filtered)' : ''}
-          </p>
+          <p className="mt-1 text-body-sm text-muted-foreground">{subheading}</p>
         </div>
         <div className="flex items-center gap-2">
           <DetectRecurringButton />
           <RecategoriseButton />
+          <Suspense fallback={null}>
+            <MonthPicker month={month} basePath="/transactions" />
+          </Suspense>
         </div>
       </div>
 
