@@ -18,7 +18,7 @@ export function IncomeVsSpendCards({ summary }: IncomeVsSpendCardsProps) {
   const netPositive = net_cents >= 0
 
   return (
-    <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+    <>
       <Card>
         <CardHeader className="pb-2">
           <CardTitle className="text-sm font-medium text-muted-foreground">Total Income</CardTitle>
@@ -50,6 +50,6 @@ export function IncomeVsSpendCards({ summary }: IncomeVsSpendCardsProps) {
           </p>
         </CardContent>
       </Card>
-    </div>
+    </>
   )
 }

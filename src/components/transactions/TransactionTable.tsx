@@ -10,6 +10,7 @@ import {
 import type { TransactionRow, TransactionSortBy, SortDir } from '@/lib/queries/transactions'
 import type { Category } from '@/types'
 import { CategoryCell } from './CategoryCell'
+import { RecurringBadge } from './RecurringBadge'
 
 const nzd = new Intl.NumberFormat('en-NZ', {
   style: 'currency',
@@ -93,6 +94,7 @@ export function TransactionTable({
                 params={params}
               />
             </TableHead>
+            <TableHead className="w-8 pr-0" />
             <TableHead className="text-muted-foreground font-medium">
               <SortHeader
                 label="Merchant / Description"
@@ -117,9 +119,12 @@ export function TransactionTable({
         </TableHeader>
         <TableBody>
           {rows.map((tx) => (
-            <TableRow key={tx.id}>
+            <TableRow key={tx.id} className="group">
               <TableCell className="tabular-nums text-muted-foreground whitespace-nowrap">
                 {tx.date}
+              </TableCell>
+              <TableCell className="pr-0">
+                <RecurringBadge transactionId={tx.id} isRecurring={tx.is_recurring} />
               </TableCell>
               <TableCell>
                 <span className="font-medium">{tx.merchant_name ?? tx.description}</span>

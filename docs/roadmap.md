@@ -149,9 +149,20 @@ uploads
 
 ### Recurring Transactions
 
-- [ ] Auto-detect recurring: same merchant + similar amount appearing monthly
-- [ ] Manual flag toggle on any transaction
-- [ ] "Fixed costs" summary card: total confirmed recurring per month (rent, ELC, loans, insurance, subscriptions)
+- [x] Auto-detect recurring: same merchant + similar amount appearing monthly
+- [x] Manual flag toggle on any transaction
+- [x] "Fixed costs" summary card: total confirmed recurring per month (rent, ELC, loans, insurance, subscriptions)
+
+> **Future enhancements to the Fixed Costs card — revisit in Phase 5**
+>
+> The current card shows a total + merchant count. Possible directions:
+>
+> - **Merchant breakdown list:** expand the card (or link to a panel) showing each recurring merchant with its typical amount — so you can see at a glance that it's Netflix $22.99, ELC $620, ANZ Homeloan $1,250, etc. rather than just a total.
+> - **Month-over-month delta:** flag when a recurring amount changes (e.g. power bill went up $15 vs last month) — useful for catching subscription price creep.
+> - **"Expected vs arrived" status:** for the current month, show which recurring payments have already hit vs which are still expected (based on historical day-of-month patterns). Helps with cash flow planning mid-month.
+> - **Auto-run detection on import:** currently triggered manually; could run automatically after each CSV/PDF import.
+> - **Category breakdown:** split fixed costs by category (Insurance, Subscriptions, Loans, Childcare, Utilities) so you can see the composition, not just the total.
+> - **Annual projection:** fixed costs × 12 shown as a "committed annual spend" figure.
 
 **Deliverable:** Open the app mid-month and know exactly where you stand.
 

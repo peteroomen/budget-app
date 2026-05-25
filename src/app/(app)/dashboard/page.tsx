@@ -1,9 +1,9 @@
-import { getDashboardData } from '@/lib/queries/dashboard'
+import { Suspense } from 'react'
 import { currentMonth, formatMonthLabel } from '@/lib/utils/month'
+import { createClient } from '@/lib/supabase/server'
 import { MonthSelector } from '@/components/dashboard/MonthSelector'
-import { IncomeVsSpendCards } from '@/components/dashboard/IncomeVsSpendCards'
-import { SpendByCategoryChart } from '@/components/dashboard/SpendByCategoryChart'
-import { TopMerchantsTable } from '@/components/dashboard/TopMerchantsTable'
+import { DashboardContent } from './DashboardContent'
+import { DashboardContentSkeleton } from './loading'
 
 interface DashboardPageProps {
   searchParams: Promise<{ month?: string }>
@@ -13,25 +13,22 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
   const { month: monthParam } = await searchParams
   const month = monthParam && /^\d{4}-\d{2}$/.test(monthParam) ? monthParam : currentMonth()
 
-  const data = await getDashboardData(month)
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  const isAdmin = user?.app_metadata?.role === 'admin'
 
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <h1 className="text-2xl font-semibold">{formatMonthLabel(month)}</h1>
-        <MonthSelector month={month} />
+        <MonthSelector month={month} allowFuture={isAdmin} />
       </div>
 
-      <IncomeVsSpendCards summary={data.summary} />
-
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        <div className="lg:col-span-2">
-          <SpendByCategoryChart data={data.byCategory} />
-        </div>
-        <div>
-          <TopMerchantsTable merchants={data.topMerchants} />
-        </div>
-      </div>
+      <Suspense key={month} fallback={<DashboardContentSkeleton />}>
+        <DashboardContent month={month} />
+      </Suspense>
     </div>
   )
 }
