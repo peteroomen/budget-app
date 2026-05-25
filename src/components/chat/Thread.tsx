@@ -16,9 +16,9 @@ export function Thread() {
     <ThreadPrimitive.Root className="flex h-full flex-col overflow-hidden">
       <ThreadPrimitive.Viewport className="flex flex-1 flex-col overflow-y-auto px-4 py-6">
         <ThreadPrimitive.Empty>
-          <div className="flex flex-1 flex-col items-center justify-center gap-2 py-16 text-center">
-            <p className="text-base font-medium">Budget Assistant</p>
-            <p className="max-w-xs text-sm text-muted-foreground">
+          <div className="flex flex-1 flex-col items-center justify-center gap-3 py-16 text-center">
+            <p className="font-display text-display-hero-sm font-medium">Ask Tide</p>
+            <p className="max-w-xs text-body-sm text-muted-foreground">
               Ask me anything about your finances — spending patterns, budgets, or how this month
               compares to last.
             </p>
@@ -44,7 +44,7 @@ function UserMessage() {
 }
 
 function UserText({ text }: TextMessagePartProps) {
-  return <p className="text-sm whitespace-pre-wrap">{text}</p>
+  return <p className="text-body-sm whitespace-pre-wrap">{text}</p>
 }
 
 function AssistantMessage() {
@@ -69,11 +69,11 @@ function AssistantText() {
 function Composer() {
   return (
     <div className="border-t px-4 pb-4 pt-3">
-      <ComposerPrimitive.Root className="flex items-end gap-2 rounded-xl border bg-background px-3 py-2 shadow-sm focus-within:ring-1 focus-within:ring-ring">
+      <ComposerPrimitive.Root className="flex items-end gap-2 rounded-xl border bg-background px-3 py-2 shadow-sm transition-colors focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/16">
         <ComposerPrimitive.Input
           autoFocus
           placeholder="Ask about your budget…"
-          className="max-h-32 flex-1 resize-none bg-transparent py-1 text-sm outline-none placeholder:text-muted-foreground"
+          className="max-h-32 flex-1 resize-none bg-transparent py-1 text-body-sm outline-none placeholder:text-muted-foreground"
           rows={1}
         />
         <ComposerPrimitive.Send

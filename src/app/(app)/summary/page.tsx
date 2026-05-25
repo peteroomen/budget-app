@@ -42,7 +42,12 @@ export default async function SummaryPage({ searchParams }: SummaryPageProps) {
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
-        <h1 className="text-2xl font-semibold">Monthly Summary</h1>
+        <div>
+          <h1 className="font-display text-display-summary-h1 font-medium">Monthly Summary</h1>
+          <p className="mt-0.5 text-body-sm text-muted-foreground">
+            A plain-English read of where the money went.
+          </p>
+        </div>
         <SummaryMonthSelector month={month} allowFuture={isAdmin} />
       </div>
 

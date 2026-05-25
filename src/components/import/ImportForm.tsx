@@ -30,7 +30,10 @@ export function ImportForm({ accounts }: { accounts: Account[] }) {
         {accounts.length === 0 ? (
           <p className="text-sm text-muted-foreground">
             No accounts yet.{' '}
-            <a href="/accounts" className="underline">
+            <a
+              href="/settings?tab=accounts"
+              className="underline hover:text-foreground transition-colors"
+            >
               Add one first.
             </a>
           </p>
@@ -72,13 +75,15 @@ export function ImportForm({ accounts }: { accounts: Account[] }) {
       {state.error && <p className="text-sm text-destructive">{state.error}</p>}
 
       {succeeded && (
-        <div className="rounded-md border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800">
-          <p className="font-medium">Import complete ({state.format})</p>
-          <p>
+        <div className="rounded-lg border border-success/25 bg-success/8 px-4 py-3">
+          <p className="text-display-card-title font-medium text-foreground">
+            Import complete — {state.format}
+          </p>
+          <p className="mt-1 text-body-sm text-muted-foreground">
             {state.inserted} transaction{state.inserted !== 1 ? 's' : ''} added
           </p>
           {state.duplicates! > 0 && (
-            <p className="text-green-700">
+            <p className="text-body-sm text-muted-foreground">
               {state.duplicates} duplicate{state.duplicates !== 1 ? 's' : ''} skipped
             </p>
           )}
