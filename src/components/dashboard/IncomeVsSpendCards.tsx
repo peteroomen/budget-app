@@ -21,29 +21,39 @@ export function IncomeVsSpendCards({ summary }: IncomeVsSpendCardsProps) {
     <>
       <Card>
         <CardHeader className="pb-2">
-          <CardTitle className="text-sm font-medium text-muted-foreground">Total Income</CardTitle>
+          <CardTitle className="text-body-xs font-sans font-medium text-muted-foreground">
+            Total Income
+          </CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-2xl font-semibold text-green-600">{formatNZD(income_cents)}</p>
+          <p className="font-display text-display-hero font-medium tabular-nums text-success">
+            {formatNZD(income_cents)}
+          </p>
         </CardContent>
       </Card>
 
       <Card>
         <CardHeader className="pb-2">
-          <CardTitle className="text-sm font-medium text-muted-foreground">Total Spent</CardTitle>
+          <CardTitle className="text-body-xs font-sans font-medium text-muted-foreground">
+            Total Spent
+          </CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-2xl font-semibold text-red-600">{formatNZD(spend_cents)}</p>
+          <p className="font-display text-display-hero font-medium tabular-nums">
+            {formatNZD(spend_cents)}
+          </p>
         </CardContent>
       </Card>
 
       <Card>
         <CardHeader className="pb-2">
-          <CardTitle className="text-sm font-medium text-muted-foreground">Net</CardTitle>
+          <CardTitle className="text-body-xs font-sans font-medium text-muted-foreground">
+            Net
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <p
-            className={`text-2xl font-semibold ${netPositive ? 'text-green-600' : 'text-red-600'}`}
+            className={`font-display text-display-hero font-medium tabular-nums ${netPositive ? 'text-success' : ''}`}
           >
             {netPositive ? '' : '−'}
             {formatNZD(Math.abs(net_cents))}

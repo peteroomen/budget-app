@@ -226,20 +226,45 @@ The chat interface is v1. Before building any of these, sit down and properly de
 
 > Goal: An app you actually want to open every month.
 
-- [ ] **Merge Dining Out + Takeaways → "Dining & Takeaways"** — the two categories overlap too much in practice and split the budget signal. Migration: rename "Dining Out" to "Dining & Takeaways", reassign all transactions and merchant_category_map rows that reference "Takeaways" to the renamed category, then delete the "Takeaways" category. One migration file + seed update. Resolves the open question from Phase 2.
-- [ ] **Add "Housing" default category** — mortgage repayments, rent, body corp fees, and rates have no home in the current category set. Add a system category "Housing" (sits between Utilities and Insurance in sort order) via migration. Update the AI categorisation prompt examples to include it.
-- [ ] **Transaction notes UI + Claude awareness** — the `notes` column already exists on `transactions` but is invisible. Two parts: (a) inline editable note on the transaction list row (pencil icon → text input → save via server action); (b) inject non-empty notes into the chat context block and monthly summary prompt so Claude sees the annotation ("normal — dog vet, every 3 months") and doesn't flag it. Makes AI output dramatically more useful for irregular-but-expected spend.
-- [ ] **Transaction pagination** — the transaction list will get unwieldy once several months of data are loaded. Two approaches to decide between: (a) show one month at a time (month selector like the dashboard, clean mental model), or (b) traditional pagination with the existing filters still in play. Approach TBD — revisit once real data volume makes the problem concrete.
-- [ ] **Import summary** — after an upload completes, show a breakdown of what happened: X transactions imported, X duplicates skipped, X categorised from merchant memory, X categorised by Claude, X flagged as recurring, X uncategorised. Becomes more useful as more AI detection runs on import (recurring, anomaly flagging, etc.). Display inline on the import page or as a modal — don't navigate away.
+### Tide design system ✓ shipped
+
+- [x] Foundation — CSS tokens, dark mode (next-themes), Fraunces + JetBrains Mono, primitives (Badge, Button, Progress, Card, Tabs, Input)
+- [x] Per-page typography pass — Dashboard, Transactions, Budgets, Summary, Chat, Import, Settings
+- [x] Budgets layout — desktop table with progress bars + pacing badges; mobile card grid
+- [x] Transaction search + category filter — merchant text search (ilike) + category dropdown; URL param driven
+- [x] Transaction month picker — month-scoped view (‹ May 2026 ›), relative dates, inline recurring/manual chips, "X of Y · Month" subheading
+- [x] Import dropzone — drag-drop zone with dashed border, hover state, upload icon; DataTransfer API wires file to hidden input
+- [x] Import "What we support" card — 2×2 grid: ANZ/ASB/Westpac/BNZ with supported formats
+- [x] Import success redesign — centred stat grid (Imported / Duplicates skipped) + "Review transactions" CTA
+- [x] Chat assistant bubble style — sparkle avatar (28px circle) + plain text; no `bg-muted` bubble
+- [x] Chat prompt chips — 4 suggested prompts in empty state; `useAui().thread().append()` on click
+- [x] Budgets KPI stats row — 4 mini stat cards (Total budget / Spent / Remaining / Over budget)
+- [x] Summary inline stats — Spend / Income / Net row inside Spend Overview card; delta arrows
+- [x] Summary compare bars — horizontal bars in vs-last-month card (prior = muted, current = primary)
+- [x] Summary sparkles header — SparklesIcon + month label above headline paragraph
+- [x] Dashboard quick-action links — "Manage budgets ↗" in chart card; "All ↗" in merchants card
+- [ ] **Import history list** — log each import (filename, account, timestamp, row_count, source format); surface as "Recent imports" card. Requires migration.
+- [ ] **Summary regenerate button** — clears cached result and re-calls Claude; needs route handler or revalidatePath trigger
+- [ ] **Summary export** — download as plain text / copy to clipboard
+- [ ] **Dashboard bottom row** — "Recent transactions" preview + "Quick actions" panel; low priority
+
+### Other Phase 5 items
+
 - [x] Monthly summary view — Claude-generated one-page recap (spend vs budget, vs prior month, notable patterns)
+- [x] Full-text transaction search — shipped as part of Tide pass
+- [ ] **Merge Dining Out + Takeaways → "Dining & Takeaways"** — the two categories overlap too much in practice. Migration: rename "Dining Out", reassign all transactions + merchant_category_map rows from "Takeaways", delete "Takeaways". One migration file.
+- [ ] **Add "Housing" default category** — mortgage, rent, body corp, rates have no home. Add system category via migration; update AI categorisation prompt examples.
+- [ ] **Transaction notes UI + Claude awareness** — `notes` column exists but is invisible. (a) inline editable note on the transaction row; (b) inject non-empty notes into chat context + summary prompt so Claude sees annotations like "normal — dog vet, every 3 months".
+- [ ] **Import summary** — post-upload breakdown: X imported, X duplicates, X from merchant memory, X from Claude, X recurring, X uncategorised. Display inline on the import page.
+- [ ] **Auto-run recurring detection after import** — currently manual trigger only; run automatically as a post-import step
 - [ ] In-app budget alerts: "You're 80% through Dining & Takeaways"
 - [ ] Multi-account view (net position across all accounts)
-- [ ] Full-text transaction search
 - [ ] CSV export of filtered transactions
 - [ ] Mobile-responsive polish pass
-- [ ] Dark mode (trivial with shadcn)
+- [x] Dark mode — shipped in Tide foundation (next-themes + ThemeToggle)
 - [ ] Persisted chat history (optional upgrade — store threads in Supabase)
-- [ ] Budget page month picker enhancement — replace prev/next buttons with a richer selector: click the month label to open a shadcn Popover with a year + month grid so users can jump directly to any month rather than stepping one at a time
+- [ ] **Month picker enhancement** — click the month label to open a Popover year+month grid; jump directly instead of stepping one month at a time
+- [ ] **Category icon picker** — Lucide icon picker in category management UI; `icon` column already exists in schema
 
 ---
 

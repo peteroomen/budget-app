@@ -21,9 +21,11 @@ function offsetMonth(month: string, delta: number): string {
 
 interface MonthPickerProps {
   month: string
+  /** Base path to navigate on month change. Defaults to '/budgets'. */
+  basePath?: string
 }
 
-export function MonthPicker({ month }: MonthPickerProps) {
+export function MonthPicker({ month, basePath = '/budgets' }: MonthPickerProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
 
@@ -31,7 +33,7 @@ export function MonthPicker({ month }: MonthPickerProps) {
     const next = offsetMonth(month, delta)
     const params = new URLSearchParams(searchParams.toString())
     params.set('month', next)
-    router.push(`/budgets?${params.toString()}`)
+    router.push(`${basePath}?${params.toString()}`)
   }
 
   return (

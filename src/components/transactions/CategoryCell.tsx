@@ -16,7 +16,6 @@ interface Props {
   transactionId: string
   merchantName: string | null
   categoryId: string | null
-  categorySource: string | null
   hasMerchantMapping: boolean
   categories: Category[]
 }
@@ -25,7 +24,6 @@ export function CategoryCell({
   transactionId,
   merchantName,
   categoryId,
-  categorySource,
   hasMerchantMapping,
   categories,
 }: Props) {
@@ -54,17 +52,17 @@ export function CategoryCell({
         onValueChange={handleCategoryChange}
         disabled={isPending}
       >
-        <SelectTrigger className="h-7 text-xs w-40 border-transparent hover:border-input focus:border-input transition-colors">
+        <SelectTrigger className="h-7 text-xs w-44 border-transparent hover:border-input focus:border-input transition-colors">
           <SelectValue>
             {selectedCategory ? (
-              <span className="flex items-center gap-1.5">
+              <span className="flex items-center gap-1.5 min-w-0">
                 {selectedCategory.color && (
                   <span
-                    className="inline-block w-2 h-2 rounded-full flex-shrink-0"
+                    className="inline-block w-2 h-2 rounded-full shrink-0"
                     style={{ backgroundColor: selectedCategory.color }}
                   />
                 )}
-                {selectedCategory.name}
+                <span className="truncate">{selectedCategory.name}</span>
               </span>
             ) : (
               <span className="text-muted-foreground">Uncategorised</span>
@@ -90,28 +88,6 @@ export function CategoryCell({
           ))}
         </SelectContent>
       </Select>
-
-      {categorySource === 'manual' && (
-        <span
-          title="Manually overridden"
-          className="text-muted-foreground flex-shrink-0"
-          aria-label="Manually categorised"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="12"
-            height="12"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
-          </svg>
-        </span>
-      )}
 
       {hasMerchantMapping && merchantName && (
         <button

@@ -1,7 +1,10 @@
 'use client'
 
+import Link from 'next/link'
+import { ArrowUpRight } from 'lucide-react'
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from 'recharts'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
 import {
   ChartContainer,
   ChartTooltip,
@@ -14,24 +17,25 @@ interface SpendByCategoryChartProps {
   data: CategorySpend[]
 }
 
+// Matches --chart-1..5 tokens: sage, warm-gold, dusty-blue, terracotta, muted-plum
 const FALLBACK_COLORS = [
-  '#6366f1',
-  '#8b5cf6',
-  '#ec4899',
-  '#f43f5e',
-  '#f97316',
-  '#eab308',
-  '#22c55e',
-  '#14b8a6',
-  '#06b6d4',
-  '#3b82f6',
-  '#a855f7',
-  '#d946ef',
-  '#10b981',
-  '#84cc16',
-  '#ef4444',
-  '#0ea5e9',
-  '#f59e0b',
+  '#427561',
+  '#c48d47',
+  '#576a9c',
+  '#b45c42',
+  '#7d6595',
+  '#427561',
+  '#c48d47',
+  '#576a9c',
+  '#b45c42',
+  '#7d6595',
+  '#427561',
+  '#c48d47',
+  '#576a9c',
+  '#b45c42',
+  '#7d6595',
+  '#427561',
+  '#c48d47',
   '#64748b',
 ]
 
@@ -74,6 +78,11 @@ export function SpendByCategoryChart({ data }: SpendByCategoryChartProps) {
     <Card>
       <CardHeader>
         <CardTitle className="text-base">Spend by Category</CardTitle>
+        <Button variant="ghost" size="sm" asChild>
+          <Link href="/budgets" className="flex items-center gap-1">
+            Manage budgets <ArrowUpRight className="h-3 w-3" />
+          </Link>
+        </Button>
       </CardHeader>
       <CardContent>
         <ChartContainer config={chartConfig} className="max-h-[360px] w-full">
