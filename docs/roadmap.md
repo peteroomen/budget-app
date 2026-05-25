@@ -228,6 +228,7 @@ The chat interface is v1. Before building any of these, sit down and properly de
 
 > Goal: An app you actually want to open every month.
 
+- [ ] **Import summary** — after an upload completes, show a breakdown of what happened: X transactions imported, X duplicates skipped, X categorised from merchant memory, X categorised by Claude, X flagged as recurring, X uncategorised. Becomes more useful as more AI detection runs on import (recurring, anomaly flagging, etc.). Display inline on the import page or as a modal — don't navigate away.
 - [ ] Monthly summary view — Claude-generated one-page recap (spend vs budget, vs prior month, notable patterns)
 - [ ] In-app budget alerts: "You're 80% through Dining Out"
 - [ ] Multi-account view (net position across all accounts)
@@ -274,6 +275,7 @@ Suggested chunking — each is one focused Claude Code session:
 14. **Chat agent** — context injection, system prompt, NZD-aware responses
 15. **Monthly summary** — Claude-generated recap view
 16. **Polish pass** — responsive, dark mode, edge cases, empty states
+17. **Import summary** — post-upload breakdown (imported / duplicates / from map / from Claude / recurring / uncategorised)
 
 > **Tip:** Each Claude Code session: one item from the list above + current DB schema as context. Never combine items. Smaller scope = fewer errors and easier debugging.
 
