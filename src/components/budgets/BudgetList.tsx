@@ -18,125 +18,146 @@ function formatNZD(cents: number): string {
   return nzd.format(cents / 100)
 }
 
-const ROW_COLS = 'auto 200px 1fr auto auto'
-
 interface BudgetListProps {
   items: BudgetWithActual[]
   month: string
 }
 
-function BudgetRow({ item, month }: { item: BudgetWithActual; month: string }) {
-  const [open, setOpen] = useState(false)
-  const { category, budget, actual_cents } = item
-  const budgetCents = budget?.amount_cents ?? 0
-  const ratio = budgetCents > 0 ? actual_cents / budgetCents : 0
-  const pct = Math.min(ratio * 100, 100)
-  const isOver = ratio >= 1
-  const isApproaching = ratio >= 0.8
-
-  const indicatorClassName = isOver ? 'bg-destructive' : isApproaching ? 'bg-warning' : 'bg-success'
-
-  const pctBadgeVariant: BadgeProps['variant'] = isOver
-    ? 'danger'
-    : isApproaching
-      ? 'warn'
-      : 'outline'
-
-  const leftOrOver = budget
-    ? isOver
-      ? { amount: formatNZD(actual_cents - budgetCents), label: 'over', over: true }
-      : { amount: formatNZD(budgetCents - actual_cents), label: 'left', over: false }
-    : null
+export function BudgetList({ items, month }: BudgetListProps) {
+  const [openId, setOpenId] = useState<string | null>(null)
 
   return (
     <>
-      <div
-        role="button"
-        tabIndex={0}
-        onClick={() => setOpen(true)}
-        onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && setOpen(true)}
-        className="grid cursor-pointer items-center gap-x-4 px-4 py-3.5 last:rounded-b-lg hover:bg-muted/30 transition-colors focus-visible:outline-none focus-visible:bg-muted/30"
-        style={{ gridTemplateColumns: ROW_COLS }}
-      >
-        {/* dot */}
-        <span
-          className="h-2.5 w-2.5 shrink-0 rounded-full"
-          style={{ backgroundColor: category.color ?? 'hsl(var(--primary))' }}
+      <div className="overflow-hidden rounded-lg border border-border">
+        <table className="w-full table-fixed border-collapse">
+          <colgroup>
+            <col className="w-10" /> {/* dot */}
+            <col className="w-52" /> {/* name + subtitle */}
+            <col /> {/* progress bar — takes all remaining space */}
+            <col className="w-24" /> {/* budget amount */}
+            <col className="w-20" /> {/* % badge */}
+          </colgroup>
+
+          {/* Header */}
+          <thead>
+            <tr className="border-b border-border">
+              <th />
+              <th className="px-3 py-3 text-left align-middle" colSpan={1}>
+                <p className="text-[13px] font-medium text-foreground">All categories</p>
+                <p className="text-[11px] text-muted-foreground">Click a budget to edit</p>
+              </th>
+              <th />
+              <th />
+              <th />
+            </tr>
+          </thead>
+
+          <tbody className="divide-y divide-border">
+            {items.map(({ category, budget, actual_cents }) => {
+              const budgetCents = budget?.amount_cents ?? 0
+              const ratio = budgetCents > 0 ? actual_cents / budgetCents : 0
+              const pct = Math.min(ratio * 100, 100)
+              const isOver = ratio >= 1
+              const isApproaching = ratio >= 0.8
+
+              const indicatorClassName = isOver
+                ? 'bg-destructive'
+                : isApproaching
+                  ? 'bg-warning'
+                  : 'bg-success'
+
+              const pctBadgeVariant: BadgeProps['variant'] = isOver
+                ? 'danger'
+                : isApproaching
+                  ? 'warn'
+                  : 'outline'
+
+              const leftOrOver = budget
+                ? isOver
+                  ? { amount: formatNZD(actual_cents - budgetCents), label: 'over', over: true }
+                  : { amount: formatNZD(budgetCents - actual_cents), label: 'left', over: false }
+                : null
+
+              return (
+                <tr
+                  key={category.id}
+                  onClick={() => setOpenId(category.id)}
+                  onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && setOpenId(category.id)}
+                  tabIndex={0}
+                  role="button"
+                  className="cursor-pointer transition-colors hover:bg-muted/30 focus-visible:outline-none focus-visible:bg-muted/30"
+                >
+                  {/* dot */}
+                  <td className="pl-4 pr-2 py-3.5 align-middle">
+                    <span
+                      className="block h-2.5 w-2.5 rounded-full"
+                      style={{ backgroundColor: category.color ?? 'hsl(var(--primary))' }}
+                    />
+                  </td>
+
+                  {/* name + subtitle */}
+                  <td className="px-3 py-3.5 align-middle">
+                    <p className="truncate text-[13.5px] font-medium">{category.name}</p>
+                    <p className="mt-0.5 truncate font-mono text-[11.5px] tabular-nums text-muted-foreground">
+                      {formatNZD(actual_cents)} spent
+                      {leftOrOver && (
+                        <>
+                          {' · '}
+                          <span className={leftOrOver.over ? 'text-destructive' : ''}>
+                            {leftOrOver.amount} {leftOrOver.label}
+                          </span>
+                        </>
+                      )}
+                    </p>
+                  </td>
+
+                  {/* progress bar */}
+                  <td className="px-3 py-3.5 align-middle">
+                    {budget ? (
+                      <Progress
+                        value={pct}
+                        className="h-1.5"
+                        indicatorClassName={indicatorClassName}
+                      />
+                    ) : (
+                      <span className="text-[11px] text-muted-foreground">No budget set</span>
+                    )}
+                  </td>
+
+                  {/* budget amount */}
+                  <td className="px-3 py-3.5 align-middle text-right font-mono text-[13px] tabular-nums">
+                    {budget ? formatNZD(budgetCents) : ''}
+                  </td>
+
+                  {/* % badge */}
+                  <td className="pr-4 pl-2 py-3.5 align-middle">
+                    {budget ? (
+                      <Badge variant={pctBadgeVariant} className="font-mono tabular-nums">
+                        {Math.round(ratio * 100)}%
+                      </Badge>
+                    ) : (
+                      <span />
+                    )}
+                  </td>
+                </tr>
+              )
+            })}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Dialogs are portals — safe to render outside the table */}
+      {items.map(({ category, budget }) => (
+        <SetBudgetDialog
+          key={category.id}
+          categoryId={category.id}
+          categoryName={category.name}
+          month={month}
+          existing={budget}
+          open={openId === category.id}
+          onOpenChange={(open) => setOpenId(open ? category.id : null)}
         />
-
-        {/* name + subtitle */}
-        <div className="min-w-0">
-          <p className="font-medium text-[13.5px] truncate">{category.name}</p>
-          <p className="text-[11.5px] font-mono tabular-nums text-muted-foreground truncate mt-0.5">
-            {formatNZD(actual_cents)} spent
-            {leftOrOver && (
-              <>
-                {' · '}
-                <span className={leftOrOver.over ? 'text-destructive' : ''}>
-                  {leftOrOver.amount} {leftOrOver.label}
-                </span>
-              </>
-            )}
-          </p>
-        </div>
-
-        {/* progress bar */}
-        <div className="min-w-0">
-          {budget ? (
-            <Progress value={pct} className="h-1.5" indicatorClassName={indicatorClassName} />
-          ) : (
-            <span className="text-[11px] text-muted-foreground">No budget set</span>
-          )}
-        </div>
-
-        {/* budget cap amount */}
-        <span className="font-mono text-[13px] tabular-nums text-foreground text-right">
-          {budget ? formatNZD(budgetCents) : ''}
-        </span>
-
-        {/* percentage badge — always shown when a budget exists */}
-        {budget ? (
-          <Badge variant={pctBadgeVariant} className="font-mono tabular-nums justify-center">
-            {Math.round(ratio * 100)}%
-          </Badge>
-        ) : (
-          <span />
-        )}
-      </div>
-
-      <SetBudgetDialog
-        categoryId={category.id}
-        categoryName={category.name}
-        month={month}
-        existing={budget}
-        open={open}
-        onOpenChange={setOpen}
-      />
-    </>
-  )
-}
-
-export function BudgetList({ items, month }: BudgetListProps) {
-  return (
-    <div className="divide-y divide-border rounded-lg border border-border">
-      {/* Header row — same background as data rows */}
-      <div
-        className="grid items-center gap-x-4 px-4 py-3 rounded-t-lg"
-        style={{ gridTemplateColumns: ROW_COLS }}
-      >
-        <span />
-        <div>
-          <p className="font-medium text-[13px] text-foreground">All categories</p>
-          <p className="text-[11px] text-muted-foreground">Click a budget to edit</p>
-        </div>
-        <span />
-        <span />
-        <span />
-      </div>
-
-      {items.map((item) => (
-        <BudgetRow key={item.category.id} item={item} month={month} />
       ))}
-    </div>
+    </>
   )
 }
