@@ -11,9 +11,14 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog'
-import { deleteAllTransactions } from '@/lib/actions/transactions'
 
-export function DeleteAllTransactionsButton() {
+interface Props {
+  title: string
+  description: string
+  action: () => Promise<{ error: string | null }>
+}
+
+export function DangerActionButton({ title, description, action }: Props) {
   const [open, setOpen] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
@@ -21,7 +26,7 @@ export function DeleteAllTransactionsButton() {
   function handleConfirm() {
     setError(null)
     startTransition(async () => {
-      const result = await deleteAllTransactions()
+      const result = await action()
       if (result.error) {
         setError(result.error)
       } else {
@@ -34,16 +39,13 @@ export function DeleteAllTransactionsButton() {
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button variant="destructive" size="sm">
-          Delete all transactions
+          {title}
         </Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Delete all transactions?</DialogTitle>
-          <DialogDescription>
-            This permanently deletes every transaction across all accounts. Accounts, categories,
-            and merchant memory are not affected. This cannot be undone.
-          </DialogDescription>
+          <DialogTitle>{title}?</DialogTitle>
+          <DialogDescription>{description}</DialogDescription>
         </DialogHeader>
         {error && <p className="text-sm text-destructive">{error}</p>}
         <DialogFooter>

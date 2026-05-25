@@ -46,6 +46,29 @@ export async function upsertMerchantMapping(
   return { error: null }
 }
 
+export async function deleteAllMerchantMappings(): Promise<ActionResult> {
+  const supabase = await createClient()
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user) return { error: 'Not authenticated' }
+  if (user.app_metadata?.role !== 'admin') return { error: 'Not authorised' }
+
+  const householdId = await getHouseholdId()
+  if (!householdId) return { error: 'No household found' }
+
+  const { error } = await supabase
+    .from('merchant_category_map')
+    .delete()
+    .eq('household_id', householdId)
+
+  if (error) return { error: error.message }
+
+  revalidatePath('/transactions')
+  return { error: null }
+}
+
 export async function deleteMerchantMapping(merchantName: string): Promise<ActionResult> {
   const supabase = await createClient()
   const householdId = await getHouseholdId()
