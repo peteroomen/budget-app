@@ -9,6 +9,7 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Separator } from '@/components/ui/separator'
 import { NavLink } from '@/components/nav/NavLink'
 import { PRIMARY_NAV, SECONDARY_NAV } from '@/components/nav/nav-items'
+import { ThemeToggle } from '@/components/theme/ThemeToggle'
 import { getInitials } from '@/lib/utils'
 import type { Profile } from '@/types'
 
@@ -45,16 +46,17 @@ export function MobileDrawer({ profile }: MobileDrawerProps) {
             {/* User chip */}
             <div className="flex items-center gap-3">
               <Avatar className="h-9 w-9 shrink-0 rounded-md">
-                <AvatarFallback className="rounded-md bg-muted text-sm font-semibold">
+                <AvatarFallback className="rounded-md bg-gradient-to-br from-primary to-primary/60 text-primary-foreground text-sm font-semibold">
                   {initials}
                 </AvatarFallback>
               </Avatar>
-              <div className="min-w-0">
+              <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-medium leading-tight">{displayName}</p>
                 <p className="truncate text-xs text-muted-foreground leading-tight">
                   {profile.email}
                 </p>
               </div>
+              <ThemeToggle />
             </div>
           </SheetHeader>
 

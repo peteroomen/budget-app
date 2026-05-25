@@ -8,6 +8,7 @@ import { Separator } from '@/components/ui/separator'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { SignOutButton } from '@/components/auth/SignOutButton'
+import { ThemeToggle } from '@/components/theme/ThemeToggle'
 import { getInitials } from '@/lib/utils'
 import type { Profile } from '@/types'
 
@@ -19,7 +20,7 @@ function SidebarUserFooter({ profile }: { profile: Profile }) {
     <div className="flex items-center justify-between gap-2 px-3 py-3">
       <div className="flex min-w-0 items-center gap-2.5">
         <Avatar className="h-8 w-8 shrink-0 rounded-md">
-          <AvatarFallback className="rounded-md bg-muted text-xs font-semibold">
+          <AvatarFallback className="rounded-md bg-gradient-to-br from-primary to-primary/60 text-primary-foreground text-xs font-semibold">
             {initials}
           </AvatarFallback>
         </Avatar>
@@ -30,7 +31,10 @@ function SidebarUserFooter({ profile }: { profile: Profile }) {
           </p>
         </div>
       </div>
-      <SignOutButton />
+      <div className="flex items-center gap-1">
+        <ThemeToggle />
+        <SignOutButton />
+      </div>
     </div>
   )
 }
@@ -47,7 +51,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       <aside className="hidden w-[232px] shrink-0 flex-col overflow-y-auto border-r bg-muted/40 md:flex">
         {/* Brand row */}
         <div className="px-4 py-4">
-          <span className="text-base font-semibold tracking-tight">Budget App</span>
+          <span className="font-display text-[15px] font-semibold tracking-tight">Tide</span>
           <p className="text-[11px] text-muted-foreground">Household</p>
         </div>
 
@@ -66,7 +70,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           {/* Mobile: hamburger + brand */}
           <div className="flex items-center gap-3 md:hidden">
             <MobileDrawer profile={profile} />
-            <span className="text-sm font-semibold">Budget App</span>
+            <span className="font-display text-[15px] font-semibold">Tide</span>
           </div>
 
           {/* Desktop: spacer so Import sits on the right */}
