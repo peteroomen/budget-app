@@ -162,18 +162,52 @@ This places the bottom tab bar _outside_ the scroll container, so the chat page'
 
 ## What actually happened
 
-(fill in after session)
+All 7 steps completed as planned. Key decisions / surprises:
+
+- Nav constants (`PRIMARY_NAV`, `SECONDARY_NAV`) were initially in `layout.tsx` — Next.js type-checks disallow non-standard exports from layout files. Moved to `src/components/nav/nav-items.ts` and imported everywhere.
+- `SettingsTabs` uses the React Server Components "children as props" pattern: the Settings server page pre-fetches all data and passes rendered RSC output as `ReactNode` props to the client `SettingsTabs` wrapper — sidesteps the "redirect fires unconditionally" problem.
+- `TransactionTable` didn't have a `className` prop — added it with `cn()` so `hidden md:block` could be applied.
+- `exactOptionalPropertyTypes: true` in tsconfig required `{...(onClick ? { onClick } : {})}` spread pattern on NavLink rather than passing `onClick` directly.
+- Layout simplified: removed `createClient` / `getUser` from `AppLayout` entirely since `getCurrentProfile` already does the auth check internally.
+- shadcn `Avatar` and `Sheet` were not previously installed — added via `pnpm dlx shadcn@latest add sheet avatar`.
 
 ## Files created / modified
 
-(fill in after session)
+**Created:**
+
+- `src/components/nav/nav-items.ts` — shared nav constants
+- `src/components/nav/BottomTabBar.tsx` — mobile 5-tab sticky bar
+- `src/components/nav/MobileDrawer.tsx` — Sheet-based drawer for mobile secondary nav
+- `src/components/settings/AccountsContent.tsx`
+- `src/components/settings/CategoriesContent.tsx`
+- `src/components/settings/DangerZoneContent.tsx`
+- `src/components/settings/SettingsTabs.tsx` — client wrapper with URL-driven tab state
+- `src/app/(app)/settings/page.tsx`
+- `src/components/transactions/TransactionDayList.tsx`
+- `src/components/ui/avatar.tsx` (shadcn)
+- `src/components/ui/sheet.tsx` (shadcn)
+- `docs/work/2026-05-25-nav-layout-restructure.md`
+
+**Modified:**
+
+- `src/app/(app)/layout.tsx` — full rebuild
+- `src/app/(app)/accounts/page.tsx` → redirect
+- `src/app/(app)/categories/page.tsx` → redirect
+- `src/app/(app)/admin/page.tsx` → redirect
+- `src/app/(app)/transactions/page.tsx` — added TransactionDayList
+- `src/components/nav/NavLink.tsx` — icon prop + new active state
+- `src/components/transactions/TransactionTable.tsx` — added className prop
+- `src/lib/utils.ts` — added getInitials()
 
 ## Deferred to next session
 
-(fill in after session)
+- Sidebar collapse to 64px (optional per spec, skipped)
+- Header search (roadmapped, intentionally excluded)
+- Dark mode / theme toggle (separate future scope)
+- Import summary page (#17 — next build order item)
 
 ## Status
 
 - [ ] In progress
-- [ ] Complete
+- [x] Complete
 - [ ] Partial — see deferred
