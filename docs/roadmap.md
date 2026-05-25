@@ -228,6 +228,7 @@ The chat interface is v1. Before building any of these, sit down and properly de
 
 > Goal: An app you actually want to open every month.
 
+- [ ] **Transaction pagination** — the transaction list will get unwieldy once several months of data are loaded. Two approaches to decide between: (a) show one month at a time (month selector like the dashboard, clean mental model), or (b) traditional pagination with the existing filters still in play. Approach TBD — revisit once real data volume makes the problem concrete.
 - [ ] **Import summary** — after an upload completes, show a breakdown of what happened: X transactions imported, X duplicates skipped, X categorised from merchant memory, X categorised by Claude, X flagged as recurring, X uncategorised. Becomes more useful as more AI detection runs on import (recurring, anomaly flagging, etc.). Display inline on the import page or as a modal — don't navigate away.
 - [ ] Monthly summary view — Claude-generated one-page recap (spend vs budget, vs prior month, notable patterns)
 - [ ] In-app budget alerts: "You're 80% through Dining Out"
