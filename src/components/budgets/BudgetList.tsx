@@ -18,7 +18,7 @@ function formatNZD(cents: number): string {
   return nzd.format(cents / 100)
 }
 
-const ROW_COLS = 'auto 200px 1fr auto'
+const ROW_COLS = 'auto 200px 1fr auto auto'
 
 interface BudgetListProps {
   items: BudgetWithActual[]
@@ -89,7 +89,12 @@ function BudgetRow({ item, month }: { item: BudgetWithActual; month: string }) {
           )}
         </div>
 
-        {/* percentage badge */}
+        {/* budget cap amount */}
+        <span className="font-mono text-[13px] tabular-nums text-foreground text-right">
+          {budget ? formatNZD(budgetCents) : ''}
+        </span>
+
+        {/* percentage badge — always shown when a budget exists */}
         {budget ? (
           <Badge variant={pctBadgeVariant} className="font-mono tabular-nums justify-center">
             {Math.round(ratio * 100)}%
@@ -124,6 +129,7 @@ export function BudgetList({ items, month }: BudgetListProps) {
           <p className="font-medium text-[13px] text-foreground">All categories</p>
           <p className="text-[11px] text-muted-foreground">Click a budget to edit</p>
         </div>
+        <span />
         <span />
         <span />
       </div>
