@@ -1,3 +1,4 @@
+import path from 'path'
 import type { NextConfig } from 'next'
 
 const nextConfig: NextConfig = {
@@ -5,12 +6,13 @@ const nextConfig: NextConfig = {
     if (nextRuntime === 'edge') {
       // Disable Webpack caching for Edge to prevent stale middleware bundles.
       config.cache = false
-      
+
       config.plugins.push(
         new webpack.NormalModuleReplacementPlugin(
           /experimental[/\\]testmode[/\\]context/,
-          // Relative path works natively and avoids ESM __dirname issues
-          './src/lib/testmode-noop.js'
+          // Absolute path — relative paths resolve from the replaced module's
+          // directory (inside node_modules), not the project root.
+          path.resolve(process.cwd(), 'src/lib/testmode-noop.js')
         )
       )
     }
