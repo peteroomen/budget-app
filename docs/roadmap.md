@@ -242,6 +242,60 @@ The chat interface is v1. Before building any of these, sit down and properly de
 
 ---
 
+## Design Direction: Dashboard vs Summary (Unresolved)
+
+> **Status:** Discussed 2026-05-25. No code changes made yet — captured here for the next revisit.
+
+### The problem
+
+With `/dashboard` and `/summary` both existing, the current split is thin:
+
+- Dashboard: charts + numbers (any month, via selector)
+- Summary: AI narrative (any month, via selector)
+
+They tell the same story in different formats, about the same data, for the same months. Navigating between them feels redundant rather than complementary.
+
+### Proposed redesign: purpose-driven split
+
+**Dashboard → "This Month" (status view)**
+
+- Always current month, no month selector
+- Answers: _"How are we tracking right now?"_
+- Budget progress bars: % used per category, colour-coded green/amber/red
+- Days remaining in the month + projected overspend at current pace (simple linear extrapolation)
+- Top merchants month-to-date
+- Fixed costs / recurring confirmed this month
+- Fast: pure Supabase queries, no AI call
+- Rename nav item to "This Month" to make the intent obvious
+
+**Summary → "Monthly Recap" (historical view)**
+
+- Past months only — current month could be hidden or shown as "in progress" with a caveat
+- Answers: _"How did that month go?"_
+- Claude-generated narrative as it is now: headline, over-budget, vs prior month, patterns
+- The AI angle makes more sense for closed months — you're reflecting, not course-correcting
+- Rename nav item to "Recap" or "Monthly Recap"
+
+### Trade-offs to weigh before building
+
+|                                 | In favour                                                      | Against                                                  |
+| ------------------------------- | -------------------------------------------------------------- | -------------------------------------------------------- |
+| Lock dashboard to current month | Clear mental model, faster load                                | Lose ability to compare chart visuals across past months |
+| AI on summary only              | Appropriate framing (retrospective), no latency on status view | Current month has no AI context — chat fills that gap    |
+| Rename nav items                | More honest about purpose                                      | Minor churn, users (both of them) already know the app   |
+
+### Open questions before committing
+
+- Do we miss the ability to look at a past month's charts (bar chart breakdown)? If yes, keep dashboard's month selector but default to current.
+- Does the current month deserve an AI "how are you tracking?" card too — a lightweight version, not a full recap? That would need a different prompt framing ("you're 18 days in, on this trajectory...").
+- Is the "days remaining + projected overspend" projection actually useful or just noisy? Only real usage will tell.
+
+### Recommended next step
+
+Use the app for 1–2 months as-is. If the duplicate-page friction is felt in practice, implement the redesign as build order item #17. If you find yourself only using one of the two pages, that's the signal.
+
+---
+
 ## Future / Far Future
 
 | Feature                    | Notes                                                                                                                                                                                                                                                                                                           |

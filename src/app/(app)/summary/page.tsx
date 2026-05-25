@@ -1,5 +1,6 @@
 import { generateText } from 'ai'
 import { anthropic } from '@ai-sdk/anthropic'
+import { createClient } from '@/lib/supabase/server'
 import { currentMonth } from '@/lib/utils/month'
 import { getSummaryContext, buildSummaryPrompt } from '@/lib/queries/summary'
 import { SummaryMonthSelector } from '@/components/summary/SummaryMonthSelector'
@@ -13,13 +14,19 @@ export default async function SummaryPage({ searchParams }: SummaryPageProps) {
   const { month: monthParam } = await searchParams
   const month = monthParam && /^\d{4}-\d{2}$/.test(monthParam) ? monthParam : currentMonth()
 
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  const isAdmin = user?.app_metadata?.role === 'admin'
+
   const ctx = await getSummaryContext(month)
 
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <h1 className="text-2xl font-semibold">Monthly Summary</h1>
-        <SummaryMonthSelector month={month} />
+        <SummaryMonthSelector month={month} isAdmin={isAdmin} />
       </div>
 
       {!ctx.hasTransactions ? (
