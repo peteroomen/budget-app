@@ -19,25 +19,29 @@ A dedicated `/admin` page gated behind `app_metadata.role === 'admin'`, containi
 ## Steps
 
 - [x] Write plan file
-- [ ] Create new branch `feature/admin-page`
-- [ ] Add `deleteAllMerchantMappings` to `src/lib/actions/merchant-map.ts`
-- [ ] Create `src/components/admin/DangerActionButton.tsx`
-- [ ] Create `src/app/(app)/admin/page.tsx` (admin guard + two danger actions)
-- [ ] Update `src/app/(app)/layout.tsx` — fetch `isAdmin`, conditionally show Admin nav link
-- [ ] Update `src/app/(app)/transactions/page.tsx` — remove `DeleteAllTransactionsButton`
-- [ ] Delete `src/components/transactions/DeleteAllTransactionsButton.tsx`
-- [ ] `pnpm lint` + `pnpm type-check`
-- [ ] Commit + push + open PR
+- [x] Create new branch `feature/admin-page`
+- [x] Add `deleteAllMerchantMappings` to `src/lib/actions/merchant-map.ts`
+- [x] Create `src/components/admin/DangerActionButton.tsx`
+- [x] Create `src/app/(app)/admin/page.tsx` (admin guard + two danger actions)
+- [x] Update `src/app/(app)/layout.tsx` — fetch `isAdmin`, conditionally show Admin nav link
+- [x] Update `src/app/(app)/transactions/page.tsx` — remove `DeleteAllTransactionsButton`
+- [x] Delete `src/components/transactions/DeleteAllTransactionsButton.tsx`
+- [x] Add `ManualBadge` column to transaction table (blue pencil, tooltip, matches `RecurringBadge` pattern)
+- [x] Install shadcn `Tooltip` component (required by `ManualBadge`)
+- [x] `pnpm lint` + `pnpm type-check`
+- [x] Commit + push + open PR
 
 ## Manual test steps
 
 - [ ] Log in as non-admin user — confirm `/admin` redirects to `/dashboard`, no Admin link in nav
-- [ ] Log in as admin — confirm Admin link appears in nav, `/admin` loads
-- [ ] Admin page shows two danger sections: "Delete all transactions" and "Delete all merchant mappings"
-- [ ] Click "Delete all transactions" → confirm dialog → click Delete all → transactions page shows 0 rows
-- [ ] Click "Delete all merchant mappings" → confirm dialog → click Delete all → `merchant_category_map` table is empty (check Supabase)
+- [x] Log in as admin — confirm Admin link appears in nav, `/admin` loads
+- [x] Admin page shows two danger sections: "Delete all transactions" and "Delete all merchant mappings"
+- [x] Click "Delete all transactions" → confirm dialog → click Delete all → transactions page shows 0 rows
+- [x] Click "Delete all merchant mappings" → confirm dialog → click Delete all → `merchant_category_map` table is empty (check Supabase)
 - [ ] Edge case: cancel the dialog — confirm nothing is deleted
-- [ ] Transactions page no longer shows Delete all transactions button for admin users
+- [x] Transactions page no longer shows Delete all transactions button for admin users
+- [x] ManualBadge: blue pencil appears on manually-overridden transactions; tooltip reads "Category manually overridden"
+- [x] June COUNTDOWN TAKANINI (imported via map) correctly shows no pencil icon — `category_source = 'map'`, not `'manual'`
 
 ## Out of scope for this session
 
@@ -49,12 +53,33 @@ A dedicated `/admin` page gated behind `app_metadata.role === 'admin'`, containi
 
 ## What actually happened
 
+- Scope expanded mid-session to also include the `ManualBadge` column (blue pencil indicator for manually-overridden categories), which was originally shipped inside `CategoryCell` as a plain grey inline SVG. Rebuilt to match the `RecurringBadge` pattern from `feature/recurring-detection`: its own narrow column, blue Lucide icon, shadcn `Tooltip`. Required installing the `Tooltip` shadcn component (not yet in the codebase).
+- `categorySource` prop removed from `CategoryCell` entirely — the pencil moved out of the cell into its own column.
+- `DangerActionButton` replaced the old one-off `DeleteAllTransactionsButton` — parameterised by title, description, and action, used twice on the admin page.
+- Confirmed correct behaviour: transactions categorised via the merchant map (`category_source = 'map'`) do not show the pencil even when the map entry has `is_manual = true`. Pencil is intentionally per-transaction, not per-merchant.
+- Two roadmap items added: transaction pagination (approach TBD) and import summary (post-upload breakdown).
+
 ## Files created / modified
 
+- `src/app/(app)/admin/page.tsx` — new admin page, role-gated
+- `src/components/admin/DangerActionButton.tsx` — generic destructive confirm dialog (replaces `DeleteAllTransactionsButton`)
+- `src/components/transactions/ManualBadge.tsx` — new; blue pencil column matching `RecurringBadge` pattern
+- `src/components/ui/tooltip.tsx` — new; shadcn Tooltip installed for `ManualBadge`
+- `src/lib/actions/merchant-map.ts` — added `deleteAllMerchantMappings`
+- `src/app/(app)/layout.tsx` — added `isAdmin` check, conditional Admin nav link
+- `src/app/(app)/transactions/page.tsx` — removed `DeleteAllTransactionsButton` and admin check
+- `src/components/transactions/CategoryCell.tsx` — removed `categorySource` prop and inline pencil SVG
+- `src/components/transactions/TransactionTable.tsx` — added `ManualBadge` column, removed `categorySource` prop pass-through
+- `docs/roadmap.md` — added transaction pagination and import summary items to Phase 5
+- `docs/work/2026-05-25-admin-page.md` — this file
+- `src/components/transactions/DeleteAllTransactionsButton.tsx` — deleted
+
 ## Deferred to next session
+
+Nothing — all planned work complete.
 
 ## Status
 
 - [ ] In progress
-- [ ] Complete
+- [x] Complete
 - [ ] Partial — see deferred
