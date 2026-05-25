@@ -43,9 +43,14 @@ export default async function SummaryPage({ searchParams }: SummaryPageProps) {
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h1 className="font-display text-display-summary-h1 font-medium">Monthly Summary</h1>
-          <p className="mt-0.5 text-body-sm text-muted-foreground">
-            A plain-English read of where the money went.
+          <h1 className="font-display text-display-summary-h1 font-medium">Monthly recap</h1>
+          <p className="mt-0.5 font-display italic text-body-sm text-muted-foreground">
+            {new Date().toLocaleDateString('en-NZ', {
+              weekday: 'short',
+              day: 'numeric',
+              month: 'short',
+            })}{' '}
+            · powered by Claude
           </p>
         </div>
         <SummaryMonthSelector month={month} allowFuture={isAdmin} />

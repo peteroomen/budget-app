@@ -7,6 +7,8 @@ export interface TransactionFilters {
   accountId?: string
   dateFrom?: string
   dateTo?: string
+  search?: string
+  categoryId?: string
   sortBy?: TransactionSortBy
   sortDir?: SortDir
 }
@@ -31,7 +33,15 @@ export interface TransactionRow {
 
 export async function getTransactions(filters: TransactionFilters = {}): Promise<TransactionRow[]> {
   const supabase = await createClient()
-  const { accountId, dateFrom, dateTo, sortBy = 'date', sortDir = 'desc' } = filters
+  const {
+    accountId,
+    dateFrom,
+    dateTo,
+    search,
+    categoryId,
+    sortBy = 'date',
+    sortDir = 'desc',
+  } = filters
 
   let query = supabase
     .from('transactions')
@@ -46,6 +56,12 @@ export async function getTransactions(filters: TransactionFilters = {}): Promise
   }
   if (dateTo) {
     query = query.lte('date', dateTo)
+  }
+  if (search) {
+    query = query.ilike('merchant_name', `%${search}%`)
+  }
+  if (categoryId) {
+    query = query.eq('category_id', categoryId)
   }
 
   const { data, error } = await query

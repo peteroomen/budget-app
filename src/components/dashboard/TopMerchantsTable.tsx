@@ -1,4 +1,7 @@
+import Link from 'next/link'
+import { ArrowUpRight } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
 import type { MerchantSpend } from '@/lib/queries/dashboard'
 
 interface TopMerchantsTableProps {
@@ -16,8 +19,13 @@ function formatNZD(cents: number): string {
 export function TopMerchantsTable({ merchants }: TopMerchantsTableProps) {
   return (
     <Card>
-      <CardHeader>
+      <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle className="text-base">Top Merchants</CardTitle>
+        <Button variant="ghost" size="sm" asChild>
+          <Link href="/transactions" className="flex items-center gap-1">
+            All <ArrowUpRight className="h-3 w-3" />
+          </Link>
+        </Button>
       </CardHeader>
       <CardContent>
         {merchants.length === 0 ? (

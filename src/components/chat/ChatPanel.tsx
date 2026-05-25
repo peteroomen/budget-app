@@ -12,7 +12,12 @@ export function ChatPanel() {
   return (
     <div className="flex h-full flex-col gap-4">
       <div className="flex shrink-0 items-center justify-between">
-        <h1 className="font-display text-display-h1 font-medium">Chat</h1>
+        <div>
+          <h1 className="font-display text-display-h1 font-medium">Chat with your finances</h1>
+          <p className="mt-0.5 text-body-sm text-muted-foreground">
+            Powered by Claude · session only
+          </p>
+        </div>
         <Button variant="outline" size="sm" onClick={() => setSessionKey((k) => k + 1)}>
           Clear chat
         </Button>

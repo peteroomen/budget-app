@@ -1,7 +1,10 @@
 'use client'
 
+import Link from 'next/link'
+import { ArrowUpRight } from 'lucide-react'
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from 'recharts'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
 import {
   ChartContainer,
   ChartTooltip,
@@ -75,6 +78,11 @@ export function SpendByCategoryChart({ data }: SpendByCategoryChartProps) {
     <Card>
       <CardHeader>
         <CardTitle className="text-base">Spend by Category</CardTitle>
+        <Button variant="ghost" size="sm" asChild>
+          <Link href="/budgets" className="flex items-center gap-1">
+            Manage budgets <ArrowUpRight className="h-3 w-3" />
+          </Link>
+        </Button>
       </CardHeader>
       <CardContent>
         <ChartContainer config={chartConfig} className="max-h-[360px] w-full">
