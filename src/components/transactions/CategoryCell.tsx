@@ -54,17 +54,17 @@ export function CategoryCell({
         onValueChange={handleCategoryChange}
         disabled={isPending}
       >
-        <SelectTrigger className="h-7 text-xs w-40 border-transparent hover:border-input focus:border-input transition-colors">
+        <SelectTrigger className="h-7 text-xs w-44 border-transparent hover:border-input focus:border-input transition-colors">
           <SelectValue>
             {selectedCategory ? (
-              <span className="flex items-center gap-1.5">
+              <span className="flex items-center gap-1.5 min-w-0">
                 {selectedCategory.color && (
                   <span
-                    className="inline-block w-2 h-2 rounded-full flex-shrink-0"
+                    className="inline-block w-2 h-2 rounded-full shrink-0"
                     style={{ backgroundColor: selectedCategory.color }}
                   />
                 )}
-                {selectedCategory.name}
+                <span className="truncate">{selectedCategory.name}</span>
               </span>
             ) : (
               <span className="text-muted-foreground">Uncategorised</span>

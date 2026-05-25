@@ -136,7 +136,7 @@ export function TransactionTable({
                 params={params}
               />
             </TableHead>
-            <TableHead className="text-label-caps uppercase text-muted-foreground font-medium">
+            <TableHead className="text-label-caps uppercase text-muted-foreground font-medium min-w-[11rem]">
               Category
             </TableHead>
             <TableHead className="text-label-caps uppercase text-muted-foreground font-medium">
