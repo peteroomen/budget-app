@@ -51,7 +51,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       <aside className="hidden w-[232px] shrink-0 flex-col overflow-y-auto border-r bg-muted/40 md:flex">
         {/* Brand row */}
         <div className="px-4 py-4">
-          <span className="font-display text-[15px] font-semibold tracking-tight">Tide</span>
+          <span className="font-display text-display-wordmark font-semibold tracking-tight">Tide</span>
           <p className="text-[11px] text-muted-foreground">Household</p>
         </div>
 
@@ -70,7 +70,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           {/* Mobile: hamburger + brand */}
           <div className="flex items-center gap-3 md:hidden">
             <MobileDrawer profile={profile} />
-            <span className="font-display text-[15px] font-semibold">Tide</span>
+            <span className="font-display text-display-wordmark font-semibold">Tide</span>
           </div>
 
           {/* Desktop: spacer so Import sits on the right */}
