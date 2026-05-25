@@ -13,21 +13,19 @@ export default function DashboardLoading() {
         </div>
       </div>
 
-      {/* Income / Spend / Net cards */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+      {/* Income / Spend / Net / Fixed costs cards */}
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         {[0, 1, 2].map((i) => (
           <div key={i} className="rounded-lg border p-6 space-y-2">
             <Skeleton className="h-4 w-24" />
             <Skeleton className="h-8 w-32" />
           </div>
         ))}
-      </div>
-
-      {/* Fixed costs card */}
-      <div className="rounded-lg border p-6 space-y-2">
-        <Skeleton className="h-4 w-36" />
-        <Skeleton className="h-8 w-28" />
-        <Skeleton className="h-3 w-44" />
+        <div className="rounded-lg border p-6 space-y-2">
+          <Skeleton className="h-4 w-36" />
+          <Skeleton className="h-8 w-28" />
+          <Skeleton className="h-3 w-44" />
+        </div>
       </div>
 
       {/* Chart + merchants grid */}

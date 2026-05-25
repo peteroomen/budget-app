@@ -34,9 +34,10 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
         <MonthSelector month={month} allowFuture={isAdmin} />
       </div>
 
-      <IncomeVsSpendCards summary={data.summary} />
-
-      <FixedCostsCard summary={fixedCosts} />
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+        <IncomeVsSpendCards summary={data.summary} />
+        <FixedCostsCard summary={fixedCosts} />
+      </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         <div className="lg:col-span-2">
