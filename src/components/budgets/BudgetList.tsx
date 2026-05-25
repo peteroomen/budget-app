@@ -30,12 +30,13 @@ export function BudgetList({ items, month }: BudgetListProps) {
     <>
       <div className="overflow-hidden rounded-lg border border-border">
         <table className="w-full table-fixed border-collapse">
+          {/* dot / name / bar / amount / badge */}
           <colgroup>
-            <col className="w-10" /> {/* dot */}
-            <col className="w-52" /> {/* name + subtitle */}
-            <col /> {/* progress bar — takes all remaining space */}
-            <col className="w-24" /> {/* budget amount */}
-            <col className="w-20" /> {/* % badge */}
+            <col className="w-10" />
+            <col className="w-52" />
+            <col />
+            <col className="w-24" />
+            <col className="w-20" />
           </colgroup>
 
           {/* Header */}
