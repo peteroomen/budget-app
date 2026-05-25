@@ -38,7 +38,7 @@ export function BudgetProgressBar({ actual_cents, budget_cents }: BudgetProgress
   return (
     <div className="space-y-1">
       <Progress value={pct} className="h-2" indicatorClassName={indicatorClassName} />
-      <p className="text-[11px] text-muted-foreground">
+      <p className="text-label text-muted-foreground">
         {ratio >= 1
           ? `${Math.round((ratio - 1) * 100)}% over budget`
           : `${Math.round(ratio * 100)}% of budget`}

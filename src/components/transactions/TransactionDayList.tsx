@@ -90,9 +90,9 @@ export function TransactionDayList({ rows, categories, className }: Props) {
         <div key={group.dateStr}>
           {/* Day header */}
           <div className="flex items-center justify-between border-b pb-1">
-            <span className="font-display text-[13px] font-semibold">{group.label}</span>
+            <span className="font-display text-body-sm font-semibold">{group.label}</span>
             {group.daySpend > 0 && (
-              <span className="font-mono text-[11px] text-muted-foreground">
+              <span className="font-mono text-label text-muted-foreground">
                 {nzdCompact.format(group.daySpend / 100)}
               </span>
             )}
@@ -118,10 +118,10 @@ export function TransactionDayList({ rows, categories, className }: Props) {
 
                   {/* Merchant + category */}
                   <div className="min-w-0">
-                    <p className="truncate text-[13px] font-medium leading-snug">
+                    <p className="truncate text-body-sm font-medium leading-snug">
                       {txn.merchant_name ?? txn.description}
                     </p>
-                    <p className="text-[11px] leading-snug text-muted-foreground">
+                    <p className="text-label leading-snug text-muted-foreground">
                       {cat?.name ?? 'Uncategorised'}
                     </p>
                   </div>
@@ -129,7 +129,7 @@ export function TransactionDayList({ rows, categories, className }: Props) {
                   {/* Amount */}
                   <span
                     className={cn(
-                      'font-mono text-[13px] tabular-nums',
+                      'font-mono text-body-sm tabular-nums',
                       isIncome ? 'text-success' : ''
                     )}
                   >

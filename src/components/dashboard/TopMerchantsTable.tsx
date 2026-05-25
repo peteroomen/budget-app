@@ -34,7 +34,7 @@ export function TopMerchantsTable({ merchants }: TopMerchantsTableProps) {
                   </span>
                   <span className="truncate text-sm font-medium">{m.merchant}</span>
                 </div>
-                <span className="shrink-0 font-mono text-[13px] tabular-nums text-foreground">
+                <span className="shrink-0 font-mono text-body-sm tabular-nums text-foreground">
                   {formatNZD(m.spend_cents)}
                 </span>
               </li>

@@ -45,10 +45,8 @@ export default async function BudgetsPage({ searchParams }: BudgetsPageProps) {
     <div className="space-y-6">
       <div className="flex items-center justify-between gap-4">
         <div>
-          <h1 className="font-display text-[28px] font-medium leading-[1.15] tracking-[-0.018em]">
-            Budgets
-          </h1>
-          <p className="mt-0.5 text-[13px] text-muted-foreground">
+          <h1 className="font-display text-display-h1 font-medium">Budgets</h1>
+          <p className="mt-0.5 text-body-sm text-muted-foreground">
             Caps for the categories we care about.
           </p>
         </div>

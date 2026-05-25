@@ -19,12 +19,12 @@ export function FixedCostsCard({ summary }: Props) {
   return (
     <Card>
       <CardHeader className="pb-2">
-        <CardTitle className="text-[12px] font-sans font-medium text-muted-foreground">
+        <CardTitle className="text-body-xs font-sans font-medium text-muted-foreground">
           Fixed Costs
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <p className="font-display text-[26px] font-medium tabular-nums">
+        <p className="font-display text-display-hero font-medium tabular-nums">
           {formatNZD(total_cents)}
         </p>
         <p className="mt-1 text-xs text-muted-foreground">

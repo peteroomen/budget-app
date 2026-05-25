@@ -21,12 +21,12 @@ export function IncomeVsSpendCards({ summary }: IncomeVsSpendCardsProps) {
     <>
       <Card>
         <CardHeader className="pb-2">
-          <CardTitle className="text-[12px] font-sans font-medium text-muted-foreground">
+          <CardTitle className="text-body-xs font-sans font-medium text-muted-foreground">
             Total Income
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="font-display text-[26px] font-medium tabular-nums text-success">
+          <p className="font-display text-display-hero font-medium tabular-nums text-success">
             {formatNZD(income_cents)}
           </p>
         </CardContent>
@@ -34,12 +34,12 @@ export function IncomeVsSpendCards({ summary }: IncomeVsSpendCardsProps) {
 
       <Card>
         <CardHeader className="pb-2">
-          <CardTitle className="text-[12px] font-sans font-medium text-muted-foreground">
+          <CardTitle className="text-body-xs font-sans font-medium text-muted-foreground">
             Total Spent
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="font-display text-[26px] font-medium tabular-nums">
+          <p className="font-display text-display-hero font-medium tabular-nums">
             {formatNZD(spend_cents)}
           </p>
         </CardContent>
@@ -47,13 +47,13 @@ export function IncomeVsSpendCards({ summary }: IncomeVsSpendCardsProps) {
 
       <Card>
         <CardHeader className="pb-2">
-          <CardTitle className="text-[12px] font-sans font-medium text-muted-foreground">
+          <CardTitle className="text-body-xs font-sans font-medium text-muted-foreground">
             Net
           </CardTitle>
         </CardHeader>
         <CardContent>
           <p
-            className={`font-display text-[26px] font-medium tabular-nums ${netPositive ? 'text-success' : ''}`}
+            className={`font-display text-display-hero font-medium tabular-nums ${netPositive ? 'text-success' : ''}`}
           >
             {netPositive ? '' : '−'}
             {formatNZD(Math.abs(net_cents))}

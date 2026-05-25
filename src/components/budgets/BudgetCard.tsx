@@ -38,15 +38,16 @@ export function BudgetCard({ item, month }: BudgetCardProps) {
               className="h-2.5 w-2.5 shrink-0 rounded-full"
               style={{ backgroundColor: category.color ?? 'hsl(var(--primary))' }}
             />
-            <span className="font-medium text-[14px] truncate">{category.name}</span>
+            <span className="font-medium text-display-card-title truncate">{category.name}</span>
           </div>
           {budget && <PacingBadge ratio={ratio} />}
         </div>
 
         {/* Hero metric */}
         <div>
-          <p className="font-display text-[22px] font-medium tabular-nums leading-none">
+          <p className="font-display text-display-metric font-medium tabular-nums leading-none">
             {formatNZD(actual_cents)}
+            {/* text-[15px] — intentional one-off between display-metric (22px) and display-card-title (14px) */}
             {budget && (
               <span className="text-[15px] font-normal text-muted-foreground">
                 {' '}
@@ -61,7 +62,7 @@ export function BudgetCard({ item, month }: BudgetCardProps) {
 
         {/* Bottom row: pacing text + edit button */}
         <div className="flex items-center justify-between gap-2">
-          <p className="text-[11px] text-muted-foreground">
+          <p className="text-label text-muted-foreground">
             {budget
               ? ratio >= 1
                 ? `${formatNZD(actual_cents - budgetCents)} over`
