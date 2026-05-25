@@ -5,6 +5,7 @@ import {
   seedBudgetsFromMonth,
 } from '@/lib/queries/budgets'
 import { MonthPicker } from '@/components/budgets/MonthPicker'
+import { BudgetTable } from '@/components/budgets/BudgetTable'
 import { BudgetCard } from '@/components/budgets/BudgetCard'
 import { OverBudgetCards } from '@/components/budgets/OverBudgetCards'
 import { SeededFromBanner } from '@/components/budgets/SeededFromBanner'
@@ -64,11 +65,17 @@ export default async function BudgetsPage({ searchParams }: BudgetsPageProps) {
           No categories found. Add some categories first.
         </p>
       ) : (
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-          {items.map((item) => (
-            <BudgetCard key={item.category.id} item={item} month={month} />
-          ))}
-        </div>
+        <>
+          {/* Desktop: sortable table */}
+          <BudgetTable items={items} month={month} className="hidden md:block" />
+
+          {/* Mobile: card list */}
+          <div className="grid grid-cols-1 gap-4 md:hidden">
+            {items.map((item) => (
+              <BudgetCard key={item.category.id} item={item} month={month} />
+            ))}
+          </div>
+        </>
       )}
     </div>
   )
