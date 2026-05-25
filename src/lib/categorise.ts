@@ -36,9 +36,13 @@ export async function categoriseMerchantsWithClaude(
 Categories (use these names exactly):
 - ${categoryNames}
 
+Category guidance:
+- "Dining & Takeaways": restaurants, cafes, fast food, food delivery (e.g. Uber Eats, Menulog), any eating out or takeaway order
+- "Housing": mortgage repayments, rent, council rates, body corporate fees
+- "Income": salary, wages, government payments (e.g. Working for Families, NZ Super), tax refunds, IRD credits
+
 Rules:
 - Return exactly one category per merchant
-- If a merchant is clearly income (salary, wages, government payment, tax refund, IRD credit), use "Income"
 - If genuinely unsure, use "Other"
 - Return ONLY a compact JSON array using the merchant's index number — no markdown, no explanation
 
@@ -49,7 +53,7 @@ Merchants:
 2: BP 2GO
 3: SPARK NZ
 4: VIVID WAGES
-Output: [{"index":0,"category":"Groceries"},{"index":1,"category":"Takeaways"},{"index":2,"category":"Fuel"},{"index":3,"category":"Utilities"},{"index":4,"category":"Income"}]
+Output: [{"index":0,"category":"Groceries"},{"index":1,"category":"Dining & Takeaways"},{"index":2,"category":"Fuel"},{"index":3,"category":"Utilities"},{"index":4,"category":"Income"}]
 
 Merchants:
 ${indexedList}`,

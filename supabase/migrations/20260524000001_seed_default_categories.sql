@@ -10,14 +10,14 @@ SELECT
   true
 FROM public.households h
 CROSS JOIN (VALUES
-  ('Groceries',       '#16a34a'),
-  ('Dining Out',      '#ea580c'),
-  ('Takeaways',       '#f97316'),
-  ('Fuel',            '#dc2626'),
-  ('Transport',       '#2563eb'),
-  ('Utilities',       '#9333ea'),
-  ('Insurance',       '#1d4ed8'),
-  ('Childcare',       '#db2777'),
+  ('Groceries',           '#16a34a'),
+  ('Dining & Takeaways',  '#ea580c'),
+  ('Fuel',                '#dc2626'),
+  ('Transport',           '#2563eb'),
+  ('Utilities',           '#9333ea'),
+  ('Housing',             '#64748b'),
+  ('Insurance',           '#1d4ed8'),
+  ('Childcare',           '#db2777'),
   ('Health',          '#0d9488'),
   ('Pharmacy',        '#0891b2'),
   ('Shopping',        '#4f46e5'),
