@@ -9,6 +9,7 @@ import {
 } from '@/components/ui/table'
 import type { TransactionRow, TransactionSortBy, SortDir } from '@/lib/queries/transactions'
 import type { Category } from '@/types'
+import { cn } from '@/lib/utils'
 import { CategoryCell } from './CategoryCell'
 import { RecurringBadge } from './RecurringBadge'
 import { ManualBadge } from './ManualBadge'
@@ -63,6 +64,7 @@ interface Props {
   params: URLSearchParams
   categories: Category[]
   mappedMerchants: Set<string>
+  className?: string
 }
 
 export function TransactionTable({
@@ -72,10 +74,11 @@ export function TransactionTable({
   params,
   categories,
   mappedMerchants,
+  className,
 }: Props) {
   if (rows.length === 0) {
     return (
-      <p className="text-sm text-muted-foreground py-8 text-center">
+      <p className={cn('text-sm text-muted-foreground py-8 text-center', className)}>
         No transactions found. Try adjusting your filters or{' '}
         <Link href="/import" className="underline">
           import a statement
@@ -86,7 +89,7 @@ export function TransactionTable({
   }
 
   return (
-    <div className="overflow-x-auto rounded-md border">
+    <div className={cn('overflow-x-auto rounded-md border', className)}>
       <Table>
         <TableHeader>
           <TableRow>

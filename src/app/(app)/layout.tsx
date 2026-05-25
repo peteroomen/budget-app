@@ -1,58 +1,93 @@
 import { redirect } from 'next/navigation'
+import { Upload } from 'lucide-react'
 import { getCurrentProfile } from '@/lib/queries/profile'
-import { createClient } from '@/lib/supabase/server'
-import { NavLink } from '@/components/nav/NavLink'
-import { SignOutButton } from '@/components/auth/SignOutButton'
+import { SidebarNav } from '@/components/nav/SidebarNav'
+import { BottomTabBar } from '@/components/nav/BottomTabBar'
+import { MobileDrawer } from '@/components/nav/MobileDrawer'
 import { Separator } from '@/components/ui/separator'
+import { Button } from '@/components/ui/button'
+import { Avatar, AvatarFallback } from '@/components/ui/avatar'
+import { SignOutButton } from '@/components/auth/SignOutButton'
+import { getInitials } from '@/lib/utils'
+import type { Profile } from '@/types'
 
-const NAV_ITEMS = [
-  { href: '/dashboard', label: 'Dashboard' },
-  { href: '/transactions', label: 'Transactions' },
-  { href: '/import', label: 'Import' },
-  { href: '/accounts', label: 'Accounts' },
-  { href: '/categories', label: 'Categories' },
-  { href: '/budgets', label: 'Budgets' },
-  { href: '/chat', label: 'Chat' },
-  { href: '/summary', label: 'Summary' },
-]
+function SidebarUserFooter({ profile }: { profile: Profile }) {
+  const initials = getInitials(profile.display_name, profile.email)
+  const displayName = profile.display_name ?? profile.email
+
+  return (
+    <div className="flex items-center justify-between gap-2 px-3 py-3">
+      <div className="flex min-w-0 items-center gap-2.5">
+        <Avatar className="h-8 w-8 shrink-0 rounded-md">
+          <AvatarFallback className="rounded-md bg-muted text-xs font-semibold">
+            {initials}
+          </AvatarFallback>
+        </Avatar>
+        <div className="min-w-0">
+          <p className="truncate text-xs font-medium leading-tight">{displayName}</p>
+          <p className="truncate text-[11px] text-muted-foreground leading-tight">
+            {profile.email}
+          </p>
+        </div>
+      </div>
+      <SignOutButton />
+    </div>
+  )
+}
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
   const profile = await getCurrentProfile()
   if (!profile) {
-    await supabase.auth.signOut()
     redirect('/login')
   }
 
-  const isAdmin = user?.app_metadata?.role === 'admin'
-  const navItems = isAdmin ? [...NAV_ITEMS, { href: '/admin', label: 'Admin' }] : NAV_ITEMS
-
   return (
-    <div className="flex h-screen overflow-hidden">
-      <aside className="hidden w-60 flex-col overflow-y-auto border-r bg-muted/40 md:flex">
-        <div className="px-6 py-5">
-          <span className="text-lg font-semibold tracking-tight">Budget App</span>
+    <div className="flex h-dvh overflow-hidden">
+      {/* ── Sidebar (desktop only) ── */}
+      <aside className="hidden w-[232px] shrink-0 flex-col overflow-y-auto border-r bg-muted/40 md:flex">
+        {/* Brand row */}
+        <div className="px-4 py-4">
+          <span className="text-base font-semibold tracking-tight">Budget App</span>
+          <p className="text-[11px] text-muted-foreground">Household</p>
         </div>
+
+        {/* Primary + secondary nav — client component owns icon imports */}
+        <SidebarNav />
+
+        {/* User footer */}
         <Separator />
-        <nav className="flex-1 space-y-1 px-3 py-4">
-          {navItems.map(({ href, label }) => (
-            <NavLink key={href} href={href}>
-              {label}
-            </NavLink>
-          ))}
-        </nav>
+        <SidebarUserFooter profile={profile} />
       </aside>
 
-      <div className="flex flex-1 flex-col overflow-hidden">
-        <header className="flex h-14 shrink-0 items-center justify-between border-b px-6">
-          <span className="text-sm text-muted-foreground">{profile.email}</span>
-          <SignOutButton />
+      {/* ── Right column ── */}
+      <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
+        {/* Header */}
+        <header className="flex h-14 shrink-0 items-center justify-between border-b px-4 md:px-6">
+          {/* Mobile: hamburger + brand */}
+          <div className="flex items-center gap-3 md:hidden">
+            <MobileDrawer profile={profile} />
+            <span className="text-sm font-semibold">Budget App</span>
+          </div>
+
+          {/* Desktop: spacer so Import sits on the right */}
+          <div className="hidden md:block" />
+
+          {/* Desktop: Import CTA */}
+          <div className="flex items-center gap-2">
+            <Button asChild size="sm" className="hidden md:flex">
+              <a href="/import">
+                <Upload size={15} className="mr-1.5" />
+                Import
+              </a>
+            </Button>
+          </div>
         </header>
+
+        {/* Page content */}
         <main className="flex flex-1 flex-col overflow-y-auto p-6">{children}</main>
+
+        {/* Mobile bottom tab bar */}
+        <BottomTabBar />
       </div>
     </div>
   )

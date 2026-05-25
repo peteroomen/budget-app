@@ -31,7 +31,7 @@ Core loop: import bank statements → AI categorises transactions → set budget
 > **Update this section at the end of every session.**
 
 - **Current phase:** Phase 5 — Polish (in progress). Phases 1–4 fully complete.
-- **Last session:** 2026-05-25 — Budget auto-seed (refinement to #11) + doc sync (roadmap/arch ticked up)
+- **Last session:** 2026-05-25 — Nav/layout restructure (design handoff, PR open on `feature/nav-layout-restructure`)
 - **All merged to main (build order items #1–#16 + extras):**
   - #1 Scaffold · #2 Auth + household · #3 Accounts CRUD
   - #4 CSV import · #5 PDF import · #6 Transaction list
@@ -45,13 +45,24 @@ Core loop: import bank statements → AI categorises transactions → set budget
   - Admin page — `/admin` route (role-gated), delete-all-transactions + delete-all-merchant-mappings (merged)
   - #15 Monthly summary — `/summary` page: Claude-generated recap (headline, spend overview, over-budget, biggest merchant, vs last month, notable patterns). Suspense skeleton on month change, admin future-month nav.
   - Budget auto-seed — budgets auto-copied from previous month on first view; dismissible shadcn Alert banner shows source month
+- **Open PRs:**
+  - **PR open** `feature/nav-layout-restructure` — nav/layout design handoff (current session, see below)
+- **Nav/layout restructure (feature/nav-layout-restructure) — what changed:**
+  - Sidebar: 5 primary (Dashboard, Transactions, Budgets, Summary, Chat) + separator + 2 secondary (Import, Settings). Icons on all items. Active state: `bg-muted` + 2px primary accent bar. Footer: logged-in user avatar (initials from display_name/email), name, email + sign-out.
+  - `/settings` consolidates Accounts + Categories + Danger zone (admin) behind shadcn Tabs. URL-driven tab state (`?tab=accounts|categories|danger`). Danger zone hidden for non-admin.
+  - `/accounts`, `/categories`, `/admin` redirect to `/settings?tab=...` (Option A — old routes still work).
+  - Mobile: sticky bottom tab bar (5 primary items), Sheet drawer for full nav (hamburger `Menu` icon). `h-dvh` fixes iOS Safari address bar.
+  - Mobile `/transactions`: `TransactionDayList` shown `md:hidden`; desktop table unchanged (`hidden md:block`).
+  - Nav constants: `src/components/nav/nav-items.ts`. shadcn `Avatar` + `Sheet` added.
 - **Remaining build order items:**
   - **#17** Import summary — post-upload breakdown (imported / duplicates / from map / from Claude / recurring / uncategorised)
 - **Deferred (not blocking):**
   - Auto-run recurring detection after each import (currently manual-trigger only)
   - Dashboard vs Summary redesign — see "Design Direction" section in `docs/roadmap.md`
+  - Sidebar collapse to 64px (optional per design spec, skipped)
+  - Header search, notification bell, dark mode toggle (roadmapped, intentionally not built yet)
 - **Known issues:** Node 22 required — always `source ~/.nvm/nvm.sh && nvm use 22` before pnpm scripts.
-- **Components available:** `Skeleton` (`src/components/ui/skeleton.tsx`), `Tooltip` (`src/components/ui/tooltip.tsx`).
+- **Components available:** `Skeleton`, `Tooltip`, `Avatar`, `Sheet` (all in `src/components/ui/`).
 - **Prop convention:** `MonthSelector` and `SummaryMonthSelector` use `allowFuture` (not `isAdmin`) — the page passes `allowFuture={isAdmin}` so the selector stays role-agnostic.
 
 ---

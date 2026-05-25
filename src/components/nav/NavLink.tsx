@@ -3,26 +3,40 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
+import type { LucideIcon } from 'lucide-react'
 
 interface NavLinkProps {
   href: string
+  icon: LucideIcon
   children: React.ReactNode
+  className?: string
+  onClick?: () => void
 }
 
-export function NavLink({ href, children }: NavLinkProps) {
+export function NavLink({ href, icon: Icon, children, className, onClick }: NavLinkProps) {
   const pathname = usePathname()
   const isActive = pathname === href || pathname.startsWith(href + '/')
 
   return (
     <Link
       href={href}
+      {...(onClick ? { onClick } : {})}
       className={cn(
-        'flex items-center rounded-md px-3 py-2 text-sm font-medium transition-colors',
+        'relative flex h-9 items-center gap-2.5 rounded-md px-3 text-sm font-medium transition-colors',
         isActive
-          ? 'bg-primary text-primary-foreground'
-          : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
+          ? 'bg-muted text-foreground'
+          : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground',
+        className
       )}
     >
+      {/* 2px accent bar on left edge when active */}
+      {isActive && (
+        <span
+          aria-hidden="true"
+          className="absolute inset-y-1.5 left-0 w-0.5 rounded-full bg-primary"
+        />
+      )}
+      <Icon size={17} strokeWidth={1.75} className="shrink-0" />
       {children}
     </Link>
   )
