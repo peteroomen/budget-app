@@ -31,23 +31,26 @@ Core loop: import bank statements → AI categorises transactions → set budget
 > **Update this section at the end of every session.**
 
 - **Current phase:** Phase 4 — AI Chat (in progress). Phases 1–3 fully complete.
-- **Last session:** 2026-05-25 — Chat context injection (build order item #14, PR #14 open for review)
-- **All merged to main (build order items #1–#13):**
+- **Last session:** 2026-05-25 — Recurring detection (build order item #12, PR #15 open for review)
+- **All merged to main (build order items #1–#14):**
   - #1 Scaffold · #2 Auth + household · #3 Accounts CRUD
   - #4 CSV import · #5 PDF import · #6 Transaction list
   - #7 Category system · #8 Merchant memory · #9 AI categorisation
   - #10 Dashboard charts · #11 Budget management
   - #13 Chat interface (Assistant UI + Vercel AI SDK, streaming, markdown rendering)
-- **In review (PR #14):**
-  - #14 Chat context injection — `src/lib/queries/chat-context.ts` fetches transactions, budgets, all categories, 3-month trends, and recurring; injected as a structured `<financial_data>` block in the system prompt. Also fixed dashboard Y-axis label skipping.
+  - #14 Chat context injection — `src/lib/queries/chat-context.ts` fetches transactions, budgets, categories, 3-month trends, and recurring; injected as a structured `<financial_data>` block in the system prompt
+- **In review (PR #15 — feature/recurring-detection):**
+  - #12 Recurring detection — auto-detect by merchant pattern (2+ months, ≤10% amount spread), manual toggle per row, Fixed Costs dashboard card. Also: dashboard loading skeleton, month-change Suspense, "This month" link, admin future-month navigation, all 4 summary cards in one row.
 - **Remaining build order items:**
-  - **#12** Recurring detection — `is_recurring` column exists; detection logic + UI not built
   - **#15** Monthly summary — Claude-generated recap page (Phase 5)
   - **#16** Polish pass — responsive, dark mode, empty states, search, export (Phase 5)
+- **Deferred from #12 (not blocking):**
+  - Auto-run recurring detection after each import (currently manual-trigger only)
 - **Deferred Phase 2 refinements (not blocking, nice to have):**
   - `category_source` column on `transactions` — track 'claude' vs 'manual' overrides
   - `is_manual` flag on `merchant_category_map` — so "Re-categorise all" preserves manual overrides
 - **Known issues:** Node 22 required — always `source ~/.nvm/nvm.sh && nvm use 22` before pnpm scripts.
+- **New components added in #12:** `src/lib/actions/recurring.ts`, `src/lib/queries/recurring.ts`, `src/components/ui/tooltip.tsx`, `src/components/ui/skeleton.tsx`, `src/app/(app)/dashboard/DashboardContent.tsx`, `src/app/(app)/dashboard/loading.tsx`.
 
 ---
 

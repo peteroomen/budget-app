@@ -39,7 +39,9 @@ export function RecurringBadge({ transactionId, isRecurring }: Props) {
           </Button>
         </TooltipTrigger>
         <TooltipContent side="top">
-          {isRecurring ? 'Recurring fixed cost — click to unmark' : 'Mark as recurring fixed cost'}
+          {isRecurring
+            ? 'Recurring expense - click to make one-off'
+            : 'One off expense - click to make recurring'}
         </TooltipContent>
       </Tooltip>
     </TooltipProvider>
