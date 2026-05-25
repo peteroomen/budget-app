@@ -54,7 +54,7 @@ export function SummaryDisplay({ summary, ctx }: SummaryDisplayProps) {
                 {summary.vsLastMonthNote}
               </p>
               {ctx.priorMonthSpend !== null && (
-                <p className="mt-3 text-xl font-semibold text-red-600">
+                <p className="mt-3 text-xl font-semibold">
                   {formatNZD(ctx.priorMonthSpend)}
                   <span className="ml-2 text-sm font-normal text-muted-foreground">
                     {ctx.priorMonthLabel} spend
@@ -95,7 +95,7 @@ export function SummaryDisplay({ summary, ctx }: SummaryDisplayProps) {
               {ctx.topMerchants[0] && (
                 <p className="mb-2 text-xl font-semibold">
                   {ctx.topMerchants[0].merchant}
-                  <span className="ml-2 text-base font-normal text-red-600">
+                  <span className="ml-2 text-base font-normal text-muted-foreground">
                     {formatNZD(ctx.topMerchants[0].spend_cents)}
                   </span>
                 </p>
