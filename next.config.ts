@@ -15,11 +15,11 @@ const nextConfig: NextConfig = {
        * built-ins, so the bundle throws `ReferenceError: __dirname is not defined`
        * on every cold start.
        *
-       * Disable webpack's persistent cache for the edge compilation so Vercel's
-       * restored build cache cannot serve a stale middleware chunk compiled before
-       * this plugin was added. Without cache: false, webpack sees identical source
-       * hashes and skips recompilation, serving the old broken bundle even though
-       * the NormalModuleReplacementPlugin is now in the config.
+       * Disable webpack's persistent filesystem cache for the edge compilation.
+       * The build script (package.json) clears .next/ before each Vercel build,
+       * which is the primary cache-bust. This is a secondary guard: if webpack
+       * ever runs with a restored .next/cache/webpack/ it won't read stale
+       * edge-server cache entries that predate this plugin.
        */
       config.cache = false
       config.plugins.push(
