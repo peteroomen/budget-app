@@ -1,10 +1,9 @@
 import { redirect } from 'next/navigation'
 import { Upload } from 'lucide-react'
 import { getCurrentProfile } from '@/lib/queries/profile'
-import { NavLink } from '@/components/nav/NavLink'
+import { SidebarNav } from '@/components/nav/SidebarNav'
 import { BottomTabBar } from '@/components/nav/BottomTabBar'
 import { MobileDrawer } from '@/components/nav/MobileDrawer'
-import { PRIMARY_NAV, SECONDARY_NAV } from '@/components/nav/nav-items'
 import { Separator } from '@/components/ui/separator'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
@@ -52,22 +51,8 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           <p className="text-[11px] text-muted-foreground">Household</p>
         </div>
 
-        {/* Primary nav */}
-        <nav className="flex-1 space-y-0.5 px-3 py-2">
-          {PRIMARY_NAV.map(({ href, label, icon }) => (
-            <NavLink key={href} href={href} icon={icon}>
-              {label}
-            </NavLink>
-          ))}
-
-          <Separator className="my-2" />
-
-          {SECONDARY_NAV.map(({ href, label, icon }) => (
-            <NavLink key={href} href={href} icon={icon}>
-              {label}
-            </NavLink>
-          ))}
-        </nav>
+        {/* Primary + secondary nav — client component owns icon imports */}
+        <SidebarNav />
 
         {/* User footer */}
         <Separator />
