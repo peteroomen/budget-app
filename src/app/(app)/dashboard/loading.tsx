@@ -1,18 +1,9 @@
 import { Skeleton } from '@/components/ui/skeleton'
 
-export default function DashboardLoading() {
+// Used as the Suspense fallback for month changes (header stays visible).
+export function DashboardContentSkeleton() {
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <Skeleton className="h-8 w-36" />
-        <div className="flex items-center gap-2">
-          <Skeleton className="h-9 w-9" />
-          <Skeleton className="h-5 w-36" />
-          <Skeleton className="h-9 w-9" />
-        </div>
-      </div>
-
       {/* Income / Spend / Net / Fixed costs cards */}
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         {[0, 1, 2].map((i) => (
@@ -49,6 +40,23 @@ export default function DashboardLoading() {
           ))}
         </div>
       </div>
+    </div>
+  )
+}
+
+// Used by Next.js on initial navigation to /dashboard.
+export default function DashboardLoading() {
+  return (
+    <div className="space-y-6">
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <Skeleton className="h-8 w-36" />
+        <div className="flex items-center gap-2">
+          <Skeleton className="h-9 w-9" />
+          <Skeleton className="h-5 w-36" />
+          <Skeleton className="h-9 w-9" />
+        </div>
+      </div>
+      <DashboardContentSkeleton />
     </div>
   )
 }

@@ -17,6 +17,11 @@ export function MonthSelector({ month, allowFuture = false }: MonthSelectorProps
 
   return (
     <div className="flex items-center gap-2">
+      {!isCurrentMonth && (
+        <Button variant="ghost" size="sm" asChild>
+          <Link href="/dashboard">This month</Link>
+        </Button>
+      )}
       <Button variant="outline" size="icon" asChild>
         <Link href={`/dashboard?month=${prevMonth(month)}`}>
           <ChevronLeft className="h-4 w-4" />
