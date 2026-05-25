@@ -14,24 +14,25 @@ interface SpendByCategoryChartProps {
   data: CategorySpend[]
 }
 
+// Matches --chart-1..5 tokens: sage, warm-gold, dusty-blue, terracotta, muted-plum
 const FALLBACK_COLORS = [
-  '#6366f1',
-  '#8b5cf6',
-  '#ec4899',
-  '#f43f5e',
-  '#f97316',
-  '#eab308',
-  '#22c55e',
-  '#14b8a6',
-  '#06b6d4',
-  '#3b82f6',
-  '#a855f7',
-  '#d946ef',
-  '#10b981',
-  '#84cc16',
-  '#ef4444',
-  '#0ea5e9',
-  '#f59e0b',
+  '#427561',
+  '#c48d47',
+  '#576a9c',
+  '#b45c42',
+  '#7d6595',
+  '#427561',
+  '#c48d47',
+  '#576a9c',
+  '#b45c42',
+  '#7d6595',
+  '#427561',
+  '#c48d47',
+  '#576a9c',
+  '#b45c42',
+  '#7d6595',
+  '#427561',
+  '#c48d47',
   '#64748b',
 ]
 

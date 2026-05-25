@@ -93,7 +93,7 @@ export function TransactionTable({
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead className="text-muted-foreground font-medium">
+            <TableHead className="text-[11px] uppercase tracking-wider text-muted-foreground font-medium">
               <SortHeader
                 label="Date"
                 column="date"
@@ -103,7 +103,7 @@ export function TransactionTable({
               />
             </TableHead>
             <TableHead className="w-8 pr-0" />
-            <TableHead className="text-muted-foreground font-medium">
+            <TableHead className="text-[11px] uppercase tracking-wider text-muted-foreground font-medium">
               <SortHeader
                 label="Merchant / Description"
                 column="merchant_name"
@@ -113,9 +113,13 @@ export function TransactionTable({
               />
             </TableHead>
             <TableHead className="w-8 pr-0" />
-            <TableHead className="text-muted-foreground font-medium">Category</TableHead>
-            <TableHead className="text-muted-foreground font-medium">Account</TableHead>
-            <TableHead className="text-muted-foreground font-medium text-right">
+            <TableHead className="text-[11px] uppercase tracking-wider text-muted-foreground font-medium">
+              Category
+            </TableHead>
+            <TableHead className="text-[11px] uppercase tracking-wider text-muted-foreground font-medium">
+              Account
+            </TableHead>
+            <TableHead className="text-[11px] uppercase tracking-wider text-muted-foreground font-medium text-right">
               <SortHeader
                 label="Amount"
                 column="amount_cents"
@@ -128,8 +132,8 @@ export function TransactionTable({
         </TableHeader>
         <TableBody>
           {rows.map((tx) => (
-            <TableRow key={tx.id} className="group">
-              <TableCell className="tabular-nums text-muted-foreground whitespace-nowrap">
+            <TableRow key={tx.id} className="group h-12 hover:bg-muted/40">
+              <TableCell className="font-mono text-[13px] tabular-nums text-muted-foreground whitespace-nowrap">
                 {tx.date}
               </TableCell>
               <TableCell className="pr-0">
@@ -162,10 +166,11 @@ export function TransactionTable({
                 {tx.account?.name ?? '—'}
               </TableCell>
               <TableCell
-                className={`tabular-nums text-right font-medium ${
-                  tx.amount_cents < 0 ? 'text-destructive' : 'text-green-700'
+                className={`font-mono text-[13px] tabular-nums text-right font-medium ${
+                  tx.amount_cents > 0 ? 'text-success' : ''
                 }`}
               >
+                {tx.amount_cents > 0 ? '+' : ''}
                 {formatAmount(tx.amount_cents)}
               </TableCell>
             </TableRow>
