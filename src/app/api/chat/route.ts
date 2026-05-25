@@ -1,6 +1,12 @@
 import { convertToModelMessages, streamText, type UIMessage } from 'ai'
-import { anthropic } from '@ai-sdk/anthropic'
+import { createAnthropic } from '@ai-sdk/anthropic'
 import { getChatContext, formatChatContext, currentMonth } from '@/lib/queries/chat-context'
+
+// @ai-sdk/anthropic v3 has a broken default baseURL (missing /v1/)
+const anthropic = createAnthropic({
+  baseURL: 'https://api.anthropic.com/v1',
+  apiKey: process.env.ANTHROPIC_API_KEY!,
+})
 
 const BASE_SYSTEM_PROMPT = `You are a helpful budget assistant for a New Zealand household.
 
