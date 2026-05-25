@@ -36,7 +36,7 @@ export function NavLink({ href, icon: Icon, children, className, onClick }: NavL
           className="absolute inset-y-1.5 left-0 w-0.5 rounded-full bg-primary"
         />
       )}
-      <Icon size={17} strokeWidth={1.75} className="shrink-0" />
+      <Icon size={17} strokeWidth={1.75} className={cn('shrink-0', isActive && 'text-primary')} />
       {children}
     </Link>
   )

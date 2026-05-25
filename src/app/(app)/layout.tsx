@@ -51,7 +51,9 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       <aside className="hidden w-[232px] shrink-0 flex-col overflow-y-auto border-r bg-muted/40 md:flex">
         {/* Brand row */}
         <div className="px-4 py-4">
-          <span className="font-display text-display-wordmark font-semibold tracking-tight">Tide</span>
+          <span className="font-display text-display-wordmark font-semibold tracking-tight">
+            Tide
+          </span>
           <p className="text-[11px] text-muted-foreground">Household</p>
         </div>
 
@@ -88,7 +90,9 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         </header>
 
         {/* Page content */}
-        <main className="flex flex-1 flex-col overflow-y-auto p-6">{children}</main>
+        <main className="flex flex-1 flex-col overflow-y-auto">
+          <div className="mx-auto w-full max-w-screen-xl px-8 py-7">{children}</div>
+        </main>
 
         {/* Mobile bottom tab bar */}
         <BottomTabBar />

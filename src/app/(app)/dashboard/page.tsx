@@ -1,6 +1,6 @@
 import { Suspense } from 'react'
 import { createClient } from '@/lib/supabase/server'
-import { currentMonth, formatMonthLabel } from '@/lib/utils/month'
+import { currentMonth } from '@/lib/utils/month'
 import { MonthSelector } from '@/components/dashboard/MonthSelector'
 import { DashboardContent } from './DashboardContent'
 import { DashboardContentSkeleton } from './loading'
@@ -23,7 +23,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h1 className="font-display text-display-h1 font-medium">{formatMonthLabel(month)}</h1>
+          <h1 className="font-display text-display-h1 font-medium">Dashboard</h1>
           <p className="mt-0.5 text-body-sm text-muted-foreground">
             Where the money went this month
           </p>

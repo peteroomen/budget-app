@@ -1,4 +1,5 @@
 import { Suspense } from 'react'
+import { Target, TrendingUp, Wallet, AlertTriangle } from 'lucide-react'
 import {
   getBudgetsWithActuals,
   findMostRecentBudgetMonth,
@@ -6,8 +7,7 @@ import {
 } from '@/lib/queries/budgets'
 import { Card, CardContent } from '@/components/ui/card'
 import { MonthPicker } from '@/components/budgets/MonthPicker'
-import { BudgetTable } from '@/components/budgets/BudgetTable'
-import { BudgetCard } from '@/components/budgets/BudgetCard'
+import { BudgetList } from '@/components/budgets/BudgetList'
 import { OverBudgetCards } from '@/components/budgets/OverBudgetCards'
 import { SeededFromBanner } from '@/components/budgets/SeededFromBanner'
 
@@ -60,13 +60,36 @@ export default async function BudgetsPage({ searchParams }: BudgetsPageProps) {
   const remaining = Math.max(0, totalBudget - totalSpent)
   const overCount = items.filter((i) => i.budget && i.actual_cents > i.budget.amount_cents).length
 
+  const [yr, mo] = month.split('-').map(Number)
+  const monthLabel = new Date(yr!, mo! - 1, 1).toLocaleDateString('en-NZ', {
+    month: 'long',
+    year: 'numeric',
+  })
+
   const kpis = [
-    { label: 'Total budget', value: totalBudget > 0 ? formatNZD(totalBudget) : '—' },
-    { label: 'Spent', value: formatNZD(totalSpent) },
-    { label: 'Remaining', value: totalBudget > 0 ? formatNZD(remaining) : '—' },
+    {
+      label: 'Total budget',
+      value: totalBudget > 0 ? formatNZD(totalBudget) : '—',
+      sub: `${items.filter((i) => i.budget).length} categories`,
+      icon: Target,
+    },
+    {
+      label: 'Total spent',
+      value: formatNZD(totalSpent),
+      sub: totalBudget > 0 ? `${Math.round((totalSpent / totalBudget) * 100)}% of budget` : '',
+      icon: TrendingUp,
+    },
+    {
+      label: 'Remaining',
+      value: totalBudget > 0 ? formatNZD(remaining) : '—',
+      sub: totalBudget > 0 ? `${Math.round((remaining / totalBudget) * 100)}% left` : '',
+      icon: Wallet,
+    },
     {
       label: 'Over budget',
       value: overCount.toString(),
+      sub: overCount > 0 ? 'Needs attention' : 'All on track',
+      icon: AlertTriangle,
       highlight: overCount > 0,
     },
   ]
@@ -77,7 +100,7 @@ export default async function BudgetsPage({ searchParams }: BudgetsPageProps) {
         <div>
           <h1 className="font-display text-display-h1 font-medium">Budgets</h1>
           <p className="mt-0.5 text-body-sm text-muted-foreground">
-            Caps for the categories we care about.
+            {items.length} categories · {monthLabel}
           </p>
         </div>
         <Suspense fallback={null}>
@@ -85,27 +108,36 @@ export default async function BudgetsPage({ searchParams }: BudgetsPageProps) {
         </Suspense>
       </div>
 
+      {seededFrom && <SeededFromBanner sourceMonth={seededFrom} />}
+
       {/* KPI stat row */}
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-        {kpis.map((kpi) => (
-          <Card key={kpi.label}>
-            <CardContent className="p-4">
-              <p className="text-label-caps uppercase tracking-[0.05em] font-medium text-muted-foreground">
-                {kpi.label}
-              </p>
-              <p
-                className={`mt-1 font-display text-display-metric font-medium tabular-nums leading-none ${
-                  kpi.highlight ? 'text-destructive' : 'text-foreground'
-                }`}
-              >
-                {kpi.value}
-              </p>
-            </CardContent>
-          </Card>
-        ))}
+        {kpis.map((kpi) => {
+          const Icon = kpi.icon
+          return (
+            <Card key={kpi.label}>
+              <CardContent className="p-4">
+                <div className="flex items-start justify-between gap-2">
+                  <p className="text-label-caps uppercase tracking-[0.05em] font-medium text-muted-foreground">
+                    {kpi.label}
+                  </p>
+                  <Icon
+                    className={`h-4 w-4 shrink-0 mt-0.5 ${kpi.highlight ? 'text-destructive' : 'text-muted-foreground/50'}`}
+                  />
+                </div>
+                <p
+                  className={`mt-1 font-display text-display-metric font-medium tabular-nums leading-none ${
+                    kpi.highlight ? 'text-destructive' : 'text-foreground'
+                  }`}
+                >
+                  {kpi.value}
+                </p>
+                {kpi.sub && <p className="mt-1 text-label text-muted-foreground">{kpi.sub}</p>}
+              </CardContent>
+            </Card>
+          )
+        })}
       </div>
-
-      {seededFrom && <SeededFromBanner sourceMonth={seededFrom} />}
 
       <OverBudgetCards items={items} />
 
@@ -114,17 +146,7 @@ export default async function BudgetsPage({ searchParams }: BudgetsPageProps) {
           No categories found. Add some categories first.
         </p>
       ) : (
-        <>
-          {/* Desktop: table */}
-          <BudgetTable items={items} month={month} className="hidden md:block" />
-
-          {/* Mobile: card list */}
-          <div className="grid grid-cols-1 gap-4 md:hidden">
-            {items.map((item) => (
-              <BudgetCard key={item.category.id} item={item} month={month} />
-            ))}
-          </div>
-        </>
+        <BudgetList items={items} month={month} />
       )}
     </div>
   )

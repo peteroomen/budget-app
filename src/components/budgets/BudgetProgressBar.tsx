@@ -33,7 +33,7 @@ export function BudgetProgressBar({ actual_cents, budget_cents }: BudgetProgress
   const pct = Math.min(ratio * 100, 100)
 
   const indicatorClassName =
-    ratio >= 1 ? 'bg-destructive' : ratio >= 0.8 ? 'bg-warning' : 'bg-primary'
+    ratio >= 1 ? 'bg-destructive' : ratio >= 0.8 ? 'bg-warning' : 'bg-success'
 
   return (
     <div className="space-y-1">
