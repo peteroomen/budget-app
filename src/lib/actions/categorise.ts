@@ -37,35 +37,52 @@ export async function recategoriseAll(): Promise<RecategoriseResult> {
   const accountIds = (accounts ?? []).map((a) => a.id as string)
   if (accountIds.length === 0) return { error: null, updated: 0 }
 
-  // 2. Fetch all distinct merchant names across household transactions
+  // 2. Fetch manually-locked merchant names so we can preserve them
+  const { data: manualMapRows } = await supabase
+    .from('merchant_category_map')
+    .select('merchant_name')
+    .eq('household_id', householdId)
+    .eq('is_manual', true)
+
+  const manualMerchants = new Set((manualMapRows ?? []).map((r) => r.merchant_name as string))
+
+  // 3. Delete only the non-manual merchant map entries (preserves manual overrides)
+  const { error: deleteError } = await supabase
+    .from('merchant_category_map')
+    .delete()
+    .eq('household_id', householdId)
+    .eq('is_manual', false)
+
+  if (deleteError) return { error: deleteError.message, updated: 0 }
+
+  // 4. Fetch distinct merchant names from transactions, excluding manually-mapped ones
   const { data: txRows } = await supabase
     .from('transactions')
     .select('merchant_name')
     .in('account_id', accountIds)
     .not('merchant_name', 'is', null)
 
-  const merchantNames = [...new Set((txRows ?? []).map((r) => r.merchant_name as string))]
+  const merchantNames = [
+    ...new Set(
+      (txRows ?? [])
+        .map((r) => r.merchant_name)
+        .filter((n): n is string => n !== null && !manualMerchants.has(n))
+    ),
+  ]
   if (merchantNames.length === 0) return { error: null, updated: 0 }
 
-  // 3. Clear the existing merchant map so this is a clean AI-only run
-  const { error: deleteError } = await supabase
-    .from('merchant_category_map')
-    .delete()
-    .eq('household_id', householdId)
-
-  if (deleteError) return { error: deleteError.message, updated: 0 }
-
-  // 4. Ask Claude to categorise all merchants
+  // 5. Ask Claude to categorise non-manual merchants
   const categories = await getCategories()
   const categoryMap = await categoriseMerchantsWithClaude(merchantNames, categories)
 
   if (categoryMap.size === 0) return { error: null, updated: 0 }
 
-  // 5. Upsert new merchant_category_map entries
+  // 6. Upsert new merchant_category_map entries (non-manual)
   const mapRows = [...categoryMap.entries()].map(([merchant, categoryId]) => ({
     household_id: householdId,
     merchant_name: merchant,
     category_id: categoryId,
+    is_manual: false,
   }))
 
   const { error: upsertError } = await supabase
@@ -74,12 +91,12 @@ export async function recategoriseAll(): Promise<RecategoriseResult> {
 
   if (upsertError) return { error: upsertError.message, updated: 0 }
 
-  // 6. Apply new categories to transactions (one update per merchant)
+  // 7. Apply new categories to transactions (one update per merchant, skip manual-mapped)
   let updated = 0
   for (const [merchant, categoryId] of categoryMap) {
     const { error: txError } = await supabase
       .from('transactions')
-      .update({ category_id: categoryId })
+      .update({ category_id: categoryId, category_source: 'claude' })
       .in('account_id', accountIds)
       .eq('merchant_name', merchant)
 

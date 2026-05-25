@@ -9,15 +9,18 @@ export async function getMerchantMappingsForImport(
 ): Promise<Map<string, string>> {
   if (merchantNames.length === 0) return new Map()
 
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from('merchant_category_map')
     .select('merchant_name, category_id')
     .eq('household_id', householdId)
     .in('merchant_name', merchantNames)
 
+  if (error) console.error('getMerchantMappingsForImport:', error.message)
   const map = new Map<string, string>()
   for (const row of data ?? []) {
-    map.set(row.merchant_name as string, row.category_id as string)
+    if (row.merchant_name && row.category_id) {
+      map.set(row.merchant_name, row.category_id)
+    }
   }
   return map
 }
@@ -25,11 +28,12 @@ export async function getMerchantMappingsForImport(
 export async function getMappedMerchantNames(): Promise<Set<string>> {
   const supabase = await createClient()
 
-  const { data } = await supabase.from('merchant_category_map').select('merchant_name')
+  const { data, error } = await supabase.from('merchant_category_map').select('merchant_name')
 
+  if (error) console.error('getMappedMerchantNames:', error.message)
   const names = new Set<string>()
   for (const row of data ?? []) {
-    names.add(row.merchant_name as string)
+    if (row.merchant_name) names.add(row.merchant_name)
   }
   return names
 }

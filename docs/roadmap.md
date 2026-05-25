@@ -149,9 +149,20 @@ uploads
 
 ### Recurring Transactions
 
-- [ ] Auto-detect recurring: same merchant + similar amount appearing monthly
-- [ ] Manual flag toggle on any transaction
-- [ ] "Fixed costs" summary card: total confirmed recurring per month (rent, ELC, loans, insurance, subscriptions)
+- [x] Auto-detect recurring: same merchant + similar amount appearing monthly
+- [x] Manual flag toggle on any transaction
+- [x] "Fixed costs" summary card: total confirmed recurring per month (rent, ELC, loans, insurance, subscriptions)
+
+> **Future enhancements to the Fixed Costs card — revisit in Phase 5**
+>
+> The current card shows a total + merchant count. Possible directions:
+>
+> - **Merchant breakdown list:** expand the card (or link to a panel) showing each recurring merchant with its typical amount — so you can see at a glance that it's Netflix $22.99, ELC $620, ANZ Homeloan $1,250, etc. rather than just a total.
+> - **Month-over-month delta:** flag when a recurring amount changes (e.g. power bill went up $15 vs last month) — useful for catching subscription price creep.
+> - **"Expected vs arrived" status:** for the current month, show which recurring payments have already hit vs which are still expected (based on historical day-of-month patterns). Helps with cash flow planning mid-month.
+> - **Auto-run detection on import:** currently triggered manually; could run automatically after each CSV/PDF import.
+> - **Category breakdown:** split fixed costs by category (Insurance, Subscriptions, Loans, Childcare, Utilities) so you can see the composition, not just the total.
+> - **Annual projection:** fixed costs × 12 shown as a "committed annual spend" figure.
 
 **Deliverable:** Open the app mid-month and know exactly where you stand.
 
@@ -197,12 +208,28 @@ Example queries:
 
 **Deliverable:** Natural conversation about your finances without opening a spreadsheet.
 
+### Chat v2 — Future Enhancements (deferred — revisit with requirements)
+
+The chat interface is v1. Before building any of these, sit down and properly define what a great chat experience looks like for this household. Ideas captured so far:
+
+- **Conversation hint chips** — suggested prompts shown below the input to help users discover what to ask
+- **Historical data access** — current context only injects the current month; the agent needs a way to look up any month (or all-time summaries) to answer trend questions, year-to-date totals, or "how does this compare to six months ago?". Tool calls are probably the right mechanism — let Claude request the data it needs rather than injecting everything upfront
+- **Tool calls** — live DB queries per message instead of a static context block
+- **Rich responses** — inline charts and trend graphs rendered inside the chat thread
+- **Summary cards** — structured cards for balances, budget snapshots, recurring costs
+- **Write actions** — Claude adjusts budgets, recategorises transactions, or flags recurring items on request (with confirmation)
+- **Account balances** — include current balances in context (requires balance tracking)
+
+> Treat this whole section as a backlog to be shaped, not a build list.
+
 ---
 
 ## Phase 5: Polish & Quality of Life
 
 > Goal: An app you actually want to open every month.
 
+- [ ] **Transaction pagination** — the transaction list will get unwieldy once several months of data are loaded. Two approaches to decide between: (a) show one month at a time (month selector like the dashboard, clean mental model), or (b) traditional pagination with the existing filters still in play. Approach TBD — revisit once real data volume makes the problem concrete.
+- [ ] **Import summary** — after an upload completes, show a breakdown of what happened: X transactions imported, X duplicates skipped, X categorised from merchant memory, X categorised by Claude, X flagged as recurring, X uncategorised. Becomes more useful as more AI detection runs on import (recurring, anomaly flagging, etc.). Display inline on the import page or as a modal — don't navigate away.
 - [ ] Monthly summary view — Claude-generated one-page recap (spend vs budget, vs prior month, notable patterns)
 - [ ] In-app budget alerts: "You're 80% through Dining Out"
 - [ ] Multi-account view (net position across all accounts)
@@ -212,6 +239,60 @@ Example queries:
 - [ ] Dark mode (trivial with shadcn)
 - [ ] Persisted chat history (optional upgrade — store threads in Supabase)
 - [ ] Budget page month picker enhancement — replace prev/next buttons with a richer selector: click the month label to open a shadcn Popover with a year + month grid so users can jump directly to any month rather than stepping one at a time
+
+---
+
+## Design Direction: Dashboard vs Summary (Unresolved)
+
+> **Status:** Discussed 2026-05-25. No code changes made yet — captured here for the next revisit.
+
+### The problem
+
+With `/dashboard` and `/summary` both existing, the current split is thin:
+
+- Dashboard: charts + numbers (any month, via selector)
+- Summary: AI narrative (any month, via selector)
+
+They tell the same story in different formats, about the same data, for the same months. Navigating between them feels redundant rather than complementary.
+
+### Proposed redesign: purpose-driven split
+
+**Dashboard → "This Month" (status view)**
+
+- Always current month, no month selector
+- Answers: _"How are we tracking right now?"_
+- Budget progress bars: % used per category, colour-coded green/amber/red
+- Days remaining in the month + projected overspend at current pace (simple linear extrapolation)
+- Top merchants month-to-date
+- Fixed costs / recurring confirmed this month
+- Fast: pure Supabase queries, no AI call
+- Rename nav item to "This Month" to make the intent obvious
+
+**Summary → "Monthly Recap" (historical view)**
+
+- Past months only — current month could be hidden or shown as "in progress" with a caveat
+- Answers: _"How did that month go?"_
+- Claude-generated narrative as it is now: headline, over-budget, vs prior month, patterns
+- The AI angle makes more sense for closed months — you're reflecting, not course-correcting
+- Rename nav item to "Recap" or "Monthly Recap"
+
+### Trade-offs to weigh before building
+
+|                                 | In favour                                                      | Against                                                  |
+| ------------------------------- | -------------------------------------------------------------- | -------------------------------------------------------- |
+| Lock dashboard to current month | Clear mental model, faster load                                | Lose ability to compare chart visuals across past months |
+| AI on summary only              | Appropriate framing (retrospective), no latency on status view | Current month has no AI context — chat fills that gap    |
+| Rename nav items                | More honest about purpose                                      | Minor churn, users (both of them) already know the app   |
+
+### Open questions before committing
+
+- Do we miss the ability to look at a past month's charts (bar chart breakdown)? If yes, keep dashboard's month selector but default to current.
+- Does the current month deserve an AI "how are you tracking?" card too — a lightweight version, not a full recap? That would need a different prompt framing ("you're 18 days in, on this trajectory...").
+- Is the "days remaining + projected overspend" projection actually useful or just noisy? Only real usage will tell.
+
+### Recommended next step
+
+Use the app for 1–2 months as-is. If the duplicate-page friction is felt in practice, implement the redesign as build order item #17. If you find yourself only using one of the two pages, that's the signal.
 
 ---
 
@@ -249,6 +330,7 @@ Suggested chunking — each is one focused Claude Code session:
 14. **Chat agent** — context injection, system prompt, NZD-aware responses
 15. **Monthly summary** — Claude-generated recap view
 16. **Polish pass** — responsive, dark mode, edge cases, empty states
+17. **Import summary** — post-upload breakdown (imported / duplicates / from map / from Claude / recurring / uncategorised)
 
 > **Tip:** Each Claude Code session: one item from the list above + current DB schema as context. Never combine items. Smaller scope = fewer errors and easier debugging.
 

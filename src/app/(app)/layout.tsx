@@ -13,15 +13,23 @@ const NAV_ITEMS = [
   { href: '/categories', label: 'Categories' },
   { href: '/budgets', label: 'Budgets' },
   { href: '/chat', label: 'Chat' },
+  { href: '/summary', label: 'Summary' },
 ]
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
   const profile = await getCurrentProfile()
   if (!profile) {
-    const supabase = await createClient()
     await supabase.auth.signOut()
     redirect('/login')
   }
+
+  const isAdmin = user?.app_metadata?.role === 'admin'
+  const navItems = isAdmin ? [...NAV_ITEMS, { href: '/admin', label: 'Admin' }] : NAV_ITEMS
 
   return (
     <div className="flex h-screen overflow-hidden">
@@ -31,7 +39,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         </div>
         <Separator />
         <nav className="flex-1 space-y-1 px-3 py-4">
-          {NAV_ITEMS.map(({ href, label }) => (
+          {navItems.map(({ href, label }) => (
             <NavLink key={href} href={href}>
               {label}
             </NavLink>

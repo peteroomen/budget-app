@@ -70,7 +70,6 @@ ${indexedList}`,
   try {
     parsed = JSON.parse(raw)
   } catch {
-    // eslint-disable-next-line no-console
     console.error('[categorise] Claude returned invalid JSON:', raw)
     return new Map()
   }

@@ -72,6 +72,13 @@ export async function getBudgetsWithActuals(month: string): Promise<BudgetWithAc
       .lt('amount_cents', 0),
   ])
 
+  if (categoriesResult.error)
+    console.error('getBudgetsWithActuals/categories:', categoriesResult.error.message)
+  if (budgetsResult.error)
+    console.error('getBudgetsWithActuals/budgets:', budgetsResult.error.message)
+  if (actualsResult.error)
+    console.error('getBudgetsWithActuals/actuals:', actualsResult.error.message)
+
   const categories: Category[] = categoriesResult.data ?? []
   const budgets: Budget[] = budgetsResult.data ?? []
   const actuals: { category_id: string | null; amount_cents: number }[] = actualsResult.data ?? []

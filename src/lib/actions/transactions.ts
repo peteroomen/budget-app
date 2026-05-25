@@ -37,13 +37,13 @@ export async function setCategoryOverride(
 
   const { error } = await supabase
     .from('transactions')
-    .update({ category_id: categoryId })
+    .update({ category_id: categoryId, category_source: categoryId ? 'manual' : null })
     .eq('id', transactionId)
 
   if (error) return { error: error.message }
 
   if (categoryId && merchantName) {
-    const mapResult = await upsertMerchantMapping(merchantName, categoryId)
+    const mapResult = await upsertMerchantMapping(merchantName, categoryId, true)
     if (mapResult.error) return { error: mapResult.error }
   }
 

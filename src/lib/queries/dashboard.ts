@@ -26,11 +26,19 @@ export interface DashboardData {
   topMerchants: MerchantSpend[]
 }
 
+type TxRow = {
+  amount_cents: number
+  merchant_name: string | null
+  description: string
+  category_id: string | null
+  category: { name: string; color: string | null } | null
+}
+
 export async function getDashboardData(month: string): Promise<DashboardData> {
   const supabase = await createClient()
   const { dateFrom, dateTo } = monthDateRange(month)
 
-  const { data: rows } = await supabase
+  const { data: rows, error } = await supabase
     .from('transactions')
     .select(
       'amount_cents, merchant_name, description, category_id, category:categories(name, color)'
@@ -38,13 +46,8 @@ export async function getDashboardData(month: string): Promise<DashboardData> {
     .gte('date', dateFrom)
     .lte('date', dateTo)
 
-  const transactions = (rows ?? []) as unknown as Array<{
-    amount_cents: number
-    merchant_name: string | null
-    description: string
-    category_id: string | null
-    category: { name: string; color: string | null } | null
-  }>
+  if (error) console.error('getDashboardData:', error.message)
+  const transactions = (rows ?? []) as unknown as TxRow[]
 
   // Summary
   let income_cents = 0

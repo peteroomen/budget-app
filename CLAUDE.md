@@ -30,26 +30,30 @@ Core loop: import bank statements → AI categorises transactions → set budget
 
 > **Update this section at the end of every session.**
 
-- **Current phase:** Phase 4 — AI Chat (in progress). Phases 1–3 fully complete.
-- **Last session:** 2026-05-25 — Budget auto-seed (refinement to #11, PR pending)
-- **All merged to main (build order items #1–#13):**
+- **Current phase:** Phase 5 — Polish (in progress). Phases 1–4 fully complete.
+- **Last session:** 2026-05-25 — Budget auto-seed (refinement to #11, PR #20 open)
+- **All merged to main (build order items #1–#16 + extras):**
   - #1 Scaffold · #2 Auth + household · #3 Accounts CRUD
   - #4 CSV import · #5 PDF import · #6 Transaction list
   - #7 Category system · #8 Merchant memory · #9 AI categorisation
   - #10 Dashboard charts · #11 Budget management
   - #13 Chat interface (Assistant UI + Vercel AI SDK, streaming, markdown rendering)
-- **In review / pending merge:**
-  - Budget auto-seed — when navigating to a month with no budgets, silently copies from the most recent month that has budgets; shadcn Alert banner shown on first seed, dismissible
+  - #14 Chat context injection — `src/lib/queries/chat-context.ts` fetches transactions, budgets, categories, 3-month trends, and recurring; injected as a structured `<financial_data>` block in the system prompt
+  - #12 Recurring detection — auto-detect by merchant pattern (2+ months, ≤10% amount spread), manual toggle per row, Fixed Costs dashboard card. Also: dashboard loading skeleton, month-change Suspense, "This month" link, admin future-month navigation, all 4 summary cards in one row.
+  - #16 Polish pass — loading skeletons (6 pages), dashboard empty state, mobile table overflow, error logging in queries, type-cast fixes, aria-label on sort headers
+  - category_source + is_manual tracking columns (PR #16 merged)
+  - Admin page — `/admin` route (role-gated), delete-all-transactions + delete-all-merchant-mappings (PR #19 merged)
+- **Open PRs:**
+  - **PR #17** `feature/monthly-summary` — `/summary` page: Claude-generated recap (headline, spend overview, over-budget, biggest merchant, vs last month, notable patterns). Suspense skeleton on month change, admin future-month nav, roadmap design direction section.
+  - **PR #20** `feature/budget-autoseed` — budgets auto-copied from previous month on first view; dismissible shadcn Alert banner shows source month
 - **Remaining build order items:**
-  - **#12** Recurring detection — `is_recurring` column exists; detection logic + UI not built
-  - **#14** Chat agent / context injection — chat works but system prompt has no real data
-  - **#15** Monthly summary — Claude-generated recap page (Phase 5)
-  - **#16** Polish pass — responsive, dark mode, empty states, search, export (Phase 5)
-- **Deferred Phase 2 refinements (not blocking, nice to have):**
-  - `category_source` column on `transactions` — track 'claude' vs 'manual' overrides
-  - `is_manual` flag on `merchant_category_map` — so "Re-categorise all" preserves manual overrides
+  - **#17** Import summary — post-upload breakdown (imported / duplicates / from map / from Claude / recurring / uncategorised)
+- **Deferred (not blocking):**
+  - Auto-run recurring detection after each import (currently manual-trigger only)
+  - Dashboard vs Summary redesign — see "Design Direction" section in `docs/roadmap.md`
 - **Known issues:** Node 22 required — always `source ~/.nvm/nvm.sh && nvm use 22` before pnpm scripts.
-- **Architecture note:** `src/lib/ai/` directory shown in `docs/architecture.md` doesn't exist; real layout is `src/lib/categorise.ts` (categorisation logic) and `src/lib/queries/` (all DB query helpers). Update architecture.md when building #14.
+- **Components available:** `Skeleton` (`src/components/ui/skeleton.tsx`), `Tooltip` (`src/components/ui/tooltip.tsx`).
+- **Prop convention:** `MonthSelector` and `SummaryMonthSelector` use `allowFuture` (not `isAdmin`) — the page passes `allowFuture={isAdmin}` so the selector stays role-agnostic.
 
 ---
 

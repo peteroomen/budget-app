@@ -10,6 +10,8 @@ import {
 import type { TransactionRow, TransactionSortBy, SortDir } from '@/lib/queries/transactions'
 import type { Category } from '@/types'
 import { CategoryCell } from './CategoryCell'
+import { RecurringBadge } from './RecurringBadge'
+import { ManualBadge } from './ManualBadge'
 
 const nzd = new Intl.NumberFormat('en-NZ', {
   style: 'currency',
@@ -38,11 +40,15 @@ function SortHeader({ label, column, currentSort, currentDir, params }: SortHead
   next.set('dir', nextDir)
 
   const indicator = isActive ? (currentDir === 'desc' ? ' ↓' : ' ↑') : ''
+  const ariaLabel = isActive
+    ? `${label}, sorted ${currentDir === 'desc' ? 'descending' : 'ascending'}, click to sort ${currentDir === 'desc' ? 'ascending' : 'descending'}`
+    : `Sort by ${label}`
 
   return (
     <Link
       href={`/transactions?${next.toString()}`}
       className="hover:text-foreground transition-colors"
+      aria-label={ariaLabel}
     >
       {label}
       {indicator}
@@ -80,7 +86,7 @@ export function TransactionTable({
   }
 
   return (
-    <div className="rounded-md border">
+    <div className="overflow-x-auto rounded-md border">
       <Table>
         <TableHeader>
           <TableRow>
@@ -93,6 +99,7 @@ export function TransactionTable({
                 params={params}
               />
             </TableHead>
+            <TableHead className="w-8 pr-0" />
             <TableHead className="text-muted-foreground font-medium">
               <SortHeader
                 label="Merchant / Description"
@@ -102,6 +109,7 @@ export function TransactionTable({
                 params={params}
               />
             </TableHead>
+            <TableHead className="w-8 pr-0" />
             <TableHead className="text-muted-foreground font-medium">Category</TableHead>
             <TableHead className="text-muted-foreground font-medium">Account</TableHead>
             <TableHead className="text-muted-foreground font-medium text-right">
@@ -117,9 +125,12 @@ export function TransactionTable({
         </TableHeader>
         <TableBody>
           {rows.map((tx) => (
-            <TableRow key={tx.id}>
+            <TableRow key={tx.id} className="group">
               <TableCell className="tabular-nums text-muted-foreground whitespace-nowrap">
                 {tx.date}
+              </TableCell>
+              <TableCell className="pr-0">
+                <RecurringBadge transactionId={tx.id} isRecurring={tx.is_recurring} />
               </TableCell>
               <TableCell>
                 <span className="font-medium">{tx.merchant_name ?? tx.description}</span>
@@ -129,11 +140,15 @@ export function TransactionTable({
                   </span>
                 )}
               </TableCell>
+              <TableCell className="pr-0">
+                <ManualBadge isManual={tx.category_source === 'manual'} />
+              </TableCell>
               <TableCell>
                 <CategoryCell
                   transactionId={tx.id}
                   merchantName={tx.merchant_name}
                   categoryId={tx.category_id}
+                  categorySource={tx.category_source}
                   hasMerchantMapping={
                     tx.merchant_name !== null && mappedMerchants.has(tx.merchant_name)
                   }

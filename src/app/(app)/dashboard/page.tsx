@@ -1,3 +1,4 @@
+import { createClient } from '@/lib/supabase/server'
 import { getDashboardData } from '@/lib/queries/dashboard'
 import { currentMonth, formatMonthLabel } from '@/lib/utils/month'
 import { MonthSelector } from '@/components/dashboard/MonthSelector'
@@ -13,13 +14,19 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
   const { month: monthParam } = await searchParams
   const month = monthParam && /^\d{4}-\d{2}$/.test(monthParam) ? monthParam : currentMonth()
 
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  const isAdmin = user?.app_metadata?.role === 'admin'
+
   const data = await getDashboardData(month)
 
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <h1 className="text-2xl font-semibold">{formatMonthLabel(month)}</h1>
-        <MonthSelector month={month} />
+        <MonthSelector month={month} isAdmin={isAdmin} />
       </div>
 
       <IncomeVsSpendCards summary={data.summary} />
