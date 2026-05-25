@@ -19,6 +19,9 @@ interface SetBudgetDialogProps {
   categoryName: string
   month: string
   existing: Budget | null
+  /** If provided, the dialog is externally controlled and no trigger button is rendered */
+  open?: boolean
+  onOpenChange?: (open: boolean) => void
 }
 
 export function SetBudgetDialog({
@@ -26,8 +29,12 @@ export function SetBudgetDialog({
   categoryName,
   month,
   existing,
+  open: openProp,
+  onOpenChange: onOpenChangeProp,
 }: SetBudgetDialogProps) {
-  const [open, setOpen] = useState(false)
+  const controlled = openProp !== undefined
+  const [openInternal, setOpenInternal] = useState(false)
+  const open = controlled ? openProp : openInternal
   const [amountError, setAmountError] = useState<string | null>(null)
   const [formKey, setFormKey] = useState(0)
   const [state, action, pending] = useActionState(upsertBudget, { error: null })
@@ -38,15 +45,20 @@ export function SetBudgetDialog({
   useEffect(() => {
     if (!pending && submitted.current) {
       if (state.error === null) {
-        setOpen(false)
+        handleOpenChange(false)
         setFormKey((k) => k + 1)
         submitted.current = false
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pending, state])
 
   function handleOpenChange(next: boolean) {
-    setOpen(next)
+    if (controlled) {
+      onOpenChangeProp?.(next)
+    } else {
+      setOpenInternal(next)
+    }
     if (!next) {
       setAmountError(null)
       setFormKey((k) => k + 1)
@@ -56,11 +68,13 @@ export function SetBudgetDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogTrigger asChild>
-        <Button variant={existing ? 'outline' : 'ghost'} size="sm">
-          {existing ? 'Edit' : 'Set budget'}
-        </Button>
-      </DialogTrigger>
+      {!controlled && (
+        <DialogTrigger asChild>
+          <Button variant={existing ? 'outline' : 'ghost'} size="sm">
+            {existing ? 'Edit' : 'Set budget'}
+          </Button>
+        </DialogTrigger>
+      )}
       <DialogContent className="sm:max-w-sm">
         <DialogHeader>
           <DialogTitle>
