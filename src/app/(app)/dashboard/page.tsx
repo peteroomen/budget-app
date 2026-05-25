@@ -1,10 +1,9 @@
+import { Suspense } from 'react'
 import { createClient } from '@/lib/supabase/server'
-import { getDashboardData } from '@/lib/queries/dashboard'
 import { currentMonth, formatMonthLabel } from '@/lib/utils/month'
 import { MonthSelector } from '@/components/dashboard/MonthSelector'
-import { IncomeVsSpendCards } from '@/components/dashboard/IncomeVsSpendCards'
-import { SpendByCategoryChart } from '@/components/dashboard/SpendByCategoryChart'
-import { TopMerchantsTable } from '@/components/dashboard/TopMerchantsTable'
+import { DashboardContent } from './DashboardContent'
+import { DashboardContentSkeleton } from './loading'
 
 interface DashboardPageProps {
   searchParams: Promise<{ month?: string }>
@@ -20,8 +19,6 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
   } = await supabase.auth.getUser()
   const isAdmin = user?.app_metadata?.role === 'admin'
 
-  const data = await getDashboardData(month)
-
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
@@ -29,16 +26,10 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
         <MonthSelector month={month} isAdmin={isAdmin} />
       </div>
 
-      <IncomeVsSpendCards summary={data.summary} />
-
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        <div className="lg:col-span-2">
-          <SpendByCategoryChart data={data.byCategory} />
-        </div>
-        <div>
-          <TopMerchantsTable merchants={data.topMerchants} />
-        </div>
-      </div>
+      {/* key={month} resets the Suspense boundary so the skeleton shows on month change */}
+      <Suspense key={month} fallback={<DashboardContentSkeleton />}>
+        <DashboardContent month={month} />
+      </Suspense>
     </div>
   )
 }
