@@ -103,7 +103,7 @@ All 6 categories completed as planned.
 - `src/app/(app)/accounts/loading.tsx` — new
 - `src/app/(app)/categories/loading.tsx` — new
 - `src/app/(app)/import/loading.tsx` — new
-- `src/app/(app)/dashboard/page.tsx` — added import link, empty-state banner
+- `src/app/(app)/dashboard/page.tsx` — added import link, empty-state banner (later moved to DashboardContent.tsx during merge)
 - `src/components/transactions/TransactionTable.tsx` — overflow-x-auto, aria-label on sort headers
 - `src/app/(app)/budgets/page.tsx` — overflow-x-auto
 - `src/app/(app)/categories/page.tsx` — overflow-x-auto
@@ -120,6 +120,15 @@ All 6 categories completed as planned.
 - `src/lib/categorise.ts` — removed redundant eslint-disable
 - `eslint.config.mjs` — no-console rule updated to allow 'error'
 - `docs/work/2026-05-25-polish-pass.md` — this file
+
+## Post-session: merge conflict resolution (2026-05-25)
+
+main had moved ahead (PRs #14 chat-context and #15 recurring-detection merged). Resolved 3 conflicts:
+
+- **`CLAUDE.md`** — merged Current State: added #14 and #12 to merged list, kept polish pass (#16) as in-PR
+- **`dashboard/loading.tsx`** — add/add conflict; used main's version (`DashboardContentSkeleton` named export + `DashboardLoading` default) since main's Suspense architecture requires the named export
+- **`dashboard/page.tsx`** — main had refactored to `Suspense` + `DashboardContent`; used that structure and migrated the polish-branch empty state into `DashboardContent.tsx`
+- **`DashboardContent.tsx`** — added empty state (no transactions for month → dashed-border banner with import link)
 
 ## Deferred to next session
 
