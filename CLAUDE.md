@@ -31,7 +31,7 @@ Core loop: import bank statements → AI categorises transactions → set budget
 > **Update this section at the end of every session.**
 
 - **Current phase:** Phase 5 — Polish (in progress). Phases 1–4 fully complete.
-- **Last session:** 2026-05-25 — Monthly summary page (build order item #15, PR #17 open)
+- **Last session:** 2026-05-25 — Budget auto-seed (refinement to #11, PR #20 open)
 - **All merged to main (build order items #1–#16 + extras):**
   - #1 Scaffold · #2 Auth + household · #3 Accounts CRUD
   - #4 CSV import · #5 PDF import · #6 Transaction list
@@ -45,6 +45,7 @@ Core loop: import bank statements → AI categorises transactions → set budget
   - Admin page — `/admin` route (role-gated), delete-all-transactions + delete-all-merchant-mappings (PR #19 merged)
 - **Open PRs:**
   - **PR #17** `feature/monthly-summary` — `/summary` page: Claude-generated recap (headline, spend overview, over-budget, biggest merchant, vs last month, notable patterns). Suspense skeleton on month change, admin future-month nav, roadmap design direction section.
+  - **PR #20** `feature/budget-autoseed` — budgets auto-copied from previous month on first view; dismissible shadcn Alert banner shows source month
 - **Remaining build order items:**
   - **#17** Import summary — post-upload breakdown (imported / duplicates / from map / from Claude / recurring / uncategorised)
 - **Deferred (not blocking):**
