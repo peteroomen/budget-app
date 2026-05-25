@@ -41,11 +41,11 @@ Core loop: import bank statements → AI categorises transactions → set budget
   - #14 Chat context injection — `src/lib/queries/chat-context.ts` fetches transactions, budgets, categories, 3-month trends, and recurring; injected as a structured `<financial_data>` block in the system prompt
   - #12 Recurring detection — auto-detect by merchant pattern (2+ months, ≤10% amount spread), manual toggle per row, Fixed Costs dashboard card. Also: dashboard loading skeleton, month-change Suspense, "This month" link, admin future-month navigation, all 4 summary cards in one row.
   - #16 Polish pass — loading skeletons (6 pages), dashboard empty state, mobile table overflow, error logging in queries, type-cast fixes, aria-label on sort headers
-  - category_source + is_manual tracking columns (PR #16 merged)
-  - Admin page — `/admin` route (role-gated), delete-all-transactions + delete-all-merchant-mappings (PR #19 merged)
+  - category_source + is_manual tracking columns (merged)
+  - Admin page — `/admin` route (role-gated), delete-all-transactions + delete-all-merchant-mappings (merged)
+  - #15 Monthly summary — `/summary` page: Claude-generated recap (headline, spend overview, over-budget, biggest merchant, vs last month, notable patterns). Suspense skeleton on month change, admin future-month nav.
+  - Budget auto-seed — budgets auto-copied from previous month on first view; dismissible shadcn Alert banner shows source month
 - **Open PRs:**
-  - **PR #17** `feature/monthly-summary` — `/summary` page: Claude-generated recap (headline, spend overview, over-budget, biggest merchant, vs last month, notable patterns). Suspense skeleton on month change, admin future-month nav, roadmap design direction section.
-  - **PR #20** `feature/budget-autoseed` — budgets auto-copied from previous month on first view; dismissible shadcn Alert banner shows source month
   - **PR open** `feature/nav-layout-restructure` — nav/layout design handoff (current session, see below)
 - **Nav/layout restructure (feature/nav-layout-restructure) — what changed:**
   - Sidebar: 5 primary (Dashboard, Transactions, Budgets, Summary, Chat) + separator + 2 secondary (Import, Settings). Icons on all items. Active state: `bg-muted` + 2px primary accent bar. Footer: logged-in user avatar (initials from display_name/email), name, email + sign-out.

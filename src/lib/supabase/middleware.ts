@@ -1,5 +1,6 @@
 import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
+import type { GoTrueClient } from '@supabase/supabase-js'
 
 const PUBLIC_PATHS = ['/login', '/auth/callback', '/auth/confirm']
 
@@ -33,9 +34,12 @@ export async function updateSession(request: NextRequest) {
     }
   )
 
+  // Cast through GoTrueClient to work around SupabaseAuthClient type-resolution
+  // differences in certain build environments (Vercel). At runtime, supabase.auth
+  // IS a GoTrueClient subclass and getUser() exists.
   const {
     data: { user },
-  } = await supabase.auth.getUser()
+  } = await (supabase.auth as unknown as GoTrueClient).getUser()
 
   const { pathname } = request.nextUrl
   const isPublic = PUBLIC_PATHS.some((p) => pathname.startsWith(p))

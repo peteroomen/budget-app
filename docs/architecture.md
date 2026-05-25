@@ -40,27 +40,36 @@ budget-app/
 │   │   │   └── login/page.tsx
 │   │   ├── (app)/                  # Protected route group
 │   │   │   ├── layout.tsx          # App shell — h-screen/overflow-hidden for chat layout
-│   │   │   ├── dashboard/page.tsx
-│   │   │   ├── transactions/page.tsx
-│   │   │   ├── budgets/page.tsx
-│   │   │   ├── accounts/page.tsx
-│   │   │   ├── categories/page.tsx
-│   │   │   └── chat/page.tsx
+│   │   │   ├── admin/page.tsx      # Danger zone — delete-all actions (role-gated)
+│   │   │   ├── accounts/           # page.tsx, loading.tsx
+│   │   │   ├── budgets/            # page.tsx, loading.tsx
+│   │   │   ├── categories/         # page.tsx, loading.tsx
+│   │   │   ├── chat/page.tsx
+│   │   │   ├── dashboard/          # page.tsx, loading.tsx, DashboardContent.tsx (Suspense boundary)
+│   │   │   ├── import/             # page.tsx, loading.tsx
+│   │   │   ├── summary/            # page.tsx, loading.tsx — Claude-generated monthly recap
+│   │   │   └── transactions/       # page.tsx, loading.tsx
 │   │   ├── api/
 │   │   │   └── chat/route.ts       # Vercel AI SDK streaming (streamText + Anthropic)
 │   │   ├── auth/                   # Supabase auth callbacks (callback, confirm, set-password)
 │   │   └── layout.tsx              # Root layout
 │   ├── components/
-│   │   ├── ui/                     # shadcn/ui components (auto-generated, copy-owned)
+│   │   ├── ui/                     # shadcn/ui components (copy-owned): button, card, dialog, input,
+│   │   │                           #   label, popover, progress, select, separator, skeleton, table,
+│   │   │                           #   tabs, tooltip, chart (Recharts wrapper)
 │   │   ├── accounts/               # AccountCard, AddAccountDialog
+│   │   ├── admin/                  # DangerActionButton
 │   │   ├── auth/                   # LoginForm, SignOutButton
 │   │   ├── budgets/                # BudgetProgressBar, MonthPicker, OverBudgetCards, SetBudgetDialog
 │   │   ├── categories/             # AddCategoryDialog, ColorPicker, DeleteCategoryButton, EditCategoryDialog
 │   │   ├── chat/                   # Thread.tsx (assistant-ui primitives), ChatPanel.tsx (runtime + clear)
-│   │   ├── dashboard/              # IncomeVsSpendCards, MonthSelector, SpendByCategoryChart, TopMerchantsTable
+│   │   ├── dashboard/              # FixedCostsCard, IncomeVsSpendCards, MonthSelector,
+│   │   │                           #   SpendByCategoryChart, TopMerchantsTable
 │   │   ├── import/                 # ImportForm
 │   │   ├── nav/                    # NavLink
-│   │   └── transactions/           # CategoryCell, DeleteAllTransactionsButton, RecategoriseButton, TransactionFilters, TransactionTable
+│   │   ├── summary/                # SummaryDisplay, SummaryMonthSelector
+│   │   └── transactions/           # CategoryCell, DetectRecurringButton, ManualBadge,
+│   │                               #   RecategoriseButton, RecurringBadge, TransactionFilters, TransactionTable
 │   ├── lib/
 │   │   ├── supabase/
 │   │   │   ├── client.ts           # Browser Supabase client
@@ -74,15 +83,18 @@ budget-app/
 │   │   │   ├── categorise.ts       # recategoriseAll (server action wrapper)
 │   │   │   ├── import.ts           # CSV/PDF upload → parse → categorise pipeline
 │   │   │   ├── merchant-map.ts     # setCategoryOverride, forgetMapping
+│   │   │   ├── recurring.ts        # detectRecurring, toggleRecurring
 │   │   │   └── transactions.ts     # deleteAllTransactions
 │   │   ├── queries/                # DB query helpers — server-only, never import from client components
 │   │   │   ├── accounts.ts
 │   │   │   ├── budgets.ts          # getBudgetsWithActuals
 │   │   │   ├── categories.ts
-│   │   │   ├── chat-context.ts     # getChatContext + formatChatContext — builds system prompt data block
+│   │   │   ├── chat-context.ts     # getChatContext + formatChatContext — builds <financial_data> system prompt block
 │   │   │   ├── dashboard.ts        # getDashboardData (aggregations for charts)
 │   │   │   ├── merchant-map.ts
 │   │   │   ├── profile.ts
+│   │   │   ├── recurring.ts        # getRecurringTransactions, getFixedCostsTotal
+│   │   │   ├── summary.ts          # getSummaryData — fetches data for Claude-generated recap
 │   │   │   └── transactions.ts
 │   │   ├── parsers/
 │   │   │   ├── bank-formats.ts     # ANZ/ASB/Westpac/BNZ column mappings
