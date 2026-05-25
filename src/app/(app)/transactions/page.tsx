@@ -5,6 +5,7 @@ import { getCategories } from '@/lib/queries/categories'
 import { getMappedMerchantNames } from '@/lib/queries/merchant-map'
 import { TransactionFilters } from '@/components/transactions/TransactionFilters'
 import { TransactionTable } from '@/components/transactions/TransactionTable'
+import { TransactionDayList } from '@/components/transactions/TransactionDayList'
 import { RecategoriseButton } from '@/components/transactions/RecategoriseButton'
 import { DetectRecurringButton } from '@/components/transactions/DetectRecurringButton'
 
@@ -78,6 +79,10 @@ export default async function TransactionsPage({
         <TransactionFilters accounts={accounts} />
       </Suspense>
 
+      {/* Mobile: day-grouped list */}
+      <TransactionDayList rows={transactions} categories={categories} className="md:hidden" />
+
+      {/* Desktop: sortable table */}
       <TransactionTable
         rows={transactions}
         sortBy={sortBy}
@@ -85,6 +90,7 @@ export default async function TransactionsPage({
         params={urlParams}
         categories={categories}
         mappedMerchants={mappedMerchants}
+        className="hidden md:block"
       />
     </div>
   )
