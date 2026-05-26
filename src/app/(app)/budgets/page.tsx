@@ -5,11 +5,13 @@ import {
   findMostRecentBudgetMonth,
   seedBudgetsFromMonth,
 } from '@/lib/queries/budgets'
+import { getHouseholdSettings } from '@/lib/queries/household'
 import { Card, CardContent } from '@/components/ui/card'
 import { MonthPicker } from '@/components/budgets/MonthPicker'
 import { BudgetList } from '@/components/budgets/BudgetList'
 import { OverBudgetCards } from '@/components/budgets/OverBudgetCards'
 import { SeededFromBanner } from '@/components/budgets/SeededFromBanner'
+import { AllocationPanel } from '@/components/budgets/AllocationPanel'
 
 const nzd = new Intl.NumberFormat('en-NZ', {
   style: 'currency',
@@ -42,7 +44,11 @@ export default async function BudgetsPage({ searchParams }: BudgetsPageProps) {
   const month =
     typeof params.month === 'string' && isValidMonth(params.month) ? params.month : currentMonth()
 
-  let items = await getBudgetsWithActuals(month)
+  const [household, initialItems] = await Promise.all([
+    getHouseholdSettings(),
+    getBudgetsWithActuals(month),
+  ])
+  let items = initialItems
   let seededFrom: string | null = null
 
   if (!items.some((item) => item.budget !== null)) {
@@ -109,6 +115,11 @@ export default async function BudgetsPage({ searchParams }: BudgetsPageProps) {
       </div>
 
       {seededFrom && <SeededFromBanner sourceMonth={seededFrom} />}
+
+      <AllocationPanel
+        expectedIncomeCents={household?.expected_monthly_income_cents ?? null}
+        totalBudgetedCents={totalBudget}
+      />
 
       {/* KPI stat row */}
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">

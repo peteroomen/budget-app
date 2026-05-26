@@ -43,7 +43,8 @@ export async function seedBudgetsFromMonth(
 
   if (!sourceRows || sourceRows.length === 0) return 0
 
-  const newRows = sourceRows.map((row) => ({
+  type SourceRow = { household_id: string; category_id: string; amount_cents: number }
+  const newRows = (sourceRows as SourceRow[]).map((row) => ({
     household_id: row.household_id,
     category_id: row.category_id,
     month: targetMonth,
@@ -62,7 +63,11 @@ export async function getBudgetsWithActuals(month: string): Promise<BudgetWithAc
   const supabase = await createClient()
 
   const [categoriesResult, budgetsResult, actualsResult] = await Promise.all([
-    supabase.from('categories').select('*').order('name', { ascending: true }),
+    supabase
+      .from('categories')
+      .select('*')
+      .eq('type', 'expense')
+      .order('name', { ascending: true }),
     supabase.from('budgets').select('*').eq('month', month),
     supabase
       .from('transactions')

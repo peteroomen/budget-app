@@ -2,8 +2,8 @@
 
 > Auto-maintained. Update this file after every migration.
 
-**Migrations:** up to `20260525000001_merchant_map_is_manual.sql`
-**Last updated:** 2026-05-25
+**Migrations:** up to `20260527000000_projected_income.sql`
+**Last updated:** 2026-05-27
 
 ---
 
@@ -11,12 +11,13 @@
 
 ### households
 
-| Column     | Type        | Notes                     |
-| ---------- | ----------- | ------------------------- |
-| id         | uuid (PK)   | Default gen_random_uuid() |
-| name       | text        | Not null                  |
-| created_at | timestamptz | Default now()             |
-| updated_at | timestamptz | Auto-updated via trigger  |
+| Column                        | Type        | Notes                                                                                      |
+| ----------------------------- | ----------- | ------------------------------------------------------------------------------------------ |
+| id                            | uuid (PK)   | Default gen_random_uuid()                                                                  |
+| name                          | text        | Not null                                                                                   |
+| expected_monthly_income_cents | integer     | Nullable. Single household-wide projected monthly income used for dashboards + AI context. |
+| created_at                    | timestamptz | Default now()                                                                              |
+| updated_at                    | timestamptz | Auto-updated via trigger                                                                   |
 
 ### profiles
 
@@ -46,16 +47,17 @@ Auto-created via trigger on `auth.users` insert.
 
 ### categories
 
-| Column       | Type        | Notes                                         |
-| ------------ | ----------- | --------------------------------------------- |
-| id           | uuid (PK)   | Default gen_random_uuid()                     |
-| household_id | uuid        | FK → households(id), cascade delete, not null |
-| name         | text        | Not null                                      |
-| color        | text        | Nullable                                      |
-| icon         | text        | Nullable                                      |
-| is_system    | boolean     | Default false                                 |
-| created_at   | timestamptz | Default now()                                 |
-| updated_at   | timestamptz | Auto-updated via trigger                      |
+| Column       | Type        | Notes                                                                                              |
+| ------------ | ----------- | -------------------------------------------------------------------------------------------------- |
+| id           | uuid (PK)   | Default gen_random_uuid()                                                                          |
+| household_id | uuid        | FK → households(id), cascade delete, not null                                                      |
+| name         | text        | Not null                                                                                           |
+| color        | text        | Nullable                                                                                           |
+| icon         | text        | Nullable                                                                                           |
+| is_system    | boolean     | Default false                                                                                      |
+| type         | text        | Default 'expense'. CHECK in ('income', 'expense', 'transfer'). Income category seeded as 'income'. |
+| created_at   | timestamptz | Default now()                                                                                      |
+| updated_at   | timestamptz | Auto-updated via trigger                                                                           |
 
 Unique constraint: `(household_id, name)`
 

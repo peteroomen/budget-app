@@ -6,6 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 interface SettingsTabsProps {
   defaultTab: string
   isAdmin: boolean
+  householdContent: React.ReactNode
   accountsContent: React.ReactNode
   categoriesContent: React.ReactNode
   dangerContent: React.ReactNode
@@ -14,6 +15,7 @@ interface SettingsTabsProps {
 export function SettingsTabs({
   defaultTab,
   isAdmin,
+  householdContent,
   accountsContent,
   categoriesContent,
   dangerContent,
@@ -27,11 +29,13 @@ export function SettingsTabs({
       className="space-y-6"
     >
       <TabsList>
+        <TabsTrigger value="household">Household</TabsTrigger>
         <TabsTrigger value="accounts">Accounts</TabsTrigger>
         <TabsTrigger value="categories">Categories</TabsTrigger>
         {isAdmin && <TabsTrigger value="danger">Danger zone</TabsTrigger>}
       </TabsList>
 
+      <TabsContent value="household">{householdContent}</TabsContent>
       <TabsContent value="accounts">{accountsContent}</TabsContent>
       <TabsContent value="categories">{categoriesContent}</TabsContent>
       {isAdmin && <TabsContent value="danger">{dangerContent}</TabsContent>}
