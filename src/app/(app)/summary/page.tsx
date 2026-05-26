@@ -83,7 +83,7 @@ async function SummaryContent({ month }: { month: string }) {
   // fall back to ANTHROPIC_API_KEY for Vercel production where only the standard name is set.
   const anthropic = createAnthropic({
     baseURL: 'https://api.anthropic.com/v1',
-    apiKey: process.env.TIDE_ANTHROPIC_API_KEY || process.env.ANTHROPIC_API_KEY,
+    apiKey: (process.env.TIDE_ANTHROPIC_API_KEY || process.env.ANTHROPIC_API_KEY)!,
   })
 
   let summary: MonthlySummaryJSON | null = null
