@@ -250,6 +250,20 @@ The chat interface is v1. Before building any of these, sit down and properly de
 
 ### Other Phase 5 items
 
+#### Income awareness + transfer handling
+
+Three items that must be built in order — A is the schema foundation, B and C both depend on it.
+
+- [ ] **A — Schema: category type + declared income** — add `type text check (type in ('income','expense','transfer')) default 'expense'` to `categories`; seed "Income" → `'income'`, add new system categories "Savings Transfer" + "Credit Card Payment" with `type = 'transfer'`; add `expected_monthly_income_cents integer nullable` to `households`; Settings UI: a "Monthly income" input field (household-wide reference figure for budget planning). One migration + minimal UI.
+
+- [ ] **B — Budget page: income exclusion + allocation panel** _(depends on A)_ — filter `type IN ('income','transfer')` categories out of the budget table and budget-setting flow entirely; add an income panel above the category rows showing: Expected income (declared, Option B) / Received so far (actual from income-category transactions this month, Option A) / Unallocated (declared minus total budgeted) / % allocated; horizontal allocation bar (budgeted | unallocated) using declared as denominator; warn state (amber/rust) if total budgeted exceeds declared income; graceful fallback to actual-only if declared income not yet set.
+
+- [ ] **C — Transfer exclusion across spend analysis** _(depends on A)_ — exclude `type = 'transfer'` transactions from all spend aggregation: dashboard totals + category chart, budget "Spent" KPI calculations, monthly summary data passed to Claude, and chat context injection (transactions list, category totals, 3-month trends). Update AI categorisation prompt to include transfer categories with descriptions so Claude knows when to use them. Transaction list: muted visual treatment + a "Transfer" badge for transfer-type rows. Merchant memory works as normal for transfers.
+
+  > **Why this matters:** with both a spending account and a savings account imported, every savings transfer currently shows up twice (outgoing + incoming) and credit card payments are counted a third time on top of per-transaction spend. Transfer exclusion makes totals reflect real spend.
+
+---
+
 - [x] Monthly summary view — Claude-generated one-page recap (spend vs budget, vs prior month, notable patterns)
 - [x] Full-text transaction search — shipped as part of Tide pass
 - [ ] **Merge Dining Out + Takeaways → "Dining & Takeaways"** — the two categories overlap too much in practice. Migration: rename "Dining Out", reassign all transactions + merchant_category_map rows from "Takeaways", delete "Takeaways". One migration file.
