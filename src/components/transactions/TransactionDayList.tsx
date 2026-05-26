@@ -4,6 +4,7 @@ import { useMemo } from 'react'
 import { cn } from '@/lib/utils'
 import type { TransactionRow } from '@/lib/queries/transactions'
 import type { Category } from '@/types'
+import { DeleteTransactionButton } from './DeleteTransactionButton'
 
 interface Props {
   rows: TransactionRow[]
@@ -108,7 +109,7 @@ export function TransactionDayList({ rows, categories, className }: Props) {
                 <div
                   key={txn.id}
                   className="grid items-center gap-x-2 py-2"
-                  style={{ gridTemplateColumns: '9px 1fr auto' }}
+                  style={{ gridTemplateColumns: '9px 1fr auto auto' }}
                 >
                   {/* Category dot */}
                   <span
@@ -136,6 +137,13 @@ export function TransactionDayList({ rows, categories, className }: Props) {
                     {isIncome ? '+' : ''}
                     {nzd.format(txn.amount_cents / 100)}
                   </span>
+
+                  {/* Delete */}
+                  <DeleteTransactionButton
+                    transactionId={txn.id}
+                    label={txn.merchant_name ?? txn.description}
+                    variant="mobile"
+                  />
                 </div>
               )
             })}

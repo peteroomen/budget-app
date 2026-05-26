@@ -6,6 +6,21 @@ import { upsertMerchantMapping } from '@/lib/actions/merchant-map'
 
 type ActionResult = { error: string | null }
 
+export async function deleteTransaction(id: string): Promise<ActionResult> {
+  const supabase = await createClient()
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user) return { error: 'Not authenticated' }
+
+  const { error } = await supabase.from('transactions').delete().eq('id', id)
+  if (error) return { error: error.message }
+
+  revalidatePath('/transactions')
+  return { error: null }
+}
+
 export async function deleteAllTransactions(): Promise<ActionResult> {
   const supabase = await createClient()
 

@@ -13,6 +13,7 @@ import { cn } from '@/lib/utils'
 import { CategoryCell } from './CategoryCell'
 import { RecurringBadge } from './RecurringBadge'
 import { ManualBadge } from './ManualBadge'
+import { DeleteTransactionButton } from './DeleteTransactionButton'
 
 const nzd = new Intl.NumberFormat('en-NZ', {
   style: 'currency',
@@ -151,6 +152,7 @@ export function TransactionTable({
                 params={params}
               />
             </TableHead>
+            <TableHead className="w-9" aria-label="Actions" />
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -193,6 +195,15 @@ export function TransactionTable({
               >
                 {tx.amount_cents > 0 ? '+' : ''}
                 {formatAmount(tx.amount_cents)}
+              </TableCell>
+
+              <TableCell className="w-9 p-0 pr-2">
+                <div className="opacity-0 transition-opacity group-hover:opacity-100 focus-within:opacity-100">
+                  <DeleteTransactionButton
+                    transactionId={tx.id}
+                    label={tx.merchant_name ?? tx.description}
+                  />
+                </div>
               </TableCell>
             </TableRow>
           ))}
