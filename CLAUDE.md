@@ -31,7 +31,7 @@ Core loop: import bank statements → AI categorises transactions → set budget
 > **Update this section at the end of every session.**
 
 - **Current phase:** Phase 5 — Polish (in progress). Phases 1–4 fully complete.
-- **Last session:** 2026-05-26 — Tide layout + feature pass (all 6 areas). PR #22 open on `feature/tide-pages`.
+- **Last session:** 2026-05-26 — Vercel edge middleware hotfix. Fixed `MIDDLEWARE_INVOCATION_FAILED` / `ReferenceError: __dirname` on every cold start. Production is healthy: `dpl_6axT7v2xMMvzBqm2iXQc9XW13ptK` (Next.js 15.5.18) is READY.
 - **All merged to main (build order items #1–#16 + extras):**
   - #1 Scaffold · #2 Auth + household · #3 Accounts CRUD
   - #4 CSV import · #5 PDF import · #6 Transaction list
@@ -46,6 +46,12 @@ Core loop: import bank statements → AI categorises transactions → set budget
   - #15 Monthly summary — `/summary` page: Claude-generated recap (headline, spend overview, over-budget, biggest merchant, vs last month, notable patterns). Suspense skeleton on month change, admin future-month nav.
   - Budget auto-seed — budgets auto-copied from previous month on first view; dismissible shadcn Alert banner shows source month
   - Nav/layout restructure — sidebar primary/secondary split, mobile bottom tab bar + Sheet drawer, `/settings` consolidates Accounts + Categories + Danger zone
+- **Vercel / build config (main branch):**
+  - `vercel.json`: `buildCommand: "pnpm run build"`, `outputDirectory: ".next"` (resolves to `src/.next` from Vercel's `src/` framework root)
+  - `next.config.ts`: `distDir: 'src/.next'` + `NormalModuleReplacementPlugin` replacing `testmode/context.js` with noop for edge runtime
+  - `scripts/patch-testmode.js`: prebuild that overwrites `node_modules/next/dist/experimental/testmode/context.js` with a noop (busts webpack cache on Vercel)
+  - `eslint.config.mjs`: `{ ignores: ['src/.next/**'] }` prevents linting of build artifacts
+  - Next.js `15.5.18` — do NOT downgrade; 15.3.3 is Vercel-blocked for CVE
 - **Open PRs:**
   - **PR #21** `feature/tide-foundation` — Tide theme foundation (tokens, dark mode, fonts, primitives) — merge this first
   - **PR #22** `feature/tide-pages` — all per-page Tide passes (Chunks 2 + 3 + layout/feature pass) — depends on PR #21
@@ -78,7 +84,7 @@ Core loop: import bank statements → AI categorises transactions → set budget
   - Sidebar collapse to 64px (optional per design spec, skipped)
   - Header search, notification bell (roadmapped, intentionally not built yet)
   - Set `TIDE_ANTHROPIC_API_KEY` in Vercel project env before deploying to production
-- **Known issues:** Node 22 required — always `source ~/.nvm/nvm.sh && nvm use 22` before pnpm scripts.
+- **Known issues:** Node 22 required — always `source ~/.nvm/nvm.sh && nvm use 22` before pnpm scripts. Edge middleware runtime errors confirmed resolved in `dpl_6axT7v2xMMvzBqm2iXQc9XW13ptK` — monitor first few real requests.
 - **Components available:** `Skeleton`, `Tooltip`, `Avatar`, `Sheet`, `Badge`, `Switch` (all in `src/components/ui/`).
 - **Prop convention:** `MonthSelector` and `SummaryMonthSelector` use `allowFuture` (not `isAdmin`) — the page passes `allowFuture={isAdmin}` so the selector stays role-agnostic.
 - **Theme:** `font-display` = Fraunces (serif, use on H1s + CardTitles + hero metrics). `font-mono` = JetBrains Mono (use on tabular numerics). Badge variants: `accent` (sage wash), `warn` (gold), `danger` (rust), `outline`.
