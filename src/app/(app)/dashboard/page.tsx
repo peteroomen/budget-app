@@ -24,7 +24,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
     { count: transactionCount },
   ] = await Promise.all([
     supabase.auth.getUser(),
-    supabase.from('households').select('name').single(),
+    supabase.from('households').select('name').maybeSingle(),
     supabase
       .from('transactions')
       .select('id', { count: 'exact', head: true })
