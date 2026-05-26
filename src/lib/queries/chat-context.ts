@@ -1,5 +1,11 @@
 import { createClient } from '@/lib/supabase/server'
-import { currentMonth, prevMonth, monthDateRange, formatMonthLabel } from '@/lib/utils/month'
+import {
+  currentMonth,
+  prevMonth,
+  monthDateRange,
+  formatMonthLabel,
+  monthStatus,
+} from '@/lib/utils/month'
 
 export interface ChatContext {
   householdName: string
@@ -245,18 +251,39 @@ export function formatChatContext(ctx: ChatContext): string {
   ]
 
   // Income — expected vs received this month
-  lines.push(`## Income (${monthLabel})`)
+  const status = monthStatus(ctx.month)
+  const statusLabel =
+    status.status === 'in_progress'
+      ? `${monthLabel}, in progress — day ${status.dayOfMonth} of ${status.daysInMonth}`
+      : status.status === 'closed'
+        ? `${monthLabel}, closed`
+        : `${monthLabel}, future month`
+
+  lines.push(`## Income (${statusLabel})`)
   if (ctx.expectedIncomeCents !== null) {
     const gap = ctx.expectedIncomeCents - ctx.receivedIncomeCents
-    const gapLabel =
-      gap > 0
-        ? `${centsToNZD(gap)} still expected`
-        : gap < 0
-          ? `${centsToNZD(Math.abs(gap))} over expected`
-          : `on target`
-    lines.push(
-      `Expected: ${centsToNZD(ctx.expectedIncomeCents)} | Received so far: ${centsToNZD(ctx.receivedIncomeCents)} | Gap: ${gapLabel}`
-    )
+    lines.push(`Expected: ${centsToNZD(ctx.expectedIncomeCents)}`)
+    lines.push(`Received so far: ${centsToNZD(ctx.receivedIncomeCents)}`)
+
+    if (status.status === 'in_progress') {
+      if (gap > 0) {
+        lines.push(
+          `Pending: ${centsToNZD(gap)} (income typically arrives later in the month — treat as on-track baseline unless timing suggests otherwise)`
+        )
+      } else if (gap < 0) {
+        lines.push(`Over expected by ${centsToNZD(Math.abs(gap))} (already above plan)`)
+      } else {
+        lines.push(`On plan — full expected income already received this month`)
+      }
+    } else if (status.status === 'closed') {
+      if (gap > 0) {
+        lines.push(`Shortfall: ${centsToNZD(gap)} (income came in below plan — flag this)`)
+      } else {
+        lines.push(`Plan was met for the month.`)
+      }
+    } else {
+      lines.push(`Month has not started — no income received yet.`)
+    }
   } else {
     lines.push(`No expected income set. Received so far: ${centsToNZD(ctx.receivedIncomeCents)}`)
   }

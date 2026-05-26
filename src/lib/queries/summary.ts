@@ -1,5 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
-import { monthDateRange, formatMonthLabel, prevMonth } from '@/lib/utils/month'
+import { monthDateRange, formatMonthLabel, prevMonth, monthStatus } from '@/lib/utils/month'
 
 export interface CategorySummaryRow {
   name: string
@@ -214,8 +214,17 @@ export function buildSummaryPrompt(ctx: SummaryContext): string {
       minimumFractionDigits: 2,
     }).format(cents / 100)
 
+  const status = monthStatus(ctx.month)
+  const statusLine =
+    status.status === 'in_progress'
+      ? `Income status: month in progress (day ${status.dayOfMonth} of ${status.daysInMonth})`
+      : status.status === 'closed'
+        ? `Income status: month closed`
+        : `Income status: future month (not yet started)`
+
   const lines: string[] = [
     `Month: ${ctx.monthLabel}`,
+    statusLine,
     `Total income: ${fmt(ctx.income_cents)}`,
     `Total spend: ${fmt(ctx.spend_cents)}`,
     `Net: ${fmt(Math.abs(ctx.net_cents))} ${ctx.net_cents >= 0 ? 'saved' : 'deficit'}`,
@@ -223,15 +232,36 @@ export function buildSummaryPrompt(ctx: SummaryContext): string {
 
   if (ctx.expected_income_cents !== null) {
     const gap = ctx.expected_income_cents - ctx.received_income_cents
-    const gapLabel =
-      gap > 0
-        ? `${fmt(gap)} still expected`
-        : gap < 0
-          ? `${fmt(Math.abs(gap))} over expected`
-          : `on target`
-    lines.push(
-      `Expected income: ${fmt(ctx.expected_income_cents)} (received ${fmt(ctx.received_income_cents)} in income categories — ${gapLabel})`
-    )
+
+    if (status.status === 'in_progress') {
+      if (gap > 0) {
+        lines.push(
+          `Expected income: ${fmt(ctx.expected_income_cents)} — ${fmt(ctx.received_income_cents)} received so far in income categories. Pending: ${fmt(gap)} still expected before month end (treat as on-track unless there is a reason it won't arrive).`
+        )
+      } else if (gap < 0) {
+        lines.push(
+          `Expected income: ${fmt(ctx.expected_income_cents)} — ${fmt(ctx.received_income_cents)} received in income categories (${fmt(Math.abs(gap))} above plan so far).`
+        )
+      } else {
+        lines.push(
+          `Expected income: ${fmt(ctx.expected_income_cents)} — fully received so far this month.`
+        )
+      }
+    } else if (status.status === 'closed') {
+      if (gap > 0) {
+        lines.push(
+          `Expected income: ${fmt(ctx.expected_income_cents)} — ${fmt(ctx.received_income_cents)} received in income categories. Shortfall: ${fmt(gap)} (income came in below plan — flag this).`
+        )
+      } else {
+        lines.push(
+          `Expected income: ${fmt(ctx.expected_income_cents)} — ${fmt(ctx.received_income_cents)} received in income categories. Plan was met.`
+        )
+      }
+    } else {
+      lines.push(
+        `Expected income: ${fmt(ctx.expected_income_cents)} — none received (month has not started).`
+      )
+    }
   }
 
   lines.push('', 'Spending by category:')
