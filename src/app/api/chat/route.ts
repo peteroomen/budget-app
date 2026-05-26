@@ -16,11 +16,11 @@ Guidelines:
 
 export async function POST(req: Request) {
   // Create provider inside the handler so process.env is read at request time.
-  // Use TIDE_ANTHROPIC_API_KEY — Claude for Desktop injects an empty
-  // ANTHROPIC_API_KEY into the macOS user env which Next.js won't override.
+  // Prefer TIDE_ANTHROPIC_API_KEY (Claude Desktop shadows ANTHROPIC_API_KEY with empty on macOS);
+  // fall back to ANTHROPIC_API_KEY for Vercel production where only the standard name is set.
   const anthropic = createAnthropic({
     baseURL: 'https://api.anthropic.com/v1',
-    apiKey: process.env.TIDE_ANTHROPIC_API_KEY!,
+    apiKey: process.env.TIDE_ANTHROPIC_API_KEY || process.env.ANTHROPIC_API_KEY,
   })
 
   const { messages } = (await req.json()) as { messages: UIMessage[] }

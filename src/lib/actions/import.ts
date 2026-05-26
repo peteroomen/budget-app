@@ -71,8 +71,11 @@ async function handlePdf(
   const buffer = await file.arrayBuffer()
   const base64 = Buffer.from(buffer).toString('base64')
 
-  // Use TIDE_ANTHROPIC_API_KEY — Claude for Desktop injects an empty ANTHROPIC_API_KEY on macOS
-  const client = new Anthropic({ apiKey: process.env.TIDE_ANTHROPIC_API_KEY! })
+  // Prefer TIDE_ANTHROPIC_API_KEY (Claude Desktop shadows ANTHROPIC_API_KEY with empty on macOS);
+  // fall back to ANTHROPIC_API_KEY for Vercel production where only the standard name is set.
+  const client = new Anthropic({
+    apiKey: process.env.TIDE_ANTHROPIC_API_KEY || process.env.ANTHROPIC_API_KEY,
+  })
   const response = await client.messages.create({
     model: 'claude-sonnet-4-6',
     max_tokens: 16000,
