@@ -2,12 +2,6 @@ import { convertToModelMessages, streamText, type UIMessage } from 'ai'
 import { createAnthropic } from '@ai-sdk/anthropic'
 import { getChatContext, formatChatContext, currentMonth } from '@/lib/queries/chat-context'
 
-// @ai-sdk/anthropic v3 has a broken default baseURL (missing /v1/)
-const anthropic = createAnthropic({
-  baseURL: 'https://api.anthropic.com/v1',
-  apiKey: process.env.ANTHROPIC_API_KEY!,
-})
-
 const BASE_SYSTEM_PROMPT = `You are a helpful budget assistant for a New Zealand household.
 
 Your role: help users understand their spending patterns, track progress against budgets, and answer financial questions about their household.
@@ -21,6 +15,14 @@ Guidelines:
 - When comparing periods, use the trend data provided`
 
 export async function POST(req: Request) {
+  // Create provider inside the handler so process.env is read at request time.
+  // Use TIDE_ANTHROPIC_API_KEY — Claude for Desktop injects an empty
+  // ANTHROPIC_API_KEY into the macOS user env which Next.js won't override.
+  const anthropic = createAnthropic({
+    baseURL: 'https://api.anthropic.com/v1',
+    apiKey: process.env.TIDE_ANTHROPIC_API_KEY!,
+  })
+
   const { messages } = (await req.json()) as { messages: UIMessage[] }
 
   const ctx = await getChatContext(currentMonth())

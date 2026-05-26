@@ -49,6 +49,7 @@ Core loop: import bank statements → AI categorises transactions → set budget
 - **Open PRs:**
   - **PR #21** `feature/tide-foundation` — Tide theme foundation (tokens, dark mode, fonts, primitives) — merge this first
   - **PR #22** `feature/tide-pages` — all per-page Tide passes (Chunks 2 + 3 + layout/feature pass) — depends on PR #21
+  - **PR #23** `claude/thirsty-chatelet-df9f7d` — audit fixes + chat/summary bug fixes + sidebar polish — depends on PR #22
 - **Tide/Editorial theme — what's in PRs #21 + #22:**
   - **Chunk 1 (PR #21):** CSS tokens (warm paper + near-black dark), `next-themes` + ThemeToggle, Fraunces + JetBrains Mono fonts, brand rename → "Tide", primitives (Button density, Card, Badge variants, Progress, Tabs segmented control, Input)
   - **Chunk 2+3 + layout/feature pass (PR #22):**
@@ -58,6 +59,16 @@ Core loop: import bank statements → AI categorises transactions → set budget
     - Summary: Sparkles headline card, BigStat inline stats (Spend/Income/Net), CompareBar vs-last-month, "Monthly recap" H1
     - Chat: sparkle avatar on assistant messages (no bubble), 4 prompt chips on empty state, "Chat with your finances" H1
     - Import: drag-drop DropZone (DataTransfer API), "What we support" card, redesigned success state
+- **What's in PR #23 (this branch):**
+  - Audit fixes: TransactionTable cell padding, chat bubble style, Dashboard H1, NavLink icon active state, category color migration
+  - Chat fix: `TIDE_ANTHROPIC_API_KEY` (Claude Desktop injects empty `ANTHROPIC_API_KEY` into macOS env, shadowing `.env.local` — see ADR 002)
+  - Summary fix: same env var fix, model `claude-sonnet-4-5`, strip markdown fences from JSON response, error logging in catch
+  - Budget list → proper `<table>` with `<colgroup>` for column alignment; amount + % badge always shown
+  - Dashboard card icons + card header alignment + subheadings
+  - TideLogo component + SVG favicon
+  - Dark mode: `SidebarThemeRow` (Moon icon + label + shadcn Switch) above user chip; hydration fix via `mounted` guard
+  - Sign-out: icon button (`LogOut`) with Tooltip
+  - Sonner toast wired to chat errors
 - **Remaining build order items:**
   - **#17** Import summary — post-upload breakdown (imported / duplicates / from map / from Claude / recurring / uncategorised). Needs `import_history` table.
 - **Deferred (not blocking):**
@@ -66,10 +77,12 @@ Core loop: import bank statements → AI categorises transactions → set budget
   - Dashboard bottom row (recent transactions + quick actions)
   - Sidebar collapse to 64px (optional per design spec, skipped)
   - Header search, notification bell (roadmapped, intentionally not built yet)
+  - Set `TIDE_ANTHROPIC_API_KEY` in Vercel project env before deploying to production
 - **Known issues:** Node 22 required — always `source ~/.nvm/nvm.sh && nvm use 22` before pnpm scripts.
-- **Components available:** `Skeleton`, `Tooltip`, `Avatar`, `Sheet`, `Badge` (all in `src/components/ui/`).
+- **Components available:** `Skeleton`, `Tooltip`, `Avatar`, `Sheet`, `Badge`, `Switch` (all in `src/components/ui/`).
 - **Prop convention:** `MonthSelector` and `SummaryMonthSelector` use `allowFuture` (not `isAdmin`) — the page passes `allowFuture={isAdmin}` so the selector stays role-agnostic.
 - **Theme:** `font-display` = Fraunces (serif, use on H1s + CardTitles + hero metrics). `font-mono` = JetBrains Mono (use on tabular numerics). Badge variants: `accent` (sage wash), `warn` (gold), `danger` (rust), `outline`.
+- **Env vars:** Use `TIDE_ANTHROPIC_API_KEY` (not `ANTHROPIC_API_KEY`) — Claude Desktop shadows the standard name with an empty value on macOS. See `docs/decisions/002-tide-anthropic-api-key-env-var.md`.
 
 ---
 

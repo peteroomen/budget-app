@@ -8,7 +8,7 @@ import { Separator } from '@/components/ui/separator'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { SignOutButton } from '@/components/auth/SignOutButton'
-import { ThemeToggle } from '@/components/theme/ThemeToggle'
+import { SidebarThemeRow } from '@/components/theme/ThemeToggle'
 import { TideLogo } from '@/components/TideLogo'
 import { getInitials } from '@/lib/utils'
 import type { Profile } from '@/types'
@@ -32,10 +32,7 @@ function SidebarUserFooter({ profile }: { profile: Profile }) {
           </p>
         </div>
       </div>
-      <div className="flex items-center gap-1">
-        <ThemeToggle />
-        <SignOutButton />
-      </div>
+      <SignOutButton />
     </div>
   )
 }
@@ -64,7 +61,8 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         {/* Primary + secondary nav — client component owns icon imports */}
         <SidebarNav />
 
-        {/* User footer */}
+        {/* Theme toggle row + user chip */}
+        <SidebarThemeRow />
         <Separator />
         <SidebarUserFooter profile={profile} />
       </aside>
