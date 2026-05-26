@@ -11,9 +11,17 @@ interface NavLinkProps {
   children: React.ReactNode
   className?: string
   onClick?: () => void
+  showBar?: boolean
 }
 
-export function NavLink({ href, icon: Icon, children, className, onClick }: NavLinkProps) {
+export function NavLink({
+  href,
+  icon: Icon,
+  children,
+  className,
+  onClick,
+  showBar = true,
+}: NavLinkProps) {
   const pathname = usePathname()
   const isActive = pathname === href || pathname.startsWith(href + '/')
 
@@ -29,8 +37,8 @@ export function NavLink({ href, icon: Icon, children, className, onClick }: NavL
         className
       )}
     >
-      {/* 2px accent bar on left edge when active */}
-      {isActive && (
+      {/* 2px accent bar on left edge when active — sidebar only */}
+      {isActive && showBar && (
         <span
           aria-hidden="true"
           className="absolute inset-y-1.5 left-0 w-0.5 rounded-full bg-primary"

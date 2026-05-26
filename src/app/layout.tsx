@@ -1,4 +1,4 @@
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import { Inter, Fraunces, JetBrains_Mono } from 'next/font/google'
 import { Toaster } from 'sonner'
 import { ThemeProvider } from '@/components/theme/ThemeProvider'
@@ -27,6 +27,13 @@ const mono = JetBrains_Mono({
 export const metadata: Metadata = {
   title: 'Tide',
   description: 'Household budgeting for two',
+}
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  // Android Chrome: resize content when soft keyboard opens so the tab bar lifts with the viewport
+  interactiveWidget: 'resizes-content',
 }
 
 export default function RootLayout({

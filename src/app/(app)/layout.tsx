@@ -3,7 +3,8 @@ import { Upload } from 'lucide-react'
 import { getCurrentProfile } from '@/lib/queries/profile'
 import { SidebarNav } from '@/components/nav/SidebarNav'
 import { BottomTabBar } from '@/components/nav/BottomTabBar'
-import { MobileDrawer } from '@/components/nav/MobileDrawer'
+import { MobileDrawer, MobileNotificationBell } from '@/components/nav/MobileDrawer'
+import { MobileNavProvider } from '@/components/nav/MobileNavContext'
 import { Separator } from '@/components/ui/separator'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
@@ -67,41 +68,44 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         <SidebarUserFooter profile={profile} />
       </aside>
 
-      {/* ── Right column ── */}
-      <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
-        {/* Header */}
-        <header className="flex h-14 shrink-0 items-center justify-between border-b px-4 md:px-6">
-          {/* Mobile: hamburger + brand */}
-          <div className="flex items-center gap-3 md:hidden">
-            <MobileDrawer profile={profile} />
-            <div className="flex items-center gap-2">
-              <TideLogo size={24} />
-              <span className="font-display text-display-wordmark font-semibold">Tide</span>
+      {/* ── Right column — wrapped in MobileNavProvider for drawer↔tab-bar state ── */}
+      <MobileNavProvider>
+        <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
+          {/* Header */}
+          <header className="flex h-14 shrink-0 items-center justify-between border-b bg-background px-4 md:px-6">
+            {/* Mobile: hamburger + brand */}
+            <div className="flex items-center gap-3 md:hidden">
+              <MobileDrawer profile={profile} />
+              <div className="flex items-center gap-2">
+                <TideLogo size={24} />
+                <span className="font-display text-display-wordmark font-semibold">Tide</span>
+              </div>
             </div>
-          </div>
 
-          {/* Desktop: spacer so Import sits on the right */}
-          <div className="hidden md:block" />
+            {/* Desktop: spacer so Import sits on the right */}
+            <div className="hidden md:block" />
 
-          {/* Desktop: Import CTA */}
-          <div className="flex items-center gap-2">
-            <Button asChild size="sm" className="hidden md:flex">
-              <a href="/import">
-                <Upload size={15} className="mr-1.5" />
-                Import
-              </a>
-            </Button>
-          </div>
-        </header>
+            {/* Right cluster: Import (desktop) + Bell (mobile) */}
+            <div className="flex items-center gap-2">
+              <Button asChild size="sm" className="hidden md:flex">
+                <a href="/import">
+                  <Upload size={15} className="mr-1.5" />
+                  Import
+                </a>
+              </Button>
+              <MobileNotificationBell />
+            </div>
+          </header>
 
-        {/* Page content */}
-        <main className="flex flex-1 flex-col overflow-y-auto">
-          <div className="mx-auto w-full max-w-screen-xl px-8 py-7">{children}</div>
-        </main>
+          {/* Page content */}
+          <main className="flex flex-1 flex-col overflow-y-auto">
+            <div className="mx-auto w-full max-w-screen-xl px-8 py-7">{children}</div>
+          </main>
 
-        {/* Mobile bottom tab bar */}
-        <BottomTabBar />
-      </div>
+          {/* Mobile bottom tab bar */}
+          <BottomTabBar />
+        </div>
+      </MobileNavProvider>
     </div>
   )
 }
