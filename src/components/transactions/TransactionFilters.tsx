@@ -68,12 +68,12 @@ export function TransactionFilters({ accounts, categories }: Props) {
   }
 
   return (
-    <div className="flex flex-wrap items-center gap-3">
+    <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
       {/* Search */}
       <div className="relative">
         <SearchIcon className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
         <Input
-          className="pl-8 w-56"
+          className="pl-8 w-full sm:w-56"
           placeholder="Search merchant or description…"
           defaultValue={search}
           onChange={(e) => handleSearch(e.target.value)}
@@ -82,7 +82,7 @@ export function TransactionFilters({ accounts, categories }: Props) {
 
       {/* Account */}
       <Select value={accountId || ALL} onValueChange={(v) => push({ account: v === ALL ? '' : v })}>
-        <SelectTrigger className="w-44">
+        <SelectTrigger className="w-full sm:w-44">
           <SelectValue placeholder="All accounts" />
         </SelectTrigger>
         <SelectContent>
@@ -98,7 +98,7 @@ export function TransactionFilters({ accounts, categories }: Props) {
 
       {/* Category */}
       <Select value={categoryId || ALL} onValueChange={(v) => push({ cat: v === ALL ? '' : v })}>
-        <SelectTrigger className="w-44">
+        <SelectTrigger className="w-full sm:w-44">
           <SelectValue placeholder="All categories" />
         </SelectTrigger>
         <SelectContent>
@@ -113,7 +113,7 @@ export function TransactionFilters({ accounts, categories }: Props) {
 
       {/* Clear */}
       {hasFilters && (
-        <Button variant="ghost" size="sm" className="gap-1.5" onClick={clearAll}>
+        <Button variant="ghost" size="sm" className="gap-1.5 sm:w-auto" onClick={clearAll}>
           <XIcon className="h-3.5 w-3.5" />
           Clear
         </Button>
