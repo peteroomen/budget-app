@@ -112,34 +112,32 @@ export function BudgetList({ items, month }: BudgetListProps) {
                     </p>
                   </td>
 
-                  {/* progress bar */}
-                  <td className="px-3 py-3.5 align-middle">
-                    {budget ? (
-                      <Progress
-                        value={pct}
-                        className="h-1.5"
-                        indicatorClassName={indicatorClassName}
-                      />
-                    ) : (
-                      <span className="text-[11px] text-muted-foreground">No budget set</span>
-                    )}
-                  </td>
-
-                  {/* budget amount */}
-                  <td className="px-3 py-3.5 align-middle text-right font-mono text-[13px] tabular-nums">
-                    {budget ? formatNZD(budgetCents) : ''}
-                  </td>
-
-                  {/* % badge */}
-                  <td className="pr-4 pl-2 py-3.5 align-middle">
-                    {budget ? (
-                      <Badge variant={pctBadgeVariant} className="font-mono tabular-nums">
-                        {Math.round(ratio * 100)}%
-                      </Badge>
-                    ) : (
-                      <span />
-                    )}
-                  </td>
+                  {/* progress bar / amount / badge — or "No budget set" spanning all three */}
+                  {budget ? (
+                    <>
+                      <td className="px-3 py-3.5 align-middle">
+                        <Progress
+                          value={pct}
+                          className="h-1.5"
+                          indicatorClassName={indicatorClassName}
+                        />
+                      </td>
+                      <td className="px-3 py-3.5 align-middle text-right font-mono text-[13px] tabular-nums">
+                        {formatNZD(budgetCents)}
+                      </td>
+                      <td className="pr-4 pl-2 py-3.5 align-middle">
+                        <Badge variant={pctBadgeVariant} className="font-mono tabular-nums">
+                          {Math.round(ratio * 100)}%
+                        </Badge>
+                      </td>
+                    </>
+                  ) : (
+                    <td className="px-3 py-3.5 align-middle" colSpan={3}>
+                      <span className="whitespace-nowrap text-[11px] text-muted-foreground">
+                        No budget set
+                      </span>
+                    </td>
+                  )}
                 </tr>
               )
             })}

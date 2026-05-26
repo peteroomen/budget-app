@@ -92,18 +92,16 @@ export default async function TransactionsPage({
   urlParams.set('sort', sortBy)
   urlParams.set('dir', sortDir)
 
-  const subheading = hasFilters
-    ? `${filteredCount} of ${totalCount} · ${formatMonthLabel(month)}`
-    : `${totalCount} · ${formatMonthLabel(month)}`
+  const subheading = `${filteredCount} of ${totalCount} · ${formatMonthLabel(month)}`
 
   return (
     <div className="space-y-6">
-      <div className="flex items-start justify-between gap-4">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
         <div>
           <h1 className="font-display text-display-h1 font-medium">Transactions</h1>
           <p className="mt-1 text-body-sm text-muted-foreground">{subheading}</p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <DetectRecurringButton />
           <RecategoriseButton />
           <Suspense fallback={null}>

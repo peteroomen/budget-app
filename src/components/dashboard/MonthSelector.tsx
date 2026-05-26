@@ -20,8 +20,8 @@ export function MonthSelector({ month, isAdmin }: MonthSelectorProps) {
   }
 
   return (
-    <div className="flex items-center gap-2">
-      <Button variant="outline" size="icon" onClick={() => navigate(prevMonth(month))}>
+    <div className="inline-flex items-center rounded-lg border bg-background">
+      <Button variant="ghost" size="icon" onClick={() => navigate(prevMonth(month))}>
         <ChevronLeft className="h-4 w-4" />
         <span className="sr-only">Previous month</span>
       </Button>
@@ -29,7 +29,7 @@ export function MonthSelector({ month, isAdmin }: MonthSelectorProps) {
         {formatMonthLabel(month)}
       </span>
       <Button
-        variant="outline"
+        variant="ghost"
         size="icon"
         onClick={() => navigate(nextMonth(month))}
         disabled={isCurrentMonth && !isAdmin}

@@ -1,5 +1,6 @@
 'use client'
 
+import { useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
@@ -9,6 +10,10 @@ import { useMobileNav } from '@/components/nav/MobileNavContext'
 export function BottomTabBar() {
   const pathname = usePathname()
   const { drawerOpen } = useMobileNav()
+
+  useEffect(() => {
+    document.getElementById('page-scroll')?.scrollTo({ top: 0 })
+  }, [pathname])
 
   return (
     <nav

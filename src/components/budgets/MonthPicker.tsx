@@ -37,14 +37,14 @@ export function MonthPicker({ month, basePath = '/budgets' }: MonthPickerProps) 
   }
 
   return (
-    <div className="flex items-center gap-2">
-      <Button variant="outline" size="sm" onClick={() => navigate(-1)} aria-label="Previous month">
+    <div className="inline-flex items-center rounded-lg border bg-background">
+      <Button variant="ghost" size="sm" onClick={() => navigate(-1)} aria-label="Previous month">
         ‹
       </Button>
       <span className="min-w-[10rem] text-center text-sm font-medium">
         {formatMonthLabel(month)}
       </span>
-      <Button variant="outline" size="sm" onClick={() => navigate(1)} aria-label="Next month">
+      <Button variant="ghost" size="sm" onClick={() => navigate(1)} aria-label="Next month">
         ›
       </Button>
     </div>

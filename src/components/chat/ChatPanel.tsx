@@ -11,12 +11,12 @@ export function ChatPanel() {
   const [sessionKey, setSessionKey] = useState(0)
 
   return (
-    <div className="flex h-full flex-col gap-4">
+    <div className="flex min-h-0 flex-1 flex-col gap-4">
       <div className="flex shrink-0 items-center justify-between">
         <div>
-          <h1 className="font-display text-display-h1 font-medium">Chat with your finances</h1>
+          <h1 className="font-display text-display-h1 font-medium">Ask Tide</h1>
           <p className="mt-0.5 text-body-sm text-muted-foreground">
-            Powered by Claude · session only
+            Powered by Tide · session only
           </p>
         </div>
         <Button variant="outline" size="sm" onClick={() => setSessionKey((k) => k + 1)}>
