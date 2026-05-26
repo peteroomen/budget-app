@@ -42,7 +42,11 @@ export async function DashboardContent({ month }: { month: string }) {
           spend_cents={data.summary.spend_cents}
           budgeted_cents={data.summary.total_budgeted_cents}
         />
-        <NetCard net_cents={data.summary.net_cents} />
+        <NetCard
+          income_cents={data.summary.income_cents}
+          spend_cents={data.summary.spend_cents}
+          expected_income_cents={data.summary.expected_income_cents}
+        />
         <FixedCostsCard summary={fixedCosts} />
       </div>
 
