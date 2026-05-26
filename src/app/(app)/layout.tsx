@@ -8,7 +8,8 @@ import { Separator } from '@/components/ui/separator'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { SignOutButton } from '@/components/auth/SignOutButton'
-import { ThemeToggle } from '@/components/theme/ThemeToggle'
+import { SidebarThemeRow } from '@/components/theme/ThemeToggle'
+import { TideLogo } from '@/components/TideLogo'
 import { getInitials } from '@/lib/utils'
 import type { Profile } from '@/types'
 
@@ -31,10 +32,7 @@ function SidebarUserFooter({ profile }: { profile: Profile }) {
           </p>
         </div>
       </div>
-      <div className="flex items-center gap-1">
-        <ThemeToggle />
-        <SignOutButton />
-      </div>
+      <SignOutButton />
     </div>
   )
 }
@@ -50,15 +48,21 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       {/* ── Sidebar (desktop only) ── */}
       <aside className="hidden w-[232px] shrink-0 flex-col overflow-y-auto border-r bg-muted/40 md:flex">
         {/* Brand row */}
-        <div className="px-4 py-4">
-          <span className="font-display text-display-wordmark font-semibold tracking-tight">Tide</span>
-          <p className="text-[11px] text-muted-foreground">Household</p>
+        <div className="flex items-center gap-2.5 px-4 py-4">
+          <TideLogo size={28} />
+          <div>
+            <p className="font-display text-display-wordmark font-semibold leading-tight tracking-tight">
+              Tide
+            </p>
+            <p className="text-[11px] text-muted-foreground leading-tight">Household</p>
+          </div>
         </div>
 
         {/* Primary + secondary nav — client component owns icon imports */}
         <SidebarNav />
 
-        {/* User footer */}
+        {/* Theme toggle row + user chip */}
+        <SidebarThemeRow />
         <Separator />
         <SidebarUserFooter profile={profile} />
       </aside>
@@ -70,7 +74,10 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           {/* Mobile: hamburger + brand */}
           <div className="flex items-center gap-3 md:hidden">
             <MobileDrawer profile={profile} />
-            <span className="font-display text-display-wordmark font-semibold">Tide</span>
+            <div className="flex items-center gap-2">
+              <TideLogo size={24} />
+              <span className="font-display text-display-wordmark font-semibold">Tide</span>
+            </div>
           </div>
 
           {/* Desktop: spacer so Import sits on the right */}
@@ -88,7 +95,9 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         </header>
 
         {/* Page content */}
-        <main className="flex flex-1 flex-col overflow-y-auto p-6">{children}</main>
+        <main className="flex flex-1 flex-col overflow-y-auto">
+          <div className="mx-auto w-full max-w-screen-xl px-8 py-7">{children}</div>
+        </main>
 
         {/* Mobile bottom tab bar */}
         <BottomTabBar />

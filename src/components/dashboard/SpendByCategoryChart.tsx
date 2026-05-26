@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { ArrowUpRight } from 'lucide-react'
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from 'recharts'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import {
   ChartContainer,
@@ -44,7 +44,16 @@ export function SpendByCategoryChart({ data }: SpendByCategoryChartProps) {
     return (
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Spend by Category</CardTitle>
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <CardTitle className="text-display-card-title font-medium">
+                Spend by category
+              </CardTitle>
+              <CardDescription className="mt-0.5 text-body-xs">
+                Vertical lines mark budget caps
+              </CardDescription>
+            </div>
+          </div>
         </CardHeader>
         <CardContent>
           <p className="py-8 text-center text-sm text-muted-foreground">
@@ -77,12 +86,19 @@ export function SpendByCategoryChart({ data }: SpendByCategoryChartProps) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-base">Spend by Category</CardTitle>
-        <Button variant="ghost" size="sm" asChild>
-          <Link href="/budgets" className="flex items-center gap-1">
-            Manage budgets <ArrowUpRight className="h-3 w-3" />
-          </Link>
-        </Button>
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <CardTitle className="text-display-card-title font-medium">Spend by category</CardTitle>
+            <CardDescription className="mt-0.5 text-body-xs">
+              Vertical lines mark budget caps
+            </CardDescription>
+          </div>
+          <Button variant="ghost" size="sm" asChild className="-mt-1 -mr-2 shrink-0">
+            <Link href="/budgets" className="flex items-center gap-1 text-[13px]">
+              Manage budgets <ArrowUpRight className="h-3.5 w-3.5" />
+            </Link>
+          </Button>
+        </div>
       </CardHeader>
       <CardContent>
         <ChartContainer config={chartConfig} className="max-h-[360px] w-full">

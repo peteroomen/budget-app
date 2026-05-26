@@ -1,3 +1,4 @@
+import { Repeat2 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import type { FixedCostsSummary } from '@/lib/queries/recurring'
 
@@ -19,9 +20,12 @@ export function FixedCostsCard({ summary }: Props) {
   return (
     <Card>
       <CardHeader className="pb-2">
-        <CardTitle className="text-body-xs font-sans font-medium text-muted-foreground">
-          Fixed Costs
-        </CardTitle>
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-body-xs font-sans font-medium text-muted-foreground">
+            Fixed Costs
+          </CardTitle>
+          <Repeat2 className="h-4 w-4 text-muted-foreground/50" />
+        </div>
       </CardHeader>
       <CardContent>
         <p className="font-display text-display-hero font-medium tabular-nums">

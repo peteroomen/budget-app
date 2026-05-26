@@ -1,6 +1,6 @@
 import { Suspense } from 'react'
 import { generateText } from 'ai'
-import { anthropic } from '@ai-sdk/anthropic'
+import { createAnthropic } from '@ai-sdk/anthropic'
 import { createClient } from '@/lib/supabase/server'
 import { currentMonth } from '@/lib/utils/month'
 import { getSummaryContext, buildSummaryPrompt } from '@/lib/queries/summary'
@@ -79,23 +79,36 @@ async function SummaryContent({ month }: { month: string }) {
 
   const prompt = buildSummaryPrompt(ctx)
 
+  // Use TIDE_ANTHROPIC_API_KEY — Claude for Desktop injects an empty
+  // ANTHROPIC_API_KEY into the macOS user env which Next.js won't override.
+  const anthropic = createAnthropic({
+    baseURL: 'https://api.anthropic.com/v1',
+    apiKey: process.env.TIDE_ANTHROPIC_API_KEY!,
+  })
+
   let summary: MonthlySummaryJSON | null = null
   let parseError: string | null = null
 
   try {
     const { text } = await generateText({
-      model: anthropic('claude-sonnet-4-6'),
+      model: anthropic('claude-sonnet-4-5'),
       system:
         'You are a financial analyst for a NZ household. ' +
-        'Analyse the provided spending data and return a JSON summary. ' +
+        'Analyse the provided spending data and return ONLY a raw JSON object — no markdown, no code fences, no explanation. ' +
         'Be specific, honest, and reference exact NZD amounts. ' +
         'Keep notes concise — one to three sentences each.',
       prompt,
       maxOutputTokens: 1024,
     })
 
-    summary = JSON.parse(text) as MonthlySummaryJSON
-  } catch {
+    // Claude sometimes wraps JSON in markdown code fences — strip them before parsing.
+    const raw = text
+      .replace(/^```(?:json)?\s*/i, '')
+      .replace(/\s*```\s*$/i, '')
+      .trim()
+    summary = JSON.parse(raw) as MonthlySummaryJSON
+  } catch (err) {
+    console.error('[summary] generateText/parse failed:', err)
     parseError = 'Could not generate summary — please try again.'
   }
 

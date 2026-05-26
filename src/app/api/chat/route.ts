@@ -1,5 +1,5 @@
 import { convertToModelMessages, streamText, type UIMessage } from 'ai'
-import { anthropic } from '@ai-sdk/anthropic'
+import { createAnthropic } from '@ai-sdk/anthropic'
 import { getChatContext, formatChatContext, currentMonth } from '@/lib/queries/chat-context'
 
 const BASE_SYSTEM_PROMPT = `You are a helpful budget assistant for a New Zealand household.
@@ -15,6 +15,14 @@ Guidelines:
 - When comparing periods, use the trend data provided`
 
 export async function POST(req: Request) {
+  // Create provider inside the handler so process.env is read at request time.
+  // Use TIDE_ANTHROPIC_API_KEY — Claude for Desktop injects an empty
+  // ANTHROPIC_API_KEY into the macOS user env which Next.js won't override.
+  const anthropic = createAnthropic({
+    baseURL: 'https://api.anthropic.com/v1',
+    apiKey: process.env.TIDE_ANTHROPIC_API_KEY!,
+  })
+
   const { messages } = (await req.json()) as { messages: UIMessage[] }
 
   const ctx = await getChatContext(currentMonth())
@@ -24,7 +32,7 @@ export async function POST(req: Request) {
     : BASE_SYSTEM_PROMPT
 
   const result = streamText({
-    model: anthropic('claude-sonnet-4-6'),
+    model: anthropic('claude-sonnet-4-5'),
     system: systemPrompt,
     messages: await convertToModelMessages(messages),
     maxOutputTokens: 2048,

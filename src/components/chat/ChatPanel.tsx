@@ -1,8 +1,9 @@
 'use client'
 
-import { useState } from 'react'
-import { AssistantRuntimeProvider } from '@assistant-ui/react'
+import { useEffect, useState } from 'react'
+import { AssistantRuntimeProvider, useAssistantRuntime } from '@assistant-ui/react'
 import { useChatRuntime } from '@assistant-ui/react-ai-sdk'
+import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Thread } from './Thread'
 
@@ -27,11 +28,38 @@ export function ChatPanel() {
   )
 }
 
+function ChatErrorWatcher() {
+  const runtime = useAssistantRuntime()
+
+  useEffect(() => {
+    return runtime.thread.subscribe(() => {
+      const state = runtime.thread.getState()
+      const lastMsg = state.messages[state.messages.length - 1]
+      if (lastMsg?.role === 'assistant' && lastMsg.status?.type === 'incomplete') {
+        const reason = lastMsg.status.reason
+        if (reason === 'error') {
+          const err = (lastMsg.status as { error?: unknown }).error
+          const text =
+            err instanceof Error
+              ? err.message
+              : typeof err === 'string'
+                ? err
+                : 'The assistant encountered an error. Please try again.'
+          toast.error('Chat error', { description: text })
+        }
+      }
+    })
+  }, [runtime])
+
+  return null
+}
+
 function ChatSession() {
   const runtime = useChatRuntime()
 
   return (
     <AssistantRuntimeProvider runtime={runtime}>
+      <ChatErrorWatcher />
       <div className="flex flex-1 flex-col overflow-hidden rounded-xl border bg-card">
         <Thread />
       </div>

@@ -73,7 +73,7 @@ function PromptChips() {
 function UserMessage() {
   return (
     <MessagePrimitive.Root className="my-2 flex justify-end">
-      <div className="max-w-[70%] rounded-2xl rounded-tr-sm bg-primary px-4 py-2.5 text-primary-foreground">
+      <div className="max-w-[70%] rounded-2xl rounded-tr-sm border border-primary/20 bg-primary/8 px-4 py-2.5 text-foreground">
         <MessagePrimitive.Parts components={{ Text: UserText }} />
       </div>
     </MessagePrimitive.Root>

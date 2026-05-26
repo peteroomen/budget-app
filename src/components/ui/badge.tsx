@@ -13,8 +13,8 @@ const badgeVariants = cva(
         destructive: 'bg-destructive text-destructive-foreground',
         outline: 'border border-border bg-transparent text-muted-foreground',
         accent: 'bg-primary/10 text-primary',
-        warn: 'bg-warning/14 text-warning',
-        danger: 'bg-destructive/12 text-destructive',
+        warn: 'border border-warning/40 bg-warning/12 text-warning',
+        danger: 'border border-destructive/40 bg-destructive/12 text-destructive',
       },
     },
     defaultVariants: {

@@ -116,9 +116,9 @@ export function TransactionTable({
   return (
     <div className={cn('overflow-x-auto rounded-md border', className)}>
       <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead className="text-label-caps uppercase text-muted-foreground font-medium w-28">
+        <TableHeader className="[&_tr]:border-0">
+          <TableRow className="bg-muted/50 hover:bg-muted/50">
+            <TableHead className="text-[11px] tracking-[0.4px] uppercase font-medium text-muted-foreground w-28">
               <SortHeader
                 label="Date"
                 column="date"
@@ -127,7 +127,7 @@ export function TransactionTable({
                 params={params}
               />
             </TableHead>
-            <TableHead className="text-label-caps uppercase text-muted-foreground font-medium">
+            <TableHead className="text-[11px] tracking-[0.4px] uppercase font-medium text-muted-foreground">
               <SortHeader
                 label="Merchant"
                 column="merchant_name"
@@ -136,13 +136,13 @@ export function TransactionTable({
                 params={params}
               />
             </TableHead>
-            <TableHead className="text-label-caps uppercase text-muted-foreground font-medium min-w-[11rem]">
+            <TableHead className="text-[11px] tracking-[0.4px] uppercase font-medium text-muted-foreground min-w-[11rem]">
               Category
             </TableHead>
-            <TableHead className="text-label-caps uppercase text-muted-foreground font-medium">
+            <TableHead className="text-[11px] tracking-[0.4px] uppercase font-medium text-muted-foreground">
               Account
             </TableHead>
-            <TableHead className="text-label-caps uppercase text-muted-foreground font-medium text-right">
+            <TableHead className="text-[11px] tracking-[0.4px] uppercase font-medium text-muted-foreground text-right">
               <SortHeader
                 label="Amount"
                 column="amount_cents"
@@ -156,13 +156,11 @@ export function TransactionTable({
         <TableBody>
           {rows.map((tx) => (
             <TableRow key={tx.id} className="group hover:bg-muted/40 align-top">
-              {/* Date — relative label, monospaced, muted */}
-              <TableCell className="font-mono text-body-sm tabular-nums text-muted-foreground whitespace-nowrap pt-3">
+              <TableCell className="font-mono text-body-sm tabular-nums text-muted-foreground whitespace-nowrap">
                 {formatRelativeDate(tx.date)}
               </TableCell>
 
-              {/* Merchant + chips */}
-              <TableCell className="pt-2.5">
+              <TableCell>
                 <p className="font-medium leading-snug">{tx.merchant_name ?? tx.description}</p>
                 {(tx.is_recurring || tx.category_source === 'manual') && (
                   <div className="mt-1.5 flex flex-wrap gap-1.5">
@@ -172,7 +170,7 @@ export function TransactionTable({
                 )}
               </TableCell>
 
-              <TableCell className="pt-3">
+              <TableCell>
                 <CategoryCell
                   transactionId={tx.id}
                   merchantName={tx.merchant_name}
@@ -184,12 +182,12 @@ export function TransactionTable({
                 />
               </TableCell>
 
-              <TableCell className="text-sm text-muted-foreground pt-3">
+              <TableCell className="text-sm text-muted-foreground">
                 {tx.account?.name ?? '—'}
               </TableCell>
 
               <TableCell
-                className={`font-mono text-body-sm tabular-nums text-right font-medium pt-3 ${
+                className={`font-mono text-body-sm tabular-nums text-right font-medium ${
                   tx.amount_cents > 0 ? 'text-success' : ''
                 }`}
               >
