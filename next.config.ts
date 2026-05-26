@@ -2,6 +2,10 @@ import path from 'path'
 import type { NextConfig } from 'next'
 
 const nextConfig: NextConfig = {
+  // Vercel auto-detects `src/` as the Next.js framework root (because app/ lives in src/app/)
+  // and expects build output at src/.next. Setting distDir to match prevents the
+  // "output directory not found" error on every Vercel deploy.
+  distDir: 'src/.next',
   webpack(config, { nextRuntime, webpack }) {
     if (nextRuntime === 'edge') {
       // Disable Webpack caching for Edge to prevent stale middleware bundles.

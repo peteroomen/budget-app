@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "prebuild": "node scripts/patch-testmode.js",
-    "build": "rm -rf .next && next build",
+    "build": "rm -rf src/.next && next build",
     "start": "next start",
     "lint": "next lint",
     "type-check": "tsc --noEmit",
