@@ -24,7 +24,8 @@ export async function categoriseMerchantsWithClaude(
   // Use numeric indices so Claude can't mangle the merchant name when echoing it back.
   const indexedList = merchantNames.map((name, i) => `${i}: ${name}`).join('\n')
 
-  const client = new Anthropic()
+  // Use TIDE_ANTHROPIC_API_KEY — Claude for Desktop injects an empty ANTHROPIC_API_KEY on macOS
+  const client = new Anthropic({ apiKey: process.env.TIDE_ANTHROPIC_API_KEY! })
   const response = await client.messages.create({
     model: 'claude-sonnet-4-6',
     max_tokens: 4096,
