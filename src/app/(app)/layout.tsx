@@ -98,7 +98,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           </header>
 
           {/* Page content */}
-          <main className="flex flex-1 flex-col overflow-y-auto">
+          <main id="page-scroll" className="flex flex-1 flex-col overflow-y-auto">
             <div className="mx-auto w-full max-w-screen-xl px-8 py-7">{children}</div>
           </main>
 

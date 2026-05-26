@@ -93,7 +93,7 @@ export function TransactionDayList({ rows, categories, className }: Props) {
             <span className="font-display text-body-sm font-semibold">{group.label}</span>
             {group.daySpend > 0 && (
               <span className="font-mono text-label text-muted-foreground">
-                {nzdCompact.format(group.daySpend / 100)}
+                {nzdCompact.format(group.daySpend / 100)} spend
               </span>
             )}
           </div>

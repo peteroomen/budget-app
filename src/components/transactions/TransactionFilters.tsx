@@ -3,7 +3,6 @@
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useCallback, useEffect, useRef } from 'react'
 import { SearchIcon, XIcon } from 'lucide-react'
-import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import {
@@ -69,64 +68,52 @@ export function TransactionFilters({ accounts, categories }: Props) {
   }
 
   return (
-    <div className="flex flex-wrap gap-3 items-end">
+    <div className="flex flex-wrap items-center gap-3">
       {/* Search */}
-      <div className="flex flex-col gap-1.5">
-        <Label className="text-label text-muted-foreground">Search</Label>
-        <div className="relative">
-          <SearchIcon className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            className="pl-8 w-56"
-            placeholder="Merchant or description…"
-            defaultValue={search}
-            onChange={(e) => handleSearch(e.target.value)}
-          />
-        </div>
+      <div className="relative">
+        <SearchIcon className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+        <Input
+          className="pl-8 w-56"
+          placeholder="Search merchant or description…"
+          defaultValue={search}
+          onChange={(e) => handleSearch(e.target.value)}
+        />
       </div>
 
       {/* Account */}
-      <div className="flex flex-col gap-1.5">
-        <Label className="text-label text-muted-foreground">Account</Label>
-        <Select
-          value={accountId || ALL}
-          onValueChange={(v) => push({ account: v === ALL ? '' : v })}
-        >
-          <SelectTrigger className="w-44">
-            <SelectValue placeholder="All accounts" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value={ALL}>All accounts</SelectItem>
-            {accounts.map((a) => (
-              <SelectItem key={a.id} value={a.id}>
-                {a.name}
-                {a.institution ? ` — ${a.institution}` : ''}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
+      <Select value={accountId || ALL} onValueChange={(v) => push({ account: v === ALL ? '' : v })}>
+        <SelectTrigger className="w-44">
+          <SelectValue placeholder="All accounts" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value={ALL}>All accounts</SelectItem>
+          {accounts.map((a) => (
+            <SelectItem key={a.id} value={a.id}>
+              {a.name}
+              {a.institution ? ` — ${a.institution}` : ''}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
 
       {/* Category */}
-      <div className="flex flex-col gap-1.5">
-        <Label className="text-label text-muted-foreground">Category</Label>
-        <Select value={categoryId || ALL} onValueChange={(v) => push({ cat: v === ALL ? '' : v })}>
-          <SelectTrigger className="w-44">
-            <SelectValue placeholder="All categories" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value={ALL}>All categories</SelectItem>
-            {categories.map((c) => (
-              <SelectItem key={c.id} value={c.id}>
-                {c.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
+      <Select value={categoryId || ALL} onValueChange={(v) => push({ cat: v === ALL ? '' : v })}>
+        <SelectTrigger className="w-44">
+          <SelectValue placeholder="All categories" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value={ALL}>All categories</SelectItem>
+          {categories.map((c) => (
+            <SelectItem key={c.id} value={c.id}>
+              {c.name}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
 
       {/* Clear */}
       {hasFilters && (
-        <Button variant="ghost" size="sm" className="gap-1.5 self-end" onClick={clearAll}>
+        <Button variant="ghost" size="sm" className="gap-1.5" onClick={clearAll}>
           <XIcon className="h-3.5 w-3.5" />
           Clear
         </Button>

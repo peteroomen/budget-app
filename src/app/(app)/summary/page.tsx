@@ -50,7 +50,7 @@ export default async function SummaryPage({ searchParams }: SummaryPageProps) {
               day: 'numeric',
               month: 'short',
             })}{' '}
-            · powered by Claude
+            · powered by Tide
           </p>
         </div>
         <SummaryMonthSelector month={month} allowFuture={isAdmin} />

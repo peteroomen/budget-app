@@ -24,9 +24,11 @@ export function SummaryMonthSelector({ month, allowFuture = false }: SummaryMont
   }
 
   return (
-    <div className={`flex items-center gap-2 transition-opacity ${isPending ? 'opacity-50' : ''}`}>
+    <div
+      className={`inline-flex items-center rounded-lg border bg-background transition-opacity ${isPending ? 'opacity-50' : ''}`}
+    >
       <Button
-        variant="outline"
+        variant="ghost"
         size="icon"
         onClick={() => navigate(prevMonth(month))}
         disabled={isPending}
@@ -38,7 +40,7 @@ export function SummaryMonthSelector({ month, allowFuture = false }: SummaryMont
         {formatMonthLabel(month)}
       </span>
       <Button
-        variant="outline"
+        variant="ghost"
         size="icon"
         onClick={() => navigate(nextMonth(month))}
         disabled={(isCurrentMonth && !allowFuture) || isPending}

@@ -63,10 +63,9 @@ export function IncomeVsSpendCards({ summary }: IncomeVsSpendCardsProps) {
         </CardHeader>
         <CardContent>
           <p
-            className={`font-display text-display-hero font-medium tabular-nums ${netPositive ? 'text-success' : ''}`}
+            className={`whitespace-nowrap font-display text-display-hero font-medium tabular-nums ${netPositive ? 'text-success' : ''}`}
           >
-            {netPositive ? '+' : '−'}
-            {formatNZD(Math.abs(net_cents))}
+            {`${netPositive ? '+' : '−'}${formatNZD(Math.abs(net_cents))}`}
           </p>
         </CardContent>
       </Card>
