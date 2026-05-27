@@ -42,6 +42,27 @@ export async function deleteAllTransactions(): Promise<ActionResult> {
   return { error: null }
 }
 
+// Empty/whitespace-only note clears the column (writes null).
+export async function setTransactionNote(id: string, note: string): Promise<ActionResult> {
+  const supabase = await createClient()
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user) return { error: 'Not authenticated' }
+
+  const trimmed = note.trim().slice(0, 500)
+  const value = trimmed.length === 0 ? null : trimmed
+
+  const { error } = await supabase.from('transactions').update({ notes: value }).eq('id', id)
+  if (error) return { error: error.message }
+
+  revalidatePath('/transactions')
+  revalidatePath('/summary')
+  revalidatePath('/chat')
+  return { error: null }
+}
+
 // null categoryId clears the transaction category without touching the merchant map.
 export async function setCategoryOverride(
   transactionId: string,

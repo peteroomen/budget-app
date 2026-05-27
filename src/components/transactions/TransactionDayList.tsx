@@ -5,6 +5,7 @@ import { cn } from '@/lib/utils'
 import type { TransactionRow } from '@/lib/queries/transactions'
 import type { Category } from '@/types'
 import { DeleteTransactionButton } from './DeleteTransactionButton'
+import { NotePopover } from './NotePopover'
 
 interface Props {
   rows: TransactionRow[]
@@ -119,12 +120,25 @@ export function TransactionDayList({ rows, categories, className }: Props) {
 
                   {/* Merchant + category */}
                   <div className="min-w-0">
-                    <p className="truncate text-body-sm font-medium leading-snug">
-                      {txn.merchant_name ?? txn.description}
-                    </p>
+                    <div className="flex items-center gap-1">
+                      <p className="truncate text-body-sm font-medium leading-snug">
+                        {txn.merchant_name ?? txn.description}
+                      </p>
+                      <NotePopover
+                        transactionId={txn.id}
+                        merchantLabel={txn.merchant_name ?? txn.description}
+                        initialNote={txn.notes}
+                        variant="mobile"
+                      />
+                    </div>
                     <p className="text-label leading-snug text-muted-foreground">
                       {cat?.name ?? 'Uncategorised'}
                     </p>
+                    {txn.notes && (
+                      <p className="mt-0.5 font-display italic text-label leading-snug text-muted-foreground line-clamp-1">
+                        {txn.notes}
+                      </p>
+                    )}
                   </div>
 
                   {/* Amount */}

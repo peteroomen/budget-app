@@ -17,6 +17,7 @@ export interface ChatContext {
     merchant: string
     category: string
     amount_cents: number
+    note: string | null
   }>
   budgetsVsActual: Array<{
     category: string
@@ -85,7 +86,9 @@ export async function getChatContext(month: string): Promise<ChatContext | null>
     // Current month transactions (expenses + income)
     supabase
       .from('transactions')
-      .select('date, amount_cents, merchant_name, description, category:categories(name, type)')
+      .select(
+        'date, amount_cents, merchant_name, description, notes, category:categories(name, type)'
+      )
       .gte('date', dateFrom)
       .lte('date', dateTo)
       .order('date', { ascending: false }),
@@ -126,6 +129,7 @@ export async function getChatContext(month: string): Promise<ChatContext | null>
     amount_cents: number
     merchant_name: string | null
     description: string
+    notes: string | null
     category: { name: string; type: string } | null
   }
   const rawTx = (txResult.data ?? []) as unknown as RawTx[]
@@ -134,6 +138,7 @@ export async function getChatContext(month: string): Promise<ChatContext | null>
     merchant: t.merchant_name ?? t.description,
     category: t.category?.name ?? 'Uncategorised',
     amount_cents: t.amount_cents,
+    note: t.notes && t.notes.trim().length > 0 ? t.notes : null,
   }))
 
   // Received income = positive amounts in income-typed categories
@@ -296,7 +301,10 @@ export function formatChatContext(ctx: ChatContext): string {
   } else {
     for (const t of ctx.currentTransactions) {
       const sign = t.amount_cents < 0 ? '-' : '+'
-      lines.push(`${t.date} | ${t.merchant} | ${t.category} | ${sign}${centsToNZD(t.amount_cents)}`)
+      const noteSuffix = t.note ? ` — note: ${t.note}` : ''
+      lines.push(
+        `${t.date} | ${t.merchant} | ${t.category} | ${sign}${centsToNZD(t.amount_cents)}${noteSuffix}`
+      )
     }
   }
   lines.push('')

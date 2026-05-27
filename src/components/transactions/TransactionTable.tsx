@@ -14,6 +14,7 @@ import { CategoryCell } from './CategoryCell'
 import { RecurringBadge } from './RecurringBadge'
 import { ManualBadge } from './ManualBadge'
 import { DeleteTransactionButton } from './DeleteTransactionButton'
+import { NotePopover } from './NotePopover'
 
 const nzd = new Intl.NumberFormat('en-NZ', {
   style: 'currency',
@@ -163,7 +164,30 @@ export function TransactionTable({
               </TableCell>
 
               <TableCell>
-                <p className="font-medium leading-snug">{tx.merchant_name ?? tx.description}</p>
+                <div className="flex items-start gap-1">
+                  <p className="font-medium leading-snug">{tx.merchant_name ?? tx.description}</p>
+                  {!tx.notes && (
+                    <span className="opacity-0 transition-opacity group-hover:opacity-100 focus-within:opacity-100">
+                      <NotePopover
+                        transactionId={tx.id}
+                        merchantLabel={tx.merchant_name ?? tx.description}
+                        initialNote={tx.notes}
+                      />
+                    </span>
+                  )}
+                </div>
+                {tx.notes && (
+                  <div className="mt-0.5 flex items-start gap-1">
+                    <p className="font-display italic text-label leading-snug text-muted-foreground line-clamp-2">
+                      {tx.notes}
+                    </p>
+                    <NotePopover
+                      transactionId={tx.id}
+                      merchantLabel={tx.merchant_name ?? tx.description}
+                      initialNote={tx.notes}
+                    />
+                  </div>
+                )}
                 {(tx.is_recurring || tx.category_source === 'manual') && (
                   <div className="mt-1.5 flex flex-wrap gap-1.5">
                     <RecurringBadge transactionId={tx.id} isRecurring={tx.is_recurring} />
