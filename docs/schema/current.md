@@ -2,7 +2,7 @@
 
 > Auto-maintained. Update this file after every migration.
 
-**Migrations:** up to `20260527000000_projected_income.sql`
+**Migrations:** up to `20260527000001_savings_to_transfer.sql`
 **Last updated:** 2026-05-27
 
 ---
@@ -47,17 +47,17 @@ Auto-created via trigger on `auth.users` insert.
 
 ### categories
 
-| Column       | Type        | Notes                                                                                              |
-| ------------ | ----------- | -------------------------------------------------------------------------------------------------- |
-| id           | uuid (PK)   | Default gen_random_uuid()                                                                          |
-| household_id | uuid        | FK → households(id), cascade delete, not null                                                      |
-| name         | text        | Not null                                                                                           |
-| color        | text        | Nullable                                                                                           |
-| icon         | text        | Nullable                                                                                           |
-| is_system    | boolean     | Default false                                                                                      |
-| type         | text        | Default 'expense'. CHECK in ('income', 'expense', 'transfer'). Income category seeded as 'income'. |
-| created_at   | timestamptz | Default now()                                                                                      |
-| updated_at   | timestamptz | Auto-updated via trigger                                                                           |
+| Column       | Type        | Notes                                                                                                                                                                                                                                 |
+| ------------ | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| id           | uuid (PK)   | Default gen_random_uuid()                                                                                                                                                                                                             |
+| household_id | uuid        | FK → households(id), cascade delete, not null                                                                                                                                                                                         |
+| name         | text        | Not null                                                                                                                                                                                                                              |
+| color        | text        | Nullable                                                                                                                                                                                                                              |
+| icon         | text        | Nullable                                                                                                                                                                                                                              |
+| is_system    | boolean     | Default false                                                                                                                                                                                                                         |
+| type         | text        | Default 'expense'. CHECK in ('income', 'expense', 'transfer'). Income category seeded as 'income'; existing `Savings` system row renamed to `Savings Transfer` and flipped to 'transfer' by `20260527000001_savings_to_transfer.sql`. |
+| created_at   | timestamptz | Default now()                                                                                                                                                                                                                         |
+| updated_at   | timestamptz | Auto-updated via trigger                                                                                                                                                                                                              |
 
 Unique constraint: `(household_id, name)`
 

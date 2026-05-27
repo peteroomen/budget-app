@@ -82,11 +82,13 @@ export async function getDashboardData(month: string): Promise<DashboardData> {
 
   const total_budgeted_cents = budgetRows.reduce((s, b) => s + (b.amount_cents ?? 0), 0)
 
-  // Summary
+  // Summary — transfers (savings moves, CC payments) excluded from both income
+  // and spend; they're internal money movement, not real cashflow.
   let income_cents = 0
   let received_income_cents = 0
   let spend_cents = 0
   for (const t of transactions) {
+    if (t.category?.type === 'transfer') continue
     if (t.amount_cents > 0) {
       income_cents += t.amount_cents
       if (t.category?.type === 'income') {
@@ -97,7 +99,7 @@ export async function getDashboardData(month: string): Promise<DashboardData> {
     }
   }
 
-  // Spend by category (expenses only)
+  // Spend by category (expenses only; transfers excluded)
   const categoryMap = new Map<
     string,
     { category_name: string; category_color: string | null; spend_cents: number }
@@ -105,6 +107,7 @@ export async function getDashboardData(month: string): Promise<DashboardData> {
 
   for (const t of transactions) {
     if (t.amount_cents >= 0) continue
+    if (t.category?.type === 'transfer') continue
     const key = t.category_id ?? '__uncategorised__'
     const name = t.category?.name ?? 'Uncategorised'
     const color = t.category?.color ?? null
@@ -127,10 +130,11 @@ export async function getDashboardData(month: string): Promise<DashboardData> {
     }))
     .sort((a, b) => b.spend_cents - a.spend_cents)
 
-  // Top 5 merchants by spend (expenses only)
+  // Top 5 merchants by spend (expenses only; transfers excluded)
   const merchantMap = new Map<string, number>()
   for (const t of transactions) {
     if (t.amount_cents >= 0) continue
+    if (t.category?.type === 'transfer') continue
     const key = t.merchant_name ?? t.description
     merchantMap.set(key, (merchantMap.get(key) ?? 0) + Math.abs(t.amount_cents))
   }

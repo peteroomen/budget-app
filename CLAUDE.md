@@ -31,8 +31,9 @@ Core loop: import bank statements → AI categorises transactions → set budget
 > **Update this section at the end of every session.**
 
 - **Current phase:** Phase 5 — Polish (in progress). Phases 1–4 fully complete.
-- **Last session:** 2026-05-27 — Projected income (Phase 5 items A + B + dashboard piece). Added `categories.type` + `households.expected_monthly_income_cents`, Household settings tab, AllocationPanel on budgets, income-vs-expected + spend-vs-budgeted dashboard cards, and income data injected into chat + summary AI context. Item C (transfer exclusion) explicitly deferred. See `docs/work/2026-05-27-projected-income.md`.
-- **Last session:** 2026-05-27 — Per-row delete on the transactions screen. New `deleteTransaction` server action + `DeleteTransactionButton` (Dialog confirm + sonner toast). Desktop = hover-revealed trash icon in trailing column; mobile = always-visible icon in day list. See `docs/work/2026-05-27-tx-row-delete.md`. Worktree `/Users/peteroomen/personal/budget-app-tx-delete` on `feature/tx-row-delete`.
+- **Last session:** 2026-05-27 — Transfer exclusion (Phase 5 — Item C). Existing `Savings` system category renamed → `Savings Transfer` and flipped to `type='transfer'`; transfers now skipped in dashboard totals/category chart/top merchants, summary totals (current + prior month), chat-context transactions list / actuals / 3-month trends / recurring, and the Fixed Costs card. AI categoriser prompt updated with guidance + NZ example for Savings Transfer. Transaction list shows muted styling + outline "Transfer" badge for transfer rows; day-spend total excludes transfers. Category create/edit dialogs now expose a Type picker (income/expense/transfer). Credit Card Payment intentionally not seeded. See `docs/work/2026-05-27-transfer-exclusion.md`. Worktree `/Users/peteroomen/personal/budget-app-transfer-exclusion` on `feature/transfer-exclusion`.
+- **Previous session:** 2026-05-27 — Projected income (Phase 5 items A + B + dashboard piece). Added `categories.type` + `households.expected_monthly_income_cents`, Household settings tab, AllocationPanel on budgets, income-vs-expected + spend-vs-budgeted dashboard cards, and income data injected into chat + summary AI context. See `docs/work/2026-05-27-projected-income.md`.
+- **Previous session:** 2026-05-27 — Per-row delete on the transactions screen. New `deleteTransaction` server action + `DeleteTransactionButton` (Dialog confirm + sonner toast). Desktop = hover-revealed trash icon in trailing column; mobile = always-visible icon in day list. See `docs/work/2026-05-27-tx-row-delete.md`. Worktree `/Users/peteroomen/personal/budget-app-tx-delete` on `feature/tx-row-delete`.
 - **Previous session:** 2026-05-26 — Vercel edge middleware hotfix. Fixed `MIDDLEWARE_INVOCATION_FAILED` / `ReferenceError: __dirname` on every cold start. Production is healthy: `dpl_6axT7v2xMMvzBqm2iXQc9XW13ptK` (Next.js 15.5.18) is READY.
 - **All merged to main (build order items #1–#16 + extras):**
   - #1 Scaffold · #2 Auth + household · #3 Accounts CRUD
@@ -54,10 +55,7 @@ Core loop: import bank statements → AI categorises transactions → set budget
   - `scripts/patch-testmode.js`: prebuild that overwrites `node_modules/next/dist/experimental/testmode/context.js` with a noop (busts webpack cache on Vercel)
   - `eslint.config.mjs`: `{ ignores: ['src/.next/**'] }` prevents linting of build artifacts
   - Next.js `15.5.18` — do NOT downgrade; 15.3.3 is Vercel-blocked for CVE
-- **Open PRs:**
-  - **PR #21** `feature/tide-foundation` — Tide theme foundation (tokens, dark mode, fonts, primitives) — merge this first
-  - **PR #22** `feature/tide-pages` — all per-page Tide passes (Chunks 2 + 3 + layout/feature pass) — depends on PR #21
-  - **PR #23** `claude/thirsty-chatelet-df9f7d` — audit fixes + chat/summary bug fixes + sidebar polish — depends on PR #22
+- **Open PRs:** none on main as of 2026-05-27 (Tide PRs #21–#23, projected income #26, tx delete #27 all merged). A new PR for `feature/transfer-exclusion` (Item C) is open from this session.
 - **Tide/Editorial theme — what's in PRs #21 + #22:**
   - **Chunk 1 (PR #21):** CSS tokens (warm paper + near-black dark), `next-themes` + ThemeToggle, Fraunces + JetBrains Mono fonts, brand rename → "Tide", primitives (Button density, Card, Badge variants, Progress, Tabs segmented control, Input)
   - **Chunk 2+3 + layout/feature pass (PR #22):**

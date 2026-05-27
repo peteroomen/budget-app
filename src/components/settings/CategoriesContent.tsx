@@ -1,10 +1,16 @@
-import type { Category } from '@/types'
+import type { Category, CategoryType } from '@/types'
 import { AddCategoryDialog } from '@/components/categories/AddCategoryDialog'
 import { EditCategoryDialog } from '@/components/categories/EditCategoryDialog'
 import { DeleteCategoryButton } from '@/components/categories/DeleteCategoryButton'
 
 interface CategoriesContentProps {
   categories: Category[]
+}
+
+const TYPE_LABEL: Record<CategoryType, string> = {
+  income: 'Income',
+  expense: 'Expense',
+  transfer: 'Transfer',
 }
 
 export function CategoriesContent({ categories }: CategoriesContentProps) {
@@ -29,6 +35,7 @@ export function CategoriesContent({ categories }: CategoriesContentProps) {
               <tr className="border-b bg-muted/50">
                 <th className="px-4 py-3 text-left font-medium text-muted-foreground">Name</th>
                 <th className="px-4 py-3 text-left font-medium text-muted-foreground">Type</th>
+                <th className="px-4 py-3 text-left font-medium text-muted-foreground">Origin</th>
                 <th className="px-4 py-3 text-right font-medium text-muted-foreground">Actions</th>
               </tr>
             </thead>
@@ -44,6 +51,7 @@ export function CategoriesContent({ categories }: CategoriesContentProps) {
                       {category.name}
                     </div>
                   </td>
+                  <td className="px-4 py-3 text-muted-foreground">{TYPE_LABEL[category.type]}</td>
                   <td className="px-4 py-3 text-muted-foreground">
                     {category.is_system ? 'Default' : 'Custom'}
                   </td>

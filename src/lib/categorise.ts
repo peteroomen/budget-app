@@ -44,6 +44,7 @@ Category guidance:
 - "Dining & Takeaways": restaurants, cafes, fast food, food delivery (e.g. Uber Eats, Menulog), any eating out or takeaway order
 - "Housing": mortgage repayments, rent, council rates, body corporate fees
 - "Income": salary, wages, government payments (e.g. Working for Families, NZ Super), tax refunds, IRD credits
+- "Savings Transfer": transfers from a spending account to your own savings/investment accounts (e.g. "TRANSFER TO SAVINGS", "TO 12-3456-7890123-00 SAVINGS", "INVESTACC")
 
 Rules:
 - Return exactly one category per merchant
@@ -57,7 +58,8 @@ Merchants:
 2: BP 2GO
 3: SPARK NZ
 4: VIVID WAGES
-Output: [{"index":0,"category":"Groceries"},{"index":1,"category":"Dining & Takeaways"},{"index":2,"category":"Fuel"},{"index":3,"category":"Utilities"},{"index":4,"category":"Income"}]
+5: TRANSFER TO SAVINGS
+Output: [{"index":0,"category":"Groceries"},{"index":1,"category":"Dining & Takeaways"},{"index":2,"category":"Fuel"},{"index":3,"category":"Utilities"},{"index":4,"category":"Income"},{"index":5,"category":"Savings Transfer"}]
 
 Merchants:
 ${indexedList}`,
