@@ -2,8 +2,16 @@
 
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
+import type { CategoryType } from '@/types'
 
 type ActionResult = { error: string | null }
+
+const VALID_TYPES: CategoryType[] = ['income', 'expense', 'transfer']
+
+function parseType(value: FormDataEntryValue | null): CategoryType | null {
+  if (typeof value !== 'string') return null
+  return (VALID_TYPES as string[]).includes(value) ? (value as CategoryType) : null
+}
 
 async function getHouseholdId(): Promise<string | null> {
   const supabase = await createClient()
@@ -27,6 +35,7 @@ export async function createCategory(
 ): Promise<ActionResult> {
   const name = formData.get('name')
   const color = formData.get('color')
+  const type = parseType(formData.get('type')) ?? 'expense'
 
   if (typeof name !== 'string' || !name.trim()) return { error: 'Category name is required' }
 
@@ -38,6 +47,7 @@ export async function createCategory(
     household_id: householdId,
     name: name.trim(),
     color: typeof color === 'string' && color ? color : null,
+    type,
     is_system: false,
   })
 
@@ -57,6 +67,7 @@ export async function updateCategory(
   const id = formData.get('id')
   const name = formData.get('name')
   const color = formData.get('color')
+  const type = parseType(formData.get('type'))
 
   if (typeof id !== 'string' || !id) return { error: 'Category ID is required' }
   if (typeof name !== 'string' || !name.trim()) return { error: 'Category name is required' }
@@ -65,12 +76,15 @@ export async function updateCategory(
   const householdId = await getHouseholdId()
   if (!householdId) return { error: 'No household found' }
 
+  const update: { name: string; color: string | null; type?: CategoryType } = {
+    name: name.trim(),
+    color: typeof color === 'string' && color ? color : null,
+  }
+  if (type) update.type = type
+
   const { error } = await supabase
     .from('categories')
-    .update({
-      name: name.trim(),
-      color: typeof color === 'string' && color ? color : null,
-    })
+    .update(update)
     .eq('id', id)
     .eq('household_id', householdId)
 
