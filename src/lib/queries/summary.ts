@@ -12,6 +12,13 @@ export interface MerchantSummaryRow {
   spend_cents: number
 }
 
+export interface NotedTransactionRow {
+  date: string
+  merchant: string
+  amount_cents: number
+  note: string
+}
+
 export interface SummaryContext {
   month: string
   monthLabel: string
@@ -22,6 +29,7 @@ export interface SummaryContext {
   net_cents: number
   categories: CategorySummaryRow[]
   topMerchants: MerchantSummaryRow[]
+  notedTransactions: NotedTransactionRow[]
   priorMonthSpend: number | null
   priorMonthLabel: string | null
   priorMonthCategories: CategorySummaryRow[] | null
@@ -30,9 +38,11 @@ export interface SummaryContext {
 }
 
 type TxRow = {
+  date: string
   amount_cents: number
   merchant_name: string | null
   description: string
+  notes: string | null
   category_id: string | null
   category: { name: string; type: string } | null
 }
@@ -75,7 +85,7 @@ export async function getSummaryContext(month: string): Promise<SummaryContext> 
     supabase
       .from('transactions')
       .select(
-        'amount_cents, merchant_name, description, category_id, category:categories(name, type)'
+        'date, amount_cents, merchant_name, description, notes, category_id, category:categories(name, type)'
       )
       .gte('date', dateFrom)
       .lte('date', dateTo),
@@ -102,6 +112,7 @@ export async function getSummaryContext(month: string): Promise<SummaryContext> 
       net_cents: 0,
       categories: [],
       topMerchants: [],
+      notedTransactions: [],
       priorMonthSpend: null,
       priorMonthLabel: null,
       priorMonthCategories: null,
@@ -162,6 +173,18 @@ export async function getSummaryContext(month: string): Promise<SummaryContext> 
     .sort((a, b) => b.spend_cents - a.spend_cents)
     .slice(0, 5)
 
+  // Noted transactions — surface verbatim notes to Claude
+  const notedTransactions: NotedTransactionRow[] = current
+    .filter((t) => t.notes !== null && t.notes.trim().length > 0)
+    .map((t) => ({
+      date: t.date,
+      merchant: t.merchant_name ?? t.description,
+      amount_cents: t.amount_cents,
+      note: t.notes!.trim(),
+    }))
+    .sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0))
+    .slice(0, 30)
+
   // Prior month
   let priorMonthSpend: number | null = null
   let priorMonthCategories: CategorySummaryRow[] | null = null
@@ -201,6 +224,7 @@ export async function getSummaryContext(month: string): Promise<SummaryContext> 
     net_cents: income_cents - spend_cents,
     categories,
     topMerchants,
+    notedTransactions,
     priorMonthSpend,
     priorMonthLabel: priorTxs.length > 0 ? formatMonthLabel(prior) : null,
     priorMonthCategories,
@@ -300,6 +324,19 @@ export function buildSummaryPrompt(ctx: SummaryContext): string {
       for (const c of ctx.priorMonthCategories) {
         lines.push(`- ${c.name}: ${fmt(c.actual_cents)}`)
       }
+    }
+  }
+
+  if (ctx.notedTransactions.length > 0) {
+    lines.push(
+      '',
+      `Transactions with notes (${ctx.monthLabel}) — user-supplied context. Use these to inform notablePatterns or spendNote; do not invent commentary about un-noted transactions:`
+    )
+    for (const n of ctx.notedTransactions) {
+      const sign = n.amount_cents < 0 ? '-' : '+'
+      lines.push(
+        `- ${n.date}, ${n.merchant}, ${sign}${fmt(Math.abs(n.amount_cents))}, note: ${n.note}`
+      )
     }
   }
 
