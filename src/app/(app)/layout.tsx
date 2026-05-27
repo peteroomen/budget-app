@@ -1,48 +1,22 @@
 import { redirect } from 'next/navigation'
 import { Upload } from 'lucide-react'
-import { getCurrentProfile } from '@/lib/queries/profile'
+import { getCurrentUserContext } from '@/lib/queries/profile'
 import { SidebarNav } from '@/components/nav/SidebarNav'
 import { BottomTabBar } from '@/components/nav/BottomTabBar'
 import { MobileDrawer, MobileNotificationBell } from '@/components/nav/MobileDrawer'
 import { MobileNavProvider } from '@/components/nav/MobileNavContext'
+import { ProfileChip } from '@/components/nav/ProfileChip'
 import { Separator } from '@/components/ui/separator'
 import { Button } from '@/components/ui/button'
-import { Avatar, AvatarFallback } from '@/components/ui/avatar'
-import { SignOutButton } from '@/components/auth/SignOutButton'
 import { SidebarThemeRow } from '@/components/theme/ThemeToggle'
 import { TideLogo } from '@/components/TideLogo'
-import { getInitials } from '@/lib/utils'
-import type { Profile } from '@/types'
-
-function SidebarUserFooter({ profile }: { profile: Profile }) {
-  const initials = getInitials(profile.display_name, profile.email)
-  const displayName = profile.display_name ?? profile.email
-
-  return (
-    <div className="flex items-center justify-between gap-2 px-3 py-3">
-      <div className="flex min-w-0 items-center gap-2.5">
-        <Avatar className="h-8 w-8 shrink-0 rounded-md">
-          <AvatarFallback className="rounded-md bg-gradient-to-br from-primary to-primary/60 text-primary-foreground text-xs font-semibold">
-            {initials}
-          </AvatarFallback>
-        </Avatar>
-        <div className="min-w-0">
-          <p className="truncate text-xs font-medium leading-tight">{displayName}</p>
-          <p className="truncate text-[11px] text-muted-foreground leading-tight">
-            {profile.email}
-          </p>
-        </div>
-      </div>
-      <SignOutButton />
-    </div>
-  )
-}
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
-  const profile = await getCurrentProfile()
-  if (!profile) {
+  const ctx = await getCurrentUserContext()
+  if (!ctx) {
     redirect('/login')
   }
+  const { profile, activeHouseholdId, activeHouseholdName, memberships } = ctx
 
   return (
     <div className="flex h-dvh overflow-hidden">
@@ -65,7 +39,15 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         {/* Theme toggle row + user chip */}
         <SidebarThemeRow />
         <Separator />
-        <SidebarUserFooter profile={profile} />
+        <div className="px-2 py-2">
+          <ProfileChip
+            profile={profile}
+            activeHouseholdId={activeHouseholdId}
+            activeHouseholdName={activeHouseholdName}
+            memberships={memberships}
+            variant="sidebar"
+          />
+        </div>
       </aside>
 
       {/* ── Right column — wrapped in MobileNavProvider for drawer↔tab-bar state ── */}
@@ -75,7 +57,12 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           <header className="flex h-14 shrink-0 items-center justify-between border-b bg-background px-4 md:px-6">
             {/* Mobile: hamburger + brand */}
             <div className="flex items-center gap-3 md:hidden">
-              <MobileDrawer profile={profile} />
+              <MobileDrawer
+                profile={profile}
+                activeHouseholdId={activeHouseholdId}
+                activeHouseholdName={activeHouseholdName}
+                memberships={memberships}
+              />
               <div className="flex items-center gap-2">
                 <TideLogo size={24} />
                 <span className="font-display text-display-wordmark font-semibold">Tide</span>

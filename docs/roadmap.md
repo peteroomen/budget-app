@@ -266,6 +266,7 @@ Three items that must be built in order — A is the schema foundation, B and C 
 
 - [x] Monthly summary view — Claude-generated one-page recap (spend vs budget, vs prior month, notable patterns)
 - [x] Full-text transaction search — shipped as part of Tide pass
+- [x] **Multi-household + profile-chip switcher** — `household_members` join table, in-app create-household action, profile chip shows display name + active household subtitle, Popover menu lists memberships + create + settings + sign-out. Settings → Household tab gets a "Households" panel for create/switch. See `docs/work/2026-05-28-multi-household.md`.
 - [ ] **Merge Dining Out + Takeaways → "Dining & Takeaways"** — the two categories overlap too much in practice. Migration: rename "Dining Out", reassign all transactions + merchant_category_map rows from "Takeaways", delete "Takeaways". One migration file.
 - [ ] **Add "Housing" default category** — mortgage, rent, body corp, rates have no home. Add system category via migration; update AI categorisation prompt examples.
 - [ ] **Transaction notes UI + Claude awareness** — `notes` column exists but is invisible. (a) inline editable note on the transaction row; (b) inject non-empty notes into chat context + summary prompt so Claude sees annotations like "normal — dog vet, every 3 months".

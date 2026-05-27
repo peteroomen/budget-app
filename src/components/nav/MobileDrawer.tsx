@@ -2,21 +2,22 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
-import { Menu, X, LogOut, Bell } from 'lucide-react'
+import { Menu, X, Bell } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Sheet, SheetContent, SheetTitle } from '@/components/ui/sheet'
-import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { ThemeToggle } from '@/components/theme/ThemeToggle'
+import { ProfileChip } from '@/components/nav/ProfileChip'
 import { PRIMARY_NAV, SECONDARY_NAV } from '@/components/nav/nav-items'
 import { useMobileNav } from '@/components/nav/MobileNavContext'
-import { signOut } from '@/lib/actions/auth'
-import { getInitials } from '@/lib/utils'
 import { cn } from '@/lib/utils'
 import type { LucideIcon } from 'lucide-react'
-import type { Profile } from '@/types'
+import type { HouseholdMembership, Profile } from '@/types'
 
 interface MobileDrawerProps {
   profile: Profile
+  activeHouseholdId: string | null
+  activeHouseholdName: string | null
+  memberships: HouseholdMembership[]
 }
 
 function DrawerNavRow({
@@ -50,27 +51,27 @@ function DrawerNavRow({
   )
 }
 
-export function MobileDrawer({ profile }: MobileDrawerProps) {
+export function MobileDrawer({
+  profile,
+  activeHouseholdId,
+  activeHouseholdName,
+  memberships,
+}: MobileDrawerProps) {
   const { setDrawerOpen } = useMobileNav()
   const [open, setOpen] = useState(false)
   const router = useRouter()
   const scrollRef = useRef<HTMLDivElement>(null)
-  const initials = getInitials(profile.display_name, profile.email)
-  const displayName = profile.display_name ?? profile.email
 
-  // Sync open state into context so BottomTabBar can go inert
   useEffect(() => {
     setDrawerOpen(open)
   }, [open, setDrawerOpen])
 
-  // Reset scroll position every time the drawer opens
   useEffect(() => {
     if (open) {
       scrollRef.current?.scrollTo({ top: 0 })
     }
   }, [open])
 
-  // Close drawer, then navigate after the 220ms slide-down animation completes
   function closeAndNavigate(href: string) {
     setOpen(false)
     setTimeout(() => router.push(href), 220)
@@ -93,21 +94,11 @@ export function MobileDrawer({ profile }: MobileDrawerProps) {
           side="bottom"
           overlayClassName="bg-black/40 backdrop-blur-[2px]"
           hideDefaultClose
-          className={cn(
-            // Bottom-sheet shape: rounded top corners, no top border
-            'rounded-t-[18px] border-t-0',
-            // Height constraint
-            'max-h-[85vh]',
-            // Layout
-            'flex flex-col p-0 gap-0'
-          )}
+          className={cn('rounded-t-[18px] border-t-0', 'max-h-[85vh]', 'flex flex-col p-0 gap-0')}
         >
-          {/* Accessible title (sr-only so we control the visible one below) */}
           <SheetTitle className="sr-only">Navigation</SheetTitle>
 
-          {/* Scrollable body */}
           <div ref={scrollRef} className="flex flex-col overflow-y-auto">
-            {/* Header row */}
             <div className="flex items-center justify-between px-4 pt-5 pb-3">
               <span className="font-display text-[16px] font-semibold leading-none">Menu</span>
               <Button
@@ -120,26 +111,22 @@ export function MobileDrawer({ profile }: MobileDrawerProps) {
               </Button>
             </div>
 
-            {/* User chip row */}
-            <div className="flex items-center gap-2.5 px-4 py-2.5">
-              <Avatar className="h-9 w-9 shrink-0 rounded-full">
-                <AvatarFallback className="rounded-full bg-gradient-to-br from-primary to-primary/60 text-primary-foreground text-sm font-semibold">
-                  {initials}
-                </AvatarFallback>
-              </Avatar>
+            {/* Profile chip (avatar + name + household subtitle, popover with switcher + sign-out) */}
+            <div className="flex items-center gap-2 pl-1 pr-3">
               <div className="min-w-0 flex-1">
-                <p className="truncate text-[14px] font-medium leading-tight">{displayName}</p>
-                <p className="truncate text-[12px] text-muted-foreground leading-tight">
-                  {profile.email}
-                </p>
+                <ProfileChip
+                  profile={profile}
+                  activeHouseholdId={activeHouseholdId}
+                  activeHouseholdName={activeHouseholdName}
+                  memberships={memberships}
+                  variant="mobile"
+                />
               </div>
               <ThemeToggle />
             </div>
 
-            {/* Full-bleed divider — negative margin escapes the px-4 panel padding */}
             <div className="mx-0 h-px bg-border" />
 
-            {/* Nav items */}
             <nav className="flex flex-col px-3 py-3">
               {PRIMARY_NAV.map(({ href, label, icon }) => (
                 <DrawerNavRow
@@ -151,7 +138,6 @@ export function MobileDrawer({ profile }: MobileDrawerProps) {
                 />
               ))}
 
-              {/* Divider between primary and secondary */}
               <div className="-mx-3 my-1.5 h-px bg-border/60" />
 
               {SECONDARY_NAV.map(({ href, label, icon }) => (
@@ -165,23 +151,6 @@ export function MobileDrawer({ profile }: MobileDrawerProps) {
               ))}
             </nav>
 
-            {/* Full-bleed divider above sign-out */}
-            <div className="mx-0 h-px bg-border" />
-
-            {/* Sign-out row */}
-            <div className="px-3 py-3">
-              <form action={signOut}>
-                <button
-                  type="submit"
-                  className="flex w-full items-center gap-3 rounded-lg px-2 py-3 text-[15px] font-medium text-destructive transition-colors hover:bg-destructive/8 active:opacity-70"
-                >
-                  <LogOut size={18} strokeWidth={1.75} className="shrink-0" />
-                  Sign out
-                </button>
-              </form>
-            </div>
-
-            {/* Bottom safe-area spacer */}
             <div style={{ paddingBottom: 'max(16px, env(safe-area-inset-bottom))' }} />
           </div>
         </SheetContent>
@@ -190,7 +159,6 @@ export function MobileDrawer({ profile }: MobileDrawerProps) {
   )
 }
 
-// Named export of the notification bell so layout can co-locate it with the drawer button
 export function MobileNotificationBell() {
   return (
     <Button variant="ghost" size="icon-sm" aria-label="Notifications" className="md:hidden">
