@@ -10,6 +10,7 @@ import {
 import type { TransactionRow, TransactionSortBy, SortDir } from '@/lib/queries/transactions'
 import type { Category } from '@/types'
 import { cn } from '@/lib/utils'
+import { Badge } from '@/components/ui/badge'
 import { CategoryCell } from './CategoryCell'
 import { RecurringBadge } from './RecurringBadge'
 import { ManualBadge } from './ManualBadge'
@@ -156,57 +157,75 @@ export function TransactionTable({
           </TableRow>
         </TableHeader>
         <TableBody>
-          {rows.map((tx) => (
-            <TableRow key={tx.id} className="group hover:bg-muted/40 align-top">
-              <TableCell className="font-mono text-body-sm tabular-nums text-muted-foreground whitespace-nowrap">
-                {formatRelativeDate(tx.date)}
-              </TableCell>
-
-              <TableCell>
-                <p className="font-medium leading-snug">{tx.merchant_name ?? tx.description}</p>
-                {(tx.is_recurring || tx.category_source === 'manual') && (
-                  <div className="mt-1.5 flex flex-wrap gap-1.5">
-                    <RecurringBadge transactionId={tx.id} isRecurring={tx.is_recurring} />
-                    <ManualBadge isManual={tx.category_source === 'manual'} />
-                  </div>
+          {rows.map((tx) => {
+            const isTransfer = tx.category?.type === 'transfer'
+            return (
+              <TableRow
+                key={tx.id}
+                className={cn(
+                  'group hover:bg-muted/40 align-top',
+                  isTransfer && 'text-muted-foreground'
                 )}
-              </TableCell>
-
-              <TableCell>
-                <CategoryCell
-                  transactionId={tx.id}
-                  merchantName={tx.merchant_name}
-                  categoryId={tx.category_id}
-                  hasMerchantMapping={
-                    tx.merchant_name !== null && mappedMerchants.has(tx.merchant_name)
-                  }
-                  categories={categories}
-                />
-              </TableCell>
-
-              <TableCell className="text-sm text-muted-foreground">
-                {tx.account?.name ?? '—'}
-              </TableCell>
-
-              <TableCell
-                className={`font-mono text-body-sm tabular-nums text-right font-medium ${
-                  tx.amount_cents > 0 ? 'text-success' : ''
-                }`}
               >
-                {tx.amount_cents > 0 ? '+' : ''}
-                {formatAmount(tx.amount_cents)}
-              </TableCell>
+                <TableCell className="font-mono text-body-sm tabular-nums text-muted-foreground whitespace-nowrap">
+                  {formatRelativeDate(tx.date)}
+                </TableCell>
 
-              <TableCell className="w-9 p-0 pr-2">
-                <div className="opacity-0 transition-opacity group-hover:opacity-100 focus-within:opacity-100">
-                  <DeleteTransactionButton
+                <TableCell>
+                  <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
+                    <p className={cn('font-medium leading-snug', isTransfer && 'font-normal')}>
+                      {tx.merchant_name ?? tx.description}
+                    </p>
+                    {isTransfer && (
+                      <Badge variant="outline" className="font-normal">
+                        Transfer
+                      </Badge>
+                    )}
+                  </div>
+                  {(tx.is_recurring || tx.category_source === 'manual') && (
+                    <div className="mt-1.5 flex flex-wrap gap-1.5">
+                      <RecurringBadge transactionId={tx.id} isRecurring={tx.is_recurring} />
+                      <ManualBadge isManual={tx.category_source === 'manual'} />
+                    </div>
+                  )}
+                </TableCell>
+
+                <TableCell>
+                  <CategoryCell
                     transactionId={tx.id}
-                    label={tx.merchant_name ?? tx.description}
+                    merchantName={tx.merchant_name}
+                    categoryId={tx.category_id}
+                    hasMerchantMapping={
+                      tx.merchant_name !== null && mappedMerchants.has(tx.merchant_name)
+                    }
+                    categories={categories}
                   />
-                </div>
-              </TableCell>
-            </TableRow>
-          ))}
+                </TableCell>
+
+                <TableCell className="text-sm text-muted-foreground">
+                  {tx.account?.name ?? '—'}
+                </TableCell>
+
+                <TableCell
+                  className={`font-mono text-body-sm tabular-nums text-right font-medium ${
+                    tx.amount_cents > 0 ? 'text-success' : ''
+                  }`}
+                >
+                  {tx.amount_cents > 0 ? '+' : ''}
+                  {formatAmount(tx.amount_cents)}
+                </TableCell>
+
+                <TableCell className="w-9 p-0 pr-2">
+                  <div className="opacity-0 transition-opacity group-hover:opacity-100 focus-within:opacity-100">
+                    <DeleteTransactionButton
+                      transactionId={tx.id}
+                      label={tx.merchant_name ?? tx.description}
+                    />
+                  </div>
+                </TableCell>
+              </TableRow>
+            )
+          })}
         </TableBody>
       </Table>
     </div>
