@@ -27,3 +27,33 @@ export function monthDateRange(month: string): { dateFrom: string; dateTo: strin
     dateTo: format(endOfMonth(monthDate), 'yyyy-MM-dd'),
   }
 }
+
+export type MonthStatus = 'future' | 'in_progress' | 'closed'
+
+export interface MonthStatusInfo {
+  status: MonthStatus
+  dayOfMonth: number | null
+  daysInMonth: number
+}
+
+/**
+ * Classifies a YYYY-MM month relative to today.
+ * - 'in_progress' if the month contains today
+ * - 'closed' if the month ended before today
+ * - 'future' if the month starts after today
+ * dayOfMonth is null for closed/future months.
+ */
+export function monthStatus(month: string, now: Date = new Date()): MonthStatusInfo {
+  const monthDate = parseISO(`${month}-01`)
+  const start = startOfMonth(monthDate)
+  const end = endOfMonth(monthDate)
+  const daysInMonth = end.getDate()
+
+  if (now < start) {
+    return { status: 'future', dayOfMonth: null, daysInMonth }
+  }
+  if (now > end) {
+    return { status: 'closed', dayOfMonth: null, daysInMonth }
+  }
+  return { status: 'in_progress', dayOfMonth: now.getDate(), daysInMonth }
+}

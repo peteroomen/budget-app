@@ -31,6 +31,7 @@ Core loop: import bank statements → AI categorises transactions → set budget
 > **Update this section at the end of every session.**
 
 - **Current phase:** Phase 5 — Polish (in progress). Phases 1–4 fully complete.
+- **Last session:** 2026-05-27 — Projected income (Phase 5 items A + B + dashboard piece). Added `categories.type` + `households.expected_monthly_income_cents`, Household settings tab, AllocationPanel on budgets, income-vs-expected + spend-vs-budgeted dashboard cards, and income data injected into chat + summary AI context. Item C (transfer exclusion) explicitly deferred. See `docs/work/2026-05-27-projected-income.md`.
 - **Last session:** 2026-05-27 — Per-row delete on the transactions screen. New `deleteTransaction` server action + `DeleteTransactionButton` (Dialog confirm + sonner toast). Desktop = hover-revealed trash icon in trailing column; mobile = always-visible icon in day list. See `docs/work/2026-05-27-tx-row-delete.md`. Worktree `/Users/peteroomen/personal/budget-app-tx-delete` on `feature/tx-row-delete`.
 - **Previous session:** 2026-05-26 — Vercel edge middleware hotfix. Fixed `MIDDLEWARE_INVOCATION_FAILED` / `ReferenceError: __dirname` on every cold start. Production is healthy: `dpl_6axT7v2xMMvzBqm2iXQc9XW13ptK` (Next.js 15.5.18) is READY.
 - **All merged to main (build order items #1–#16 + extras):**

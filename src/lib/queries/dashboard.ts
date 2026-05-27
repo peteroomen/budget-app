@@ -15,7 +15,10 @@ export interface MerchantSpend {
 
 export interface DashboardSummary {
   income_cents: number
+  received_income_cents: number
+  expected_income_cents: number | null
   spend_cents: number
+  total_budgeted_cents: number
   net_cents: number
 }
 
@@ -31,30 +34,64 @@ type TxRow = {
   merchant_name: string | null
   description: string
   category_id: string | null
-  category: { name: string; color: string | null } | null
+  category: { name: string; color: string | null; type: string } | null
 }
 
 export async function getDashboardData(month: string): Promise<DashboardData> {
   const supabase = await createClient()
   const { dateFrom, dateTo } = monthDateRange(month)
 
-  const { data: rows, error } = await supabase
-    .from('transactions')
-    .select(
-      'amount_cents, merchant_name, description, category_id, category:categories(name, color)'
-    )
-    .gte('date', dateFrom)
-    .lte('date', dateTo)
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
 
-  if (error) console.error('getDashboardData:', error.message)
-  const transactions = (rows ?? []) as unknown as TxRow[]
+  let expected_income_cents: number | null = null
+  if (user) {
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('household_id')
+      .eq('id', user.id)
+      .maybeSingle()
+
+    if (profile?.household_id) {
+      const { data: household } = await supabase
+        .from('households')
+        .select('expected_monthly_income_cents')
+        .eq('id', profile.household_id)
+        .maybeSingle()
+      expected_income_cents = household?.expected_monthly_income_cents ?? null
+    }
+  }
+
+  const [txResult, budgetsResult] = await Promise.all([
+    supabase
+      .from('transactions')
+      .select(
+        'amount_cents, merchant_name, description, category_id, category:categories(name, color, type)'
+      )
+      .gte('date', dateFrom)
+      .lte('date', dateTo),
+    supabase.from('budgets').select('amount_cents').eq('month', month),
+  ])
+
+  if (txResult.error) console.error('getDashboardData/tx:', txResult.error.message)
+  if (budgetsResult.error) console.error('getDashboardData/budgets:', budgetsResult.error.message)
+
+  const transactions = (txResult.data ?? []) as unknown as TxRow[]
+  const budgetRows = (budgetsResult.data ?? []) as { amount_cents: number }[]
+
+  const total_budgeted_cents = budgetRows.reduce((s, b) => s + (b.amount_cents ?? 0), 0)
 
   // Summary
   let income_cents = 0
+  let received_income_cents = 0
   let spend_cents = 0
   for (const t of transactions) {
     if (t.amount_cents > 0) {
       income_cents += t.amount_cents
+      if (t.category?.type === 'income') {
+        received_income_cents += t.amount_cents
+      }
     } else {
       spend_cents += Math.abs(t.amount_cents)
     }
@@ -105,7 +142,14 @@ export async function getDashboardData(month: string): Promise<DashboardData> {
 
   return {
     month,
-    summary: { income_cents, spend_cents, net_cents: income_cents - spend_cents },
+    summary: {
+      income_cents,
+      received_income_cents,
+      expected_income_cents,
+      spend_cents,
+      total_budgeted_cents,
+      net_cents: income_cents - spend_cents,
+    },
     byCategory,
     topMerchants,
   }

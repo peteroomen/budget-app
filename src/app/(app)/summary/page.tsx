@@ -96,7 +96,8 @@ async function SummaryContent({ month }: { month: string }) {
         'You are a financial analyst for a NZ household. ' +
         'Analyse the provided spending data and return ONLY a raw JSON object — no markdown, no code fences, no explanation. ' +
         'Be specific, honest, and reference exact NZD amounts. ' +
-        'Keep notes concise — one to three sentences each.',
+        'Keep notes concise — one to three sentences each. ' +
+        'Income framing: when the month is in progress, treat pending expected income as on-track to arrive — do not flag it as a problem. When the month is closed, if expected income met plan and spending stayed within budget, report it as the expected outcome without celebration. If income fell short of plan, or spending exceeded income or budget, be realistic about what went wrong — do not soften the analysis.',
       prompt,
       maxOutputTokens: 1024,
     })

@@ -2,7 +2,9 @@ import Link from 'next/link'
 import { getDashboardData } from '@/lib/queries/dashboard'
 import { getFixedCostsSummary } from '@/lib/queries/recurring'
 import { formatMonthLabel } from '@/lib/utils/month'
-import { IncomeVsSpendCards } from '@/components/dashboard/IncomeVsSpendCards'
+import { IncomeVsExpectedCard } from '@/components/dashboard/IncomeVsExpectedCard'
+import { SpendVsBudgetedCard } from '@/components/dashboard/SpendVsBudgetedCard'
+import { NetCard } from '@/components/dashboard/NetCard'
 import { SpendByCategoryChart } from '@/components/dashboard/SpendByCategoryChart'
 import { TopMerchantsTable } from '@/components/dashboard/TopMerchantsTable'
 import { FixedCostsCard } from '@/components/dashboard/FixedCostsCard'
@@ -12,6 +14,11 @@ export async function DashboardContent({ month }: { month: string }) {
     getDashboardData(month),
     getFixedCostsSummary(month),
   ])
+
+  const receivedForCard =
+    data.summary.expected_income_cents !== null
+      ? data.summary.received_income_cents
+      : data.summary.income_cents
 
   return (
     <>
@@ -26,7 +33,20 @@ export async function DashboardContent({ month }: { month: string }) {
       )}
 
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <IncomeVsSpendCards summary={data.summary} />
+        <IncomeVsExpectedCard
+          received_cents={receivedForCard}
+          expected_cents={data.summary.expected_income_cents}
+          month={month}
+        />
+        <SpendVsBudgetedCard
+          spend_cents={data.summary.spend_cents}
+          budgeted_cents={data.summary.total_budgeted_cents}
+        />
+        <NetCard
+          income_cents={data.summary.income_cents}
+          spend_cents={data.summary.spend_cents}
+          expected_income_cents={data.summary.expected_income_cents}
+        />
         <FixedCostsCard summary={fixedCosts} />
       </div>
 

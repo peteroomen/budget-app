@@ -1,5 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
-import { monthDateRange, formatMonthLabel, prevMonth } from '@/lib/utils/month'
+import { monthDateRange, formatMonthLabel, prevMonth, monthStatus } from '@/lib/utils/month'
 
 export interface CategorySummaryRow {
   name: string
@@ -16,6 +16,8 @@ export interface SummaryContext {
   month: string
   monthLabel: string
   income_cents: number
+  received_income_cents: number
+  expected_income_cents: number | null
   spend_cents: number
   net_cents: number
   categories: CategorySummaryRow[]
@@ -32,7 +34,7 @@ type TxRow = {
   merchant_name: string | null
   description: string
   category_id: string | null
-  category: { name: string } | null
+  category: { name: string; type: string } | null
 }
 
 type PriorTxRow = {
@@ -47,10 +49,34 @@ export async function getSummaryContext(month: string): Promise<SummaryContext> 
   const prior = prevMonth(month)
   const { dateFrom: priorFrom, dateTo: priorTo } = monthDateRange(prior)
 
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  let expected_income_cents: number | null = null
+  if (user) {
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('household_id')
+      .eq('id', user.id)
+      .maybeSingle()
+
+    if (profile?.household_id) {
+      const { data: household } = await supabase
+        .from('households')
+        .select('expected_monthly_income_cents')
+        .eq('id', profile.household_id)
+        .maybeSingle()
+      expected_income_cents = household?.expected_monthly_income_cents ?? null
+    }
+  }
+
   const [currentResult, budgetResult, priorResult] = await Promise.all([
     supabase
       .from('transactions')
-      .select('amount_cents, merchant_name, description, category_id, category:categories(name)')
+      .select(
+        'amount_cents, merchant_name, description, category_id, category:categories(name, type)'
+      )
       .gte('date', dateFrom)
       .lte('date', dateTo),
     supabase.from('budgets').select('category_id, amount_cents').eq('month', month),
@@ -70,6 +96,8 @@ export async function getSummaryContext(month: string): Promise<SummaryContext> 
       month,
       monthLabel: formatMonthLabel(month),
       income_cents: 0,
+      received_income_cents: 0,
+      expected_income_cents,
       spend_cents: 0,
       net_cents: 0,
       categories: [],
@@ -84,10 +112,15 @@ export async function getSummaryContext(month: string): Promise<SummaryContext> 
 
   // Totals
   let income_cents = 0
+  let received_income_cents = 0
   let spend_cents = 0
   for (const t of current) {
-    if (t.amount_cents > 0) income_cents += t.amount_cents
-    else spend_cents += Math.abs(t.amount_cents)
+    if (t.amount_cents > 0) {
+      income_cents += t.amount_cents
+      if (t.category?.type === 'income') received_income_cents += t.amount_cents
+    } else {
+      spend_cents += Math.abs(t.amount_cents)
+    }
   }
 
   // Category actuals (expenses only)
@@ -101,7 +134,10 @@ export async function getSummaryContext(month: string): Promise<SummaryContext> 
   }
   if (actualMap.has('__uncategorised__')) categoryNames.set('__uncategorised__', 'Uncategorised')
 
-  const budgetMap = new Map<string, number>(budgets.map((b) => [b.category_id, b.amount_cents]))
+  type BudgetRow = { category_id: string; amount_cents: number }
+  const budgetMap = new Map<string, number>(
+    (budgets as BudgetRow[]).map((b) => [b.category_id, b.amount_cents])
+  )
 
   const categories: CategorySummaryRow[] = Array.from(actualMap.entries())
     .map(([id, actual_cents]) => ({
@@ -156,6 +192,8 @@ export async function getSummaryContext(month: string): Promise<SummaryContext> 
     month,
     monthLabel: formatMonthLabel(month),
     income_cents,
+    received_income_cents,
+    expected_income_cents,
     spend_cents,
     net_cents: income_cents - spend_cents,
     categories,
@@ -176,14 +214,57 @@ export function buildSummaryPrompt(ctx: SummaryContext): string {
       minimumFractionDigits: 2,
     }).format(cents / 100)
 
+  const status = monthStatus(ctx.month)
+  const statusLine =
+    status.status === 'in_progress'
+      ? `Income status: month in progress (day ${status.dayOfMonth} of ${status.daysInMonth})`
+      : status.status === 'closed'
+        ? `Income status: month closed`
+        : `Income status: future month (not yet started)`
+
   const lines: string[] = [
     `Month: ${ctx.monthLabel}`,
+    statusLine,
     `Total income: ${fmt(ctx.income_cents)}`,
     `Total spend: ${fmt(ctx.spend_cents)}`,
     `Net: ${fmt(Math.abs(ctx.net_cents))} ${ctx.net_cents >= 0 ? 'saved' : 'deficit'}`,
-    '',
-    'Spending by category:',
   ]
+
+  if (ctx.expected_income_cents !== null) {
+    const gap = ctx.expected_income_cents - ctx.received_income_cents
+
+    if (status.status === 'in_progress') {
+      if (gap > 0) {
+        lines.push(
+          `Expected income: ${fmt(ctx.expected_income_cents)} — ${fmt(ctx.received_income_cents)} received so far in income categories. Pending: ${fmt(gap)} still expected before month end (treat as on-track unless there is a reason it won't arrive).`
+        )
+      } else if (gap < 0) {
+        lines.push(
+          `Expected income: ${fmt(ctx.expected_income_cents)} — ${fmt(ctx.received_income_cents)} received in income categories (${fmt(Math.abs(gap))} above plan so far).`
+        )
+      } else {
+        lines.push(
+          `Expected income: ${fmt(ctx.expected_income_cents)} — fully received so far this month.`
+        )
+      }
+    } else if (status.status === 'closed') {
+      if (gap > 0) {
+        lines.push(
+          `Expected income: ${fmt(ctx.expected_income_cents)} — ${fmt(ctx.received_income_cents)} received in income categories. Shortfall: ${fmt(gap)} (income came in below plan — flag this).`
+        )
+      } else {
+        lines.push(
+          `Expected income: ${fmt(ctx.expected_income_cents)} — ${fmt(ctx.received_income_cents)} received in income categories. Plan was met.`
+        )
+      }
+    } else {
+      lines.push(
+        `Expected income: ${fmt(ctx.expected_income_cents)} — none received (month has not started).`
+      )
+    }
+  }
+
+  lines.push('', 'Spending by category:')
 
   for (const c of ctx.categories) {
     if (c.budget_cents !== null) {

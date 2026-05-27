@@ -9,10 +9,12 @@ export type UploadStatus = 'pending' | 'processing' | 'complete' | 'error'
 export type FileType = 'csv' | 'pdf'
 export type TransactionSource = 'csv' | 'pdf'
 export type CategorySource = 'claude' | 'manual' | 'map'
+export type CategoryType = 'income' | 'expense' | 'transfer'
 
 export interface Household {
   id: string
   name: string
+  expected_monthly_income_cents: number | null
   created_at: string
   updated_at: string
 }
@@ -44,6 +46,7 @@ export interface Category {
   color: string | null
   icon: string | null
   is_system: boolean
+  type: CategoryType
   created_at: string
   updated_at: string
 }

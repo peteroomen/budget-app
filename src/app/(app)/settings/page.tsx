@@ -1,16 +1,18 @@
 import { createClient } from '@/lib/supabase/server'
 import { getAccounts } from '@/lib/queries/accounts'
 import { getCategories } from '@/lib/queries/categories'
+import { getHouseholdSettings } from '@/lib/queries/household'
 import { SettingsTabs } from '@/components/settings/SettingsTabs'
+import { HouseholdContent } from '@/components/settings/HouseholdContent'
 import { AccountsContent } from '@/components/settings/AccountsContent'
 import { CategoriesContent } from '@/components/settings/CategoriesContent'
 import { DangerZoneContent } from '@/components/settings/DangerZoneContent'
 
-const VALID_TABS = ['accounts', 'categories', 'danger'] as const
+const VALID_TABS = ['household', 'accounts', 'categories', 'danger'] as const
 type Tab = (typeof VALID_TABS)[number]
 
 function parseTab(raw: string | undefined): Tab {
-  return VALID_TABS.includes(raw as Tab) ? (raw as Tab) : 'accounts'
+  return VALID_TABS.includes(raw as Tab) ? (raw as Tab) : 'household'
 }
 
 export default async function SettingsPage({
@@ -28,20 +30,29 @@ export default async function SettingsPage({
 
   const isAdmin = user?.app_metadata?.role === 'admin'
 
-  const [accounts, categories] = await Promise.all([getAccounts(), getCategories()])
+  const [accounts, categories, household] = await Promise.all([
+    getAccounts(),
+    getCategories(),
+    getHouseholdSettings(),
+  ])
 
   return (
     <div className="space-y-6">
       <div>
         <h1 className="font-display text-display-h1 font-medium">Settings</h1>
         <p className="mt-0.5 text-body-sm text-muted-foreground">
-          Accounts, categories, and danger zone.
+          Household, accounts, categories, and danger zone.
         </p>
       </div>
 
       <SettingsTabs
         defaultTab={activeTab}
         isAdmin={isAdmin}
+        householdContent={
+          <HouseholdContent
+            expectedMonthlyIncomeCents={household?.expected_monthly_income_cents ?? null}
+          />
+        }
         accountsContent={<AccountsContent accounts={accounts} />}
         categoriesContent={<CategoriesContent categories={categories} />}
         dangerContent={<DangerZoneContent />}

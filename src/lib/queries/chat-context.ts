@@ -1,9 +1,17 @@
 import { createClient } from '@/lib/supabase/server'
-import { currentMonth, prevMonth, monthDateRange, formatMonthLabel } from '@/lib/utils/month'
+import {
+  currentMonth,
+  prevMonth,
+  monthDateRange,
+  formatMonthLabel,
+  monthStatus,
+} from '@/lib/utils/month'
 
 export interface ChatContext {
   householdName: string
   month: string
+  expectedIncomeCents: number | null
+  receivedIncomeCents: number
   currentTransactions: Array<{
     date: string
     merchant: string
@@ -68,12 +76,16 @@ export async function getChatContext(month: string): Promise<ChatContext | null>
     recurringResult,
     categoriesResult,
   ] = await Promise.all([
-    supabase.from('households').select('name').eq('id', profile.household_id).single(),
+    supabase
+      .from('households')
+      .select('name, expected_monthly_income_cents')
+      .eq('id', profile.household_id)
+      .single(),
 
     // Current month transactions (expenses + income)
     supabase
       .from('transactions')
-      .select('date, amount_cents, merchant_name, description, category:categories(name)')
+      .select('date, amount_cents, merchant_name, description, category:categories(name, type)')
       .gte('date', dateFrom)
       .lte('date', dateTo)
       .order('date', { ascending: false }),
@@ -106,6 +118,7 @@ export async function getChatContext(month: string): Promise<ChatContext | null>
   ])
 
   const householdName = householdResult.data?.name ?? 'Household'
+  const expectedIncomeCents = householdResult.data?.expected_monthly_income_cents ?? null
 
   // Current month transactions
   type RawTx = {
@@ -113,7 +126,7 @@ export async function getChatContext(month: string): Promise<ChatContext | null>
     amount_cents: number
     merchant_name: string | null
     description: string
-    category: { name: string } | null
+    category: { name: string; type: string } | null
   }
   const rawTx = (txResult.data ?? []) as unknown as RawTx[]
   const currentTransactions = rawTx.map((t) => ({
@@ -122,6 +135,14 @@ export async function getChatContext(month: string): Promise<ChatContext | null>
     category: t.category?.name ?? 'Uncategorised',
     amount_cents: t.amount_cents,
   }))
+
+  // Received income = positive amounts in income-typed categories
+  let receivedIncomeCents = 0
+  for (const t of rawTx) {
+    if (t.amount_cents > 0 && t.category?.type === 'income') {
+      receivedIncomeCents += t.amount_cents
+    }
+  }
 
   // Budget vs actual — seed from all known categories so $0-activity ones are included
   const allCategoryNames: string[] = (categoriesResult.data ?? []).map(
@@ -204,6 +225,8 @@ export async function getChatContext(month: string): Promise<ChatContext | null>
   return {
     householdName,
     month,
+    expectedIncomeCents,
+    receivedIncomeCents,
     currentTransactions,
     budgetsVsActual,
     trends,
@@ -226,6 +249,45 @@ export function formatChatContext(ctx: ChatContext): string {
     `Current month: ${monthLabel}`,
     '',
   ]
+
+  // Income — expected vs received this month
+  const status = monthStatus(ctx.month)
+  const statusLabel =
+    status.status === 'in_progress'
+      ? `${monthLabel}, in progress — day ${status.dayOfMonth} of ${status.daysInMonth}`
+      : status.status === 'closed'
+        ? `${monthLabel}, closed`
+        : `${monthLabel}, future month`
+
+  lines.push(`## Income (${statusLabel})`)
+  if (ctx.expectedIncomeCents !== null) {
+    const gap = ctx.expectedIncomeCents - ctx.receivedIncomeCents
+    lines.push(`Expected: ${centsToNZD(ctx.expectedIncomeCents)}`)
+    lines.push(`Received so far: ${centsToNZD(ctx.receivedIncomeCents)}`)
+
+    if (status.status === 'in_progress') {
+      if (gap > 0) {
+        lines.push(
+          `Pending: ${centsToNZD(gap)} (income typically arrives later in the month — treat as on-track baseline unless timing suggests otherwise)`
+        )
+      } else if (gap < 0) {
+        lines.push(`Over expected by ${centsToNZD(Math.abs(gap))} (already above plan)`)
+      } else {
+        lines.push(`On plan — full expected income already received this month`)
+      }
+    } else if (status.status === 'closed') {
+      if (gap > 0) {
+        lines.push(`Shortfall: ${centsToNZD(gap)} (income came in below plan — flag this)`)
+      } else {
+        lines.push(`Plan was met for the month.`)
+      }
+    } else {
+      lines.push(`Month has not started — no income received yet.`)
+    }
+  } else {
+    lines.push(`No expected income set. Received so far: ${centsToNZD(ctx.receivedIncomeCents)}`)
+  }
+  lines.push('')
 
   // Current month transactions
   lines.push(`## ${monthLabel} Transactions (${ctx.currentTransactions.length} total)`)

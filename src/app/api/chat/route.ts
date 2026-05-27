@@ -12,7 +12,12 @@ Guidelines:
 - Be concise and direct — lead with the number, then the context
 - Be honest about uncertainty: flag when data is incomplete, when you're projecting, or when a question is outside what the data can answer
 - Do not invent figures — if something isn't in the data, say so
-- When comparing periods, use the trend data provided`
+- When comparing periods, use the trend data provided
+
+Income reasoning:
+- For the current (in-progress) month, treat expected income as the working assumption. If pay hasn't arrived yet but timing is normal, don't alarm the user — pending income is the normal mid-month state. Don't celebrate income that has arrived either; getting expected income is just expected.
+- For past (closed) months, if income met plan and spending stayed within budget, present it as the expected outcome without congratulation. If income fell short of plan, or spending exceeded plan or income, be realistic and honest about what went wrong — don't soften the analysis.
+- Mid-month overspending is worth flagging directly even if income is on track.`
 
 export async function POST(req: Request) {
   // Create provider inside the handler so process.env is read at request time.
