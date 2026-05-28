@@ -12,13 +12,23 @@ import {
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { ColorPicker } from './ColorPicker'
+import type { CategoryType } from '@/types'
 
 const DEFAULT_COLOR = '#6b7280'
+const DEFAULT_TYPE: CategoryType = 'expense'
 
 export function AddCategoryDialog() {
   const [open, setOpen] = useState(false)
   const [color, setColor] = useState(DEFAULT_COLOR)
+  const [type, setType] = useState<CategoryType>(DEFAULT_TYPE)
   const [formKey, setFormKey] = useState(0)
   const [nameError, setNameError] = useState<string | null>(null)
   const [state, action, pending] = useActionState(createCategory, { error: null })
@@ -29,6 +39,7 @@ export function AddCategoryDialog() {
       if (state.error === null) {
         setOpen(false)
         setColor(DEFAULT_COLOR)
+        setType(DEFAULT_TYPE)
         setFormKey((k) => k + 1)
         submitted.current = false
       }
@@ -39,6 +50,7 @@ export function AddCategoryDialog() {
     setOpen(next)
     if (!next) {
       setColor(DEFAULT_COLOR)
+      setType(DEFAULT_TYPE)
       setNameError(null)
       setFormKey((k) => k + 1)
       submitted.current = false
@@ -72,6 +84,23 @@ export function AddCategoryDialog() {
             <Label htmlFor="add-name">Name</Label>
             <Input id="add-name" name="name" placeholder="e.g. Petrol" />
             {nameError && <p className="text-sm text-destructive">{nameError}</p>}
+          </div>
+
+          <div className="space-y-1.5">
+            <Label htmlFor="add-type">Type</Label>
+            <input type="hidden" name="type" value={type} />
+            <Select value={type} onValueChange={(v) => setType(v as CategoryType)}>
+              <SelectTrigger id="add-type">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="expense">Expense — money out</SelectItem>
+                <SelectItem value="income">Income — money in</SelectItem>
+                <SelectItem value="transfer">
+                  Transfer — moves between own accounts (excluded from spend)
+                </SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="space-y-1.5">

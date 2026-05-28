@@ -4,7 +4,9 @@ import { useMemo } from 'react'
 import { cn } from '@/lib/utils'
 import type { TransactionRow } from '@/lib/queries/transactions'
 import type { Category } from '@/types'
+import { Badge } from '@/components/ui/badge'
 import { DeleteTransactionButton } from './DeleteTransactionButton'
+import { NotePopover } from './NotePopover'
 
 interface Props {
   rows: TransactionRow[]
@@ -68,7 +70,7 @@ function groupByDay(rows: TransactionRow[]): DayGroup[] {
     dateStr,
     label: formatDayLabel(dateStr),
     daySpend: txns
-      .filter((t) => t.amount_cents < 0)
+      .filter((t) => t.amount_cents < 0 && t.category?.type !== 'transfer')
       .reduce((sum, t) => sum + Math.abs(t.amount_cents), 0),
     transactions: txns,
   }))
@@ -104,11 +106,15 @@ export function TransactionDayList({ rows, categories, className }: Props) {
             {group.transactions.map((txn) => {
               const cat = categories.find((c) => c.id === txn.category_id)
               const isIncome = txn.amount_cents > 0
+              const isTransfer = txn.category?.type === 'transfer' || cat?.type === 'transfer'
 
               return (
                 <div
                   key={txn.id}
-                  className="grid items-center gap-x-2 py-2"
+                  className={cn(
+                    'grid items-center gap-x-2 py-2',
+                    isTransfer && 'text-muted-foreground'
+                  )}
                   style={{ gridTemplateColumns: '9px 1fr auto auto' }}
                 >
                   {/* Category dot */}
@@ -119,19 +125,42 @@ export function TransactionDayList({ rows, categories, className }: Props) {
 
                   {/* Merchant + category */}
                   <div className="min-w-0">
-                    <p className="truncate text-body-sm font-medium leading-snug">
-                      {txn.merchant_name ?? txn.description}
-                    </p>
+                    <div className="flex items-center gap-1.5">
+                      <p
+                        className={cn(
+                          'truncate text-body-sm font-medium leading-snug',
+                          isTransfer && 'font-normal'
+                        )}
+                      >
+                        {txn.merchant_name ?? txn.description}
+                      </p>
+                      {isTransfer && (
+                        <Badge variant="outline" className="font-normal">
+                          Transfer
+                        </Badge>
+                      )}
+                      <NotePopover
+                        transactionId={txn.id}
+                        merchantLabel={txn.merchant_name ?? txn.description}
+                        initialNote={txn.notes}
+                        variant="mobile"
+                      />
+                    </div>
                     <p className="text-label leading-snug text-muted-foreground">
                       {cat?.name ?? 'Uncategorised'}
                     </p>
+                    {txn.notes && (
+                      <p className="mt-0.5 font-display italic text-label leading-snug text-muted-foreground line-clamp-1">
+                        {txn.notes}
+                      </p>
+                    )}
                   </div>
 
                   {/* Amount */}
                   <span
                     className={cn(
                       'font-mono text-body-sm tabular-nums',
-                      isIncome ? 'text-success' : ''
+                      isIncome && !isTransfer ? 'text-success' : ''
                     )}
                   >
                     {isIncome ? '+' : ''}

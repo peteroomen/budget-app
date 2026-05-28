@@ -172,15 +172,24 @@ Run locally: `source ~/.nvm/nvm.sh && nvm use 22 && pnpm dev`.
 Implementation matched the plan. Key decisions confirmed during build:
 
 - `profiles.household_id` repurposed as "active household" pointer — zero changes needed to any existing server action that scopes inserts via it. `get_my_household_id()` now validates membership and falls back to the oldest membership row if the active pointer is stale.
-- New SQL function `seed_default_categories(uuid)` is the single source of truth for the Tide default category list (Income → type='income', everything else → 'expense'). Migration body inlines the colour values from `20260524000001_seed_default_categories.sql` + `20260526000000_category_colors_tide.sql` so creating a new household via `createHousehold` doesn't need a second round of UPDATEs.
+- New SQL function `seed_default_categories(uuid)` is the single source of truth for the Tide default category list (Income → type='income', Savings Transfer → type='transfer', everything else → 'expense'). Migration body inlines the colour values from `20260524000001_seed_default_categories.sql` + `20260526000000_category_colors_tide.sql` so creating a new household via `createHousehold` doesn't need a second round of UPDATEs.
 - Popover (already installed) used for the chip menu — no new shadcn primitive required.
 - Mobile drawer's standalone bottom-row Sign-out is gone — it's now in the ProfileChip popover. ThemeToggle stays inline next to the chip on mobile.
 - Initial `pnpm lint` auto-rewrote `tsconfig.json` formatting (same Next-lint quirk as the previous worktree session). Reverted before committing.
 
+### Follow-up: RLS gap + savings/transfer alignment
+
+After the first push, the in-app create flow hit `new row violates row-level security policy for table "households"` — the initial migration only declared SELECT/UPDATE policies on `households`, never INSERT. Adding an INSERT policy alone would have left a second problem: the action's `.insert().select('id').single()` post-insert SELECT also goes through RLS, and the just-created household has no membership row yet to satisfy the SELECT policy.
+
+Fix landed in `20260528000001_create_household_rpc.sql`: a single `security definer` SQL function `create_household(p_name)` that atomically inserts the household, inserts the owner membership, seeds defaults, and flips `profiles.household_id` — all in one round trip, bypassing RLS for the multi-step setup. The server action becomes a thin `supabase.rpc('create_household', ...)` wrapper. No `households` INSERT policy needed.
+
+Same follow-up migration `create or replace`s `seed_default_categories` so its Savings entry matches the rename in `20260527000001_savings_to_transfer.sql` (now seeds **Savings Transfer** with `type='transfer'`, colour `#7A8E84`). Without this, newly-created households would diverge from existing migrated ones.
+
 ## Files created / modified
 
 - `supabase/migrations/20260528000000_multi_household.sql` — **new** — `household_members` table + backfill + RLS + `get_my_household_id` rewrite + `seed_default_categories(uuid)` function
-- `src/lib/actions/households.ts` — **new** — `createHousehold(name)` + `switchHousehold(id)`
+- `supabase/migrations/20260528000001_create_household_rpc.sql` — **new** — `security definer` `create_household(text)` RPC + replaces `seed_default_categories` so Savings Transfer matches the migrated state
+- `src/lib/actions/households.ts` — **new** — `createHousehold(name)` (now a thin wrapper around the RPC) + `switchHousehold(id)`
 - `src/lib/queries/profile.ts` — added `getCurrentUserContext()` returning `{ profile, activeHouseholdId, activeHouseholdName, memberships }`
 - `src/types/index.ts` — added `HouseholdMembership` + `UserContext` types
 - `src/components/nav/ProfileChip.tsx` — **new** — avatar + name + household subtitle, Popover with switch list + create link + settings link + sign-out

@@ -12,8 +12,15 @@ import {
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { ColorPicker } from './ColorPicker'
-import type { Category } from '@/types'
+import type { Category, CategoryType } from '@/types'
 
 interface EditCategoryDialogProps {
   category: Category
@@ -22,6 +29,7 @@ interface EditCategoryDialogProps {
 export function EditCategoryDialog({ category }: EditCategoryDialogProps) {
   const [open, setOpen] = useState(false)
   const [color, setColor] = useState(category.color ?? '#6b7280')
+  const [type, setType] = useState<CategoryType>(category.type)
   const [formKey, setFormKey] = useState(0)
   const [nameError, setNameError] = useState<string | null>(null)
   const [state, action, pending] = useActionState(updateCategory, { error: null })
@@ -40,6 +48,7 @@ export function EditCategoryDialog({ category }: EditCategoryDialogProps) {
     setOpen(next)
     if (!next) {
       setColor(category.color ?? '#6b7280')
+      setType(category.type)
       setNameError(null)
       setFormKey((k) => k + 1)
       submitted.current = false
@@ -77,6 +86,23 @@ export function EditCategoryDialog({ category }: EditCategoryDialogProps) {
             <Label htmlFor={`edit-name-${category.id}`}>Name</Label>
             <Input id={`edit-name-${category.id}`} name="name" defaultValue={category.name} />
             {nameError && <p className="text-sm text-destructive">{nameError}</p>}
+          </div>
+
+          <div className="space-y-1.5">
+            <Label htmlFor={`edit-type-${category.id}`}>Type</Label>
+            <input type="hidden" name="type" value={type} />
+            <Select value={type} onValueChange={(v) => setType(v as CategoryType)}>
+              <SelectTrigger id={`edit-type-${category.id}`}>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="expense">Expense — money out</SelectItem>
+                <SelectItem value="income">Income — money in</SelectItem>
+                <SelectItem value="transfer">
+                  Transfer — moves between own accounts (excluded from spend)
+                </SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="space-y-1.5">

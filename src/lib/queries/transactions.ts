@@ -30,7 +30,7 @@ export interface TransactionRow {
   created_at: string
   updated_at: string
   account: { name: string; institution: string | null } | null
-  category: { name: string } | null
+  category: { name: string; type: string } | null
 }
 
 export async function getTransactions(filters: TransactionFilters = {}): Promise<TransactionRow[]> {
@@ -48,7 +48,7 @@ export async function getTransactions(filters: TransactionFilters = {}): Promise
 
   let query = supabase
     .from('transactions')
-    .select('*, account:accounts(name, institution), category:categories(name)')
+    .select('*, account:accounts(name, institution), category:categories(name, type)')
     .order(sortBy, { ascending: sortDir === 'asc' })
 
   if (month) {

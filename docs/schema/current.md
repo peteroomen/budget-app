@@ -2,7 +2,7 @@
 
 > Auto-maintained. Update this file after every migration.
 
-**Migrations:** up to `20260528000000_multi_household.sql`
+**Migrations:** up to `20260528000001_create_household_rpc.sql`
 **Last updated:** 2026-05-28
 
 ---
@@ -58,17 +58,17 @@ Primary key: `(user_id, household_id)`. A user may belong to many households; `p
 
 ### categories
 
-| Column       | Type        | Notes                                                                                              |
-| ------------ | ----------- | -------------------------------------------------------------------------------------------------- |
-| id           | uuid (PK)   | Default gen_random_uuid()                                                                          |
-| household_id | uuid        | FK → households(id), cascade delete, not null                                                      |
-| name         | text        | Not null                                                                                           |
-| color        | text        | Nullable                                                                                           |
-| icon         | text        | Nullable                                                                                           |
-| is_system    | boolean     | Default false                                                                                      |
-| type         | text        | Default 'expense'. CHECK in ('income', 'expense', 'transfer'). Income category seeded as 'income'. |
-| created_at   | timestamptz | Default now()                                                                                      |
-| updated_at   | timestamptz | Auto-updated via trigger                                                                           |
+| Column       | Type        | Notes                                                                                                                                                                                                                                 |
+| ------------ | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| id           | uuid (PK)   | Default gen_random_uuid()                                                                                                                                                                                                             |
+| household_id | uuid        | FK → households(id), cascade delete, not null                                                                                                                                                                                         |
+| name         | text        | Not null                                                                                                                                                                                                                              |
+| color        | text        | Nullable                                                                                                                                                                                                                              |
+| icon         | text        | Nullable                                                                                                                                                                                                                              |
+| is_system    | boolean     | Default false                                                                                                                                                                                                                         |
+| type         | text        | Default 'expense'. CHECK in ('income', 'expense', 'transfer'). Income category seeded as 'income'; existing `Savings` system row renamed to `Savings Transfer` and flipped to 'transfer' by `20260527000001_savings_to_transfer.sql`. |
+| created_at   | timestamptz | Default now()                                                                                                                                                                                                                         |
+| updated_at   | timestamptz | Auto-updated via trigger                                                                                                                                                                                                              |
 
 Unique constraint: `(household_id, name)`
 
@@ -145,7 +145,8 @@ Unique constraint: `(household_id, category_id, month)`
 - `handle_updated_at()` — trigger function, sets `updated_at = now()` on update
 - `handle_new_user()` — trigger function, inserts a `profiles` row when `auth.users` row is created
 - `get_my_household_id()` — helper for RLS policies, returns the **active** household for the current user. Validates that `profiles.household_id` is still a real membership row in `household_members`; falls back to the oldest membership if not; returns null if the user has no memberships.
-- `seed_default_categories(p_household_id uuid)` — inserts the Tide default category set (system flag = true, Income → type='income', everything else → type='expense'). Called by `createHousehold` server action; safe to call repeatedly thanks to ON CONFLICT DO NOTHING.
+- `seed_default_categories(p_household_id uuid)` — inserts the Tide default category set (system flag = true, Income → type='income', Savings Transfer → type='transfer' to match `20260527000001_savings_to_transfer.sql`, everything else → type='expense'). Called by `create_household`; safe to call repeatedly thanks to ON CONFLICT DO NOTHING.
+- `create_household(p_name text)` — `security definer` RPC that atomically inserts a new household, makes the calling user its owner via `household_members`, seeds default categories, and flips `profiles.household_id` to the new id. Returns the new `uuid`. Used by the `createHousehold` server action; bypasses RLS for the multi-step setup so no `households` INSERT policy is needed.
 
 ## RLS
 

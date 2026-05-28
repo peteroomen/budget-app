@@ -17,6 +17,7 @@ export interface ChatContext {
     merchant: string
     category: string
     amount_cents: number
+    note: string | null
   }>
   budgetsVsActual: Array<{
     category: string
@@ -85,7 +86,9 @@ export async function getChatContext(month: string): Promise<ChatContext | null>
     // Current month transactions (expenses + income)
     supabase
       .from('transactions')
-      .select('date, amount_cents, merchant_name, description, category:categories(name, type)')
+      .select(
+        'date, amount_cents, merchant_name, description, notes, category:categories(name, type)'
+      )
       .gte('date', dateFrom)
       .lte('date', dateTo)
       .order('date', { ascending: false }),
@@ -99,7 +102,7 @@ export async function getChatContext(month: string): Promise<ChatContext | null>
     // Trend: last 3 months of expense transactions
     supabase
       .from('transactions')
-      .select('date, amount_cents, category:categories(name)')
+      .select('date, amount_cents, category:categories(name, type)')
       .gte('date', trendStart)
       .lt('date', trendEnd)
       .lt('amount_cents', 0),
@@ -107,34 +110,44 @@ export async function getChatContext(month: string): Promise<ChatContext | null>
     // Recurring transactions this month
     supabase
       .from('transactions')
-      .select('merchant_name, description, amount_cents')
+      .select('merchant_name, description, amount_cents, category:categories(type)')
       .gte('date', dateFrom)
       .lte('date', dateTo)
       .eq('is_recurring', true)
       .lt('amount_cents', 0),
 
-    // All categories — so Claude knows every category even with $0 activity
-    supabase.from('categories').select('name').order('name', { ascending: true }),
+    // Expense + income categories — transfer categories aren't shown to Claude
+    // (they're internal money moves, excluded from spend analysis).
+    supabase
+      .from('categories')
+      .select('name')
+      .neq('type', 'transfer')
+      .order('name', { ascending: true }),
   ])
 
   const householdName = householdResult.data?.name ?? 'Household'
   const expectedIncomeCents = householdResult.data?.expected_monthly_income_cents ?? null
 
-  // Current month transactions
+  // Current month transactions — transfers excluded so Claude isn't confused
+  // by internal money moves showing up alongside real spend.
   type RawTx = {
     date: string
     amount_cents: number
     merchant_name: string | null
     description: string
+    notes: string | null
     category: { name: string; type: string } | null
   }
   const rawTx = (txResult.data ?? []) as unknown as RawTx[]
-  const currentTransactions = rawTx.map((t) => ({
-    date: t.date,
-    merchant: t.merchant_name ?? t.description,
-    category: t.category?.name ?? 'Uncategorised',
-    amount_cents: t.amount_cents,
-  }))
+  const currentTransactions = rawTx
+    .filter((t) => t.category?.type !== 'transfer')
+    .map((t) => ({
+      date: t.date,
+      merchant: t.merchant_name ?? t.description,
+      category: t.category?.name ?? 'Uncategorised',
+      amount_cents: t.amount_cents,
+      note: t.notes && t.notes.trim().length > 0 ? t.notes : null,
+    }))
 
   // Received income = positive amounts in income-typed categories
   let receivedIncomeCents = 0
@@ -152,6 +165,7 @@ export async function getChatContext(month: string): Promise<ChatContext | null>
   const actualMap = new Map<string, number>()
   for (const t of rawTx) {
     if (t.amount_cents >= 0) continue
+    if (t.category?.type === 'transfer') continue
     const name = t.category?.name ?? 'Uncategorised'
     actualMap.set(name, (actualMap.get(name) ?? 0) + Math.abs(t.amount_cents))
   }
@@ -178,16 +192,17 @@ export async function getChatContext(month: string): Promise<ChatContext | null>
     }))
     .sort((a, b) => b.actual_cents - a.actual_cents)
 
-  // Trend: aggregate by month + category
+  // Trend: aggregate by month + category (transfers excluded)
   type RawTrend = {
     date: string
     amount_cents: number
-    category: { name: string } | null
+    category: { name: string; type: string } | null
   }
   const rawTrend = (trendTxResult.data ?? []) as unknown as RawTrend[]
   const trendMap = new Map<string, Map<string, number>>() // category → month → cents
 
   for (const t of rawTrend) {
+    if (t.category?.type === 'transfer') continue
     const cat = t.category?.name ?? 'Uncategorised'
     const m = t.date.slice(0, 7) // YYYY-MM
     if (!trendMap.has(cat)) trendMap.set(cat, new Map())
@@ -206,15 +221,17 @@ export async function getChatContext(month: string): Promise<ChatContext | null>
       return bTotal - aTotal
     })
 
-  // Recurring
+  // Recurring (transfers excluded — e.g. a recurring savings move isn't a "fixed cost")
   type RawRecurring = {
     merchant_name: string | null
     description: string
     amount_cents: number
+    category: { type: string } | null
   }
   const rawRecurring = (recurringResult.data ?? []) as unknown as RawRecurring[]
   const recurringMap = new Map<string, number>()
   for (const r of rawRecurring) {
+    if (r.category?.type === 'transfer') continue
     const key = r.merchant_name ?? r.description
     recurringMap.set(key, (recurringMap.get(key) ?? 0) + Math.abs(r.amount_cents))
   }
@@ -296,7 +313,10 @@ export function formatChatContext(ctx: ChatContext): string {
   } else {
     for (const t of ctx.currentTransactions) {
       const sign = t.amount_cents < 0 ? '-' : '+'
-      lines.push(`${t.date} | ${t.merchant} | ${t.category} | ${sign}${centsToNZD(t.amount_cents)}`)
+      const noteSuffix = t.note ? ` — note: ${t.note}` : ''
+      lines.push(
+        `${t.date} | ${t.merchant} | ${t.category} | ${sign}${centsToNZD(t.amount_cents)}${noteSuffix}`
+      )
     }
   }
   lines.push('')

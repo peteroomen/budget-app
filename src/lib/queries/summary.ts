@@ -12,6 +12,13 @@ export interface MerchantSummaryRow {
   spend_cents: number
 }
 
+export interface NotedTransactionRow {
+  date: string
+  merchant: string
+  amount_cents: number
+  note: string
+}
+
 export interface SummaryContext {
   month: string
   monthLabel: string
@@ -22,6 +29,7 @@ export interface SummaryContext {
   net_cents: number
   categories: CategorySummaryRow[]
   topMerchants: MerchantSummaryRow[]
+  notedTransactions: NotedTransactionRow[]
   priorMonthSpend: number | null
   priorMonthLabel: string | null
   priorMonthCategories: CategorySummaryRow[] | null
@@ -30,9 +38,11 @@ export interface SummaryContext {
 }
 
 type TxRow = {
+  date: string
   amount_cents: number
   merchant_name: string | null
   description: string
+  notes: string | null
   category_id: string | null
   category: { name: string; type: string } | null
 }
@@ -40,7 +50,7 @@ type TxRow = {
 type PriorTxRow = {
   amount_cents: number
   category_id: string | null
-  category: { name: string } | null
+  category: { name: string; type: string } | null
 }
 
 export async function getSummaryContext(month: string): Promise<SummaryContext> {
@@ -75,14 +85,14 @@ export async function getSummaryContext(month: string): Promise<SummaryContext> 
     supabase
       .from('transactions')
       .select(
-        'amount_cents, merchant_name, description, category_id, category:categories(name, type)'
+        'date, amount_cents, merchant_name, description, notes, category_id, category:categories(name, type)'
       )
       .gte('date', dateFrom)
       .lte('date', dateTo),
     supabase.from('budgets').select('category_id, amount_cents').eq('month', month),
     supabase
       .from('transactions')
-      .select('amount_cents, category_id, category:categories(name)')
+      .select('amount_cents, category_id, category:categories(name, type)')
       .gte('date', priorFrom)
       .lte('date', priorTo),
   ])
@@ -102,6 +112,7 @@ export async function getSummaryContext(month: string): Promise<SummaryContext> 
       net_cents: 0,
       categories: [],
       topMerchants: [],
+      notedTransactions: [],
       priorMonthSpend: null,
       priorMonthLabel: null,
       priorMonthCategories: null,
@@ -110,11 +121,12 @@ export async function getSummaryContext(month: string): Promise<SummaryContext> 
     }
   }
 
-  // Totals
+  // Totals — transfers excluded from both income + spend (internal money moves)
   let income_cents = 0
   let received_income_cents = 0
   let spend_cents = 0
   for (const t of current) {
+    if (t.category?.type === 'transfer') continue
     if (t.amount_cents > 0) {
       income_cents += t.amount_cents
       if (t.category?.type === 'income') received_income_cents += t.amount_cents
@@ -123,11 +135,12 @@ export async function getSummaryContext(month: string): Promise<SummaryContext> 
     }
   }
 
-  // Category actuals (expenses only)
+  // Category actuals (expenses only; transfers excluded)
   const actualMap = new Map<string, number>()
   const categoryNames = new Map<string, string>()
   for (const t of current) {
     if (t.amount_cents >= 0) continue
+    if (t.category?.type === 'transfer') continue
     const key = t.category_id ?? '__uncategorised__'
     actualMap.set(key, (actualMap.get(key) ?? 0) + Math.abs(t.amount_cents))
     if (t.category?.name) categoryNames.set(key, t.category.name)
@@ -147,10 +160,11 @@ export async function getSummaryContext(month: string): Promise<SummaryContext> 
     }))
     .sort((a, b) => b.actual_cents - a.actual_cents)
 
-  // Top 5 merchants (expenses only)
+  // Top 5 merchants (expenses only; transfers excluded)
   const merchantMap = new Map<string, number>()
   for (const t of current) {
     if (t.amount_cents >= 0) continue
+    if (t.category?.type === 'transfer') continue
     const key = t.merchant_name ?? t.description
     merchantMap.set(key, (merchantMap.get(key) ?? 0) + Math.abs(t.amount_cents))
   }
@@ -158,6 +172,18 @@ export async function getSummaryContext(month: string): Promise<SummaryContext> 
     .map(([merchant, spend_cents]) => ({ merchant, spend_cents }))
     .sort((a, b) => b.spend_cents - a.spend_cents)
     .slice(0, 5)
+
+  // Noted transactions — surface verbatim notes to Claude
+  const notedTransactions: NotedTransactionRow[] = current
+    .filter((t) => t.notes !== null && t.notes.trim().length > 0)
+    .map((t) => ({
+      date: t.date,
+      merchant: t.merchant_name ?? t.description,
+      amount_cents: t.amount_cents,
+      note: t.notes!.trim(),
+    }))
+    .sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0))
+    .slice(0, 30)
 
   // Prior month
   let priorMonthSpend: number | null = null
@@ -169,7 +195,7 @@ export async function getSummaryContext(month: string): Promise<SummaryContext> 
     const priorNames = new Map<string, string>()
 
     for (const t of priorTxs) {
-      if (t.amount_cents < 0) {
+      if (t.amount_cents < 0 && t.category?.type !== 'transfer') {
         priorMonthSpend += Math.abs(t.amount_cents)
         const key = t.category_id ?? '__uncategorised__'
         priorActualMap.set(key, (priorActualMap.get(key) ?? 0) + Math.abs(t.amount_cents))
@@ -198,6 +224,7 @@ export async function getSummaryContext(month: string): Promise<SummaryContext> 
     net_cents: income_cents - spend_cents,
     categories,
     topMerchants,
+    notedTransactions,
     priorMonthSpend,
     priorMonthLabel: priorTxs.length > 0 ? formatMonthLabel(prior) : null,
     priorMonthCategories,
@@ -297,6 +324,19 @@ export function buildSummaryPrompt(ctx: SummaryContext): string {
       for (const c of ctx.priorMonthCategories) {
         lines.push(`- ${c.name}: ${fmt(c.actual_cents)}`)
       }
+    }
+  }
+
+  if (ctx.notedTransactions.length > 0) {
+    lines.push(
+      '',
+      `Transactions with notes (${ctx.monthLabel}) — user-supplied context. Use these to inform notablePatterns or spendNote; do not invent commentary about un-noted transactions:`
+    )
+    for (const n of ctx.notedTransactions) {
+      const sign = n.amount_cents < 0 ? '-' : '+'
+      lines.push(
+        `- ${n.date}, ${n.merchant}, ${sign}${fmt(Math.abs(n.amount_cents))}, note: ${n.note}`
+      )
     }
   }
 
