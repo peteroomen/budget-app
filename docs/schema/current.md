@@ -2,8 +2,8 @@
 
 > Auto-maintained. Update this file after every migration.
 
-**Migrations:** up to `20260527000001_savings_to_transfer.sql`
-**Last updated:** 2026-05-27
+**Migrations:** up to `20260528000001_create_household_rpc.sql`
+**Last updated:** 2026-05-28
 
 ---
 
@@ -21,16 +21,27 @@
 
 ### profiles
 
-| Column       | Type        | Notes                               |
-| ------------ | ----------- | ----------------------------------- |
-| id           | uuid (PK)   | FK → auth.users(id), cascade delete |
-| household_id | uuid        | FK → households(id), nullable       |
-| email        | text        | Not null                            |
-| display_name | text        | Nullable                            |
-| created_at   | timestamptz | Default now()                       |
-| updated_at   | timestamptz | Auto-updated via trigger            |
+| Column       | Type        | Notes                                                                                             |
+| ------------ | ----------- | ------------------------------------------------------------------------------------------------- |
+| id           | uuid (PK)   | FK → auth.users(id), cascade delete                                                               |
+| household_id | uuid        | FK → households(id), nullable. **Active** household pointer (user may belong to many — see below) |
+| email        | text        | Not null                                                                                          |
+| display_name | text        | Nullable                                                                                          |
+| created_at   | timestamptz | Default now()                                                                                     |
+| updated_at   | timestamptz | Auto-updated via trigger                                                                          |
 
 Auto-created via trigger on `auth.users` insert.
+
+### household_members
+
+| Column       | Type        | Notes                                          |
+| ------------ | ----------- | ---------------------------------------------- |
+| user_id      | uuid        | FK → auth.users(id), cascade delete            |
+| household_id | uuid        | FK → households(id), cascade delete            |
+| role         | text        | Default 'member'. CHECK in ('owner', 'member') |
+| created_at   | timestamptz | Default now()                                  |
+
+Primary key: `(user_id, household_id)`. A user may belong to many households; `profiles.household_id` records which one is currently active.
 
 ### accounts
 
@@ -133,8 +144,13 @@ Unique constraint: `(household_id, category_id, month)`
 
 - `handle_updated_at()` — trigger function, sets `updated_at = now()` on update
 - `handle_new_user()` — trigger function, inserts a `profiles` row when `auth.users` row is created
-- `get_my_household_id()` — helper for RLS policies, returns current user's household_id
+- `get_my_household_id()` — helper for RLS policies, returns the **active** household for the current user. Validates that `profiles.household_id` is still a real membership row in `household_members`; falls back to the oldest membership if not; returns null if the user has no memberships.
+- `seed_default_categories(p_household_id uuid)` — inserts the Tide default category set (system flag = true, Income → type='income', Savings Transfer → type='transfer' to match `20260527000001_savings_to_transfer.sql`, everything else → type='expense'). Called by `create_household`; safe to call repeatedly thanks to ON CONFLICT DO NOTHING.
+- `create_household(p_name text)` — `security definer` RPC that atomically inserts a new household, makes the calling user its owner via `household_members`, seeds default categories, and flips `profiles.household_id` to the new id. Returns the new `uuid`. Used by the `createHousehold` server action; bypasses RLS for the multi-step setup so no `households` INSERT policy is needed.
 
 ## RLS
 
-All tables have RLS enabled. Policies enforce household-level isolation via `get_my_household_id()`. Transactions and uploads are scoped through their parent account's household_id.
+All tables have RLS enabled. Policies enforce household-level isolation via `get_my_household_id()` (the active household). Transactions and uploads are scoped through their parent account's household_id.
+
+- `households` SELECT is broader: a user can read **any** household they belong to (powers the switcher). UPDATE on households remains scoped to the active household.
+- `household_members` has SELECT and INSERT policies that match `user_id = auth.uid()` — users can see and insert their own membership rows. No UPDATE/DELETE policies (leave/transfer-ownership flows are out of scope for now).
