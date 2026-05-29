@@ -113,12 +113,27 @@ Boot locally: `source ~/.nvm/nvm.sh && nvm use 22 && pnpm dev` from the worktree
 
 ## What actually happened
 
+Implementation matched the plan exactly. Key notes:
+
+- **`MonthPicker` cleanup bonus**: the budgets `MonthPicker` had inlined its own `formatMonthLabel` and `offsetMonth` helpers. Updating it to use `MonthJumpPopover` also switched it to the shared `prevMonth`/`nextMonth` utils from `lib/utils/month` and swapped the bare `‹`/`›` text buttons for proper `Button size="icon"` with `ChevronLeft`/`ChevronRight` icons — consistent with the other two selectors now.
+- **Popover open-on-trigger sync**: `handleOpenChange` resets `viewYear` to the selected month's year whenever the popover opens, so navigating months with the prev/next arrows and then opening the popover always starts at the right year.
+- **`tsconfig.json` drift**: `next lint` auto-modified `tsconfig.json` again; reverted via `git checkout tsconfig.json` before committing (same pattern as previous sessions).
+- Lint + type-check clean. Husky pre-commit ran lint-staged (prettier + eslint) and passed.
+
 ## Files created / modified
 
+- `src/components/ui/month-jump-popover.tsx` — **new** — shared client component; Popover with year nav + 3×4 month grid; `selectedMonth`, `onSelect`, `allowFuture` props
+- `src/components/dashboard/MonthSelector.tsx` — replaced `<span>` label with `<MonthJumpPopover>`; removed unused `formatMonthLabel` import
+- `src/components/summary/SummaryMonthSelector.tsx` — same replacement; removed unused `formatMonthLabel` import
+- `src/components/budgets/MonthPicker.tsx` — replaced label + inline helpers with `<MonthJumpPopover>` + shared `prevMonth`/`nextMonth` utils; switched bare text buttons to `Button size="icon"` with chevron icons
+- `docs/work/2026-05-29-month-picker-enhancement.md` — this file
+
 ## Deferred to next session
+
+- Nothing from this session. Rename `MonthSelector`'s `isAdmin` prop to `allowFuture` remains a separate future refactor.
 
 ## Status
 
 - [ ] In progress
-- [ ] Complete
+- [x] Complete
 - [ ] Partial — see deferred
