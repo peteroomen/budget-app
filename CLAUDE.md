@@ -31,62 +31,52 @@ Core loop: import bank statements → AI categorises transactions → set budget
 > **Update this section at the end of every session.**
 
 - **Current phase:** Phase 5 — Polish (in progress). Phases 1–4 fully complete.
-- **Last session:** 2026-05-27 — Transaction notes UI + Claude awareness. New `setTransactionNote` server action + `NotePopover` (shadcn Popover + Input + sonner toast). Desktop = hover-revealed pencil when no note, inline pencil next to italic note line when set; mobile = always-visible pencil next to merchant. Notes injected as ` — note: …` per transaction in chat context and as a "Transactions with notes" section before the JSON-format instruction in the summary prompt. No schema change (notes column already existed). Merge with `feature/transfer-exclusion` resolved — Transfer badge + isTransfer styling sit alongside the note pencil; chat-context still filters out transfer-typed rows. See `docs/work/2026-05-27-transaction-notes-ui.md`. Worktree `/Users/peteroomen/personal/budget-app-tx-notes` on `feature/transaction-notes-ui`.
-- **Previous session:** 2026-05-27 — Transfer exclusion (Phase 5 — Item C). Existing `Savings` system category renamed → `Savings Transfer` and flipped to `type='transfer'`; transfers now skipped in dashboard totals/category chart/top merchants, summary totals (current + prior month), chat-context transactions list / actuals / 3-month trends / recurring, and the Fixed Costs card. AI categoriser prompt updated with guidance + NZ example for Savings Transfer. Transaction list shows muted styling + outline "Transfer" badge for transfer rows; day-spend total excludes transfers. Category create/edit dialogs now expose a Type picker (income/expense/transfer). Credit Card Payment intentionally not seeded. See `docs/work/2026-05-27-transfer-exclusion.md`. Worktree `/Users/peteroomen/personal/budget-app-transfer-exclusion` on `feature/transfer-exclusion`.
-- **Previous session:** 2026-05-27 — Projected income (Phase 5 items A + B + dashboard piece). Added `categories.type` + `households.expected_monthly_income_cents`, Household settings tab, AllocationPanel on budgets, income-vs-expected + spend-vs-budgeted dashboard cards, and income data injected into chat + summary AI context. See `docs/work/2026-05-27-projected-income.md`.
-- **Previous session:** 2026-05-27 — Per-row delete on the transactions screen. New `deleteTransaction` server action + `DeleteTransactionButton` (Dialog confirm + sonner toast). Desktop = hover-revealed trash icon in trailing column; mobile = always-visible icon in day list. See `docs/work/2026-05-27-tx-row-delete.md`. Worktree `/Users/peteroomen/personal/budget-app-tx-delete` on `feature/tx-row-delete`.
-- **Previous session:** 2026-05-26 — Vercel edge middleware hotfix. Fixed `MIDDLEWARE_INVOCATION_FAILED` / `ReferenceError: __dirname` on every cold start. Production is healthy: `dpl_6axT7v2xMMvzBqm2iXQc9XW13ptK` (Next.js 15.5.18) is READY.
-- **All merged to main (build order items #1–#16 + extras):**
+- **Last session:** 2026-05-27 — Transaction notes UI + Claude awareness (PR #28, merged). New `setTransactionNote` server action + `NotePopover` (shadcn Popover + Input + sonner toast). Desktop = hover-revealed pencil when no note, inline pencil next to italic note line when set; mobile = always-visible pencil next to merchant. Notes injected as `— note: …` per transaction in chat context and as a "Transactions with notes" section in the summary prompt. See `docs/work/2026-05-27-transaction-notes-ui.md`.
+- **Previous sessions (all merged):**
+  - 2026-05-27 — Transfer exclusion (Phase 5 Item C, PR #29). `Savings` → `Savings Transfer`, `type='transfer'`; transfers excluded from dashboard totals, summary, chat context, recurring, fixed costs. Category Type picker in create/edit dialogs. See `docs/work/2026-05-27-transfer-exclusion.md`.
+  - 2026-05-27 — Projected income (Phase 5 Items A + B, PR #26). `categories.type`, `households.expected_monthly_income_cents`, Household settings tab, AllocationPanel on budgets, income-vs-expected + spend-vs-budgeted dashboard cards, income injected into chat + summary context. See `docs/work/2026-05-27-projected-income.md`.
+  - 2026-05-27 — Per-row transaction delete (PR #27). `deleteTransaction` server action + `DeleteTransactionButton` with Dialog confirm + sonner toast. Desktop = hover-revealed trash; mobile = always-visible. See `docs/work/2026-05-27-tx-row-delete.md`.
+  - 2026-05-26 — Vercel edge middleware hotfix (PR #25 + manual deploy). Fixed `MIDDLEWARE_INVOCATION_FAILED` / `ReferenceError: __dirname`. Production healthy: `dpl_6axT7v2xMMvzBqm2iXQc9XW13ptK`.
+  - 2026-05-24 — Thorough mobile nav (PR #24). Bottom sheet drawer, tab bar, viewport fixes.
+- **All merged to main (build order + extras — PRs #1–#29):**
   - #1 Scaffold · #2 Auth + household · #3 Accounts CRUD
   - #4 CSV import · #5 PDF import · #6 Transaction list
   - #7 Category system · #8 Merchant memory · #9 AI categorisation
   - #10 Dashboard charts · #11 Budget management
-  - #13 Chat interface (Assistant UI + Vercel AI SDK, streaming, markdown rendering)
-  - #14 Chat context injection — `src/lib/queries/chat-context.ts` fetches transactions, budgets, categories, 3-month trends, and recurring; injected as a structured `<financial_data>` block in the system prompt
-  - #12 Recurring detection — auto-detect by merchant pattern (2+ months, ≤10% amount spread), manual toggle per row, Fixed Costs dashboard card. Also: dashboard loading skeleton, month-change Suspense, "This month" link, admin future-month navigation, all 4 summary cards in one row.
-  - #16 Polish pass — loading skeletons (6 pages), dashboard empty state, mobile table overflow, error logging in queries, type-cast fixes, aria-label on sort headers
-  - category_source + is_manual tracking columns (merged)
-  - Admin page — `/admin` route (role-gated), delete-all-transactions + delete-all-merchant-mappings (merged)
-  - #15 Monthly summary — `/summary` page: Claude-generated recap (headline, spend overview, over-budget, biggest merchant, vs last month, notable patterns). Suspense skeleton on month change, admin future-month nav.
-  - Budget auto-seed — budgets auto-copied from previous month on first view; dismissible shadcn Alert banner shows source month
-  - Nav/layout restructure — sidebar primary/secondary split, mobile bottom tab bar + Sheet drawer, `/settings` consolidates Accounts + Categories + Danger zone
+  - #12 Recurring detection — auto-detect, manual toggle, Fixed Costs card
+  - #13 Chat interface — Assistant UI + Vercel AI SDK, streaming, markdown
+  - #14 Chat context injection — transactions, budgets, categories, 3-month trends, recurring
+  - #15 Monthly summary — Claude-generated recap page
+  - #16 Polish pass — skeletons (6 pages), empty states, mobile overflow, accessibility
+  - category_source + is_manual tracking columns
+  - Admin page — `/admin` (role-gated), delete-all-transactions + delete-all-merchant-mappings
+  - Budget auto-seed — auto-copy from previous month; dismissible Alert banner
+  - Nav/layout restructure — sidebar primary/secondary split, mobile bottom tab bar + Sheet drawer
+  - Tide design system (PRs #21 + #22 + #23) — CSS tokens, dark mode, Fraunces + JetBrains Mono, per-page passes, import dropzone, chat chips, budget KPI stats, summary compare bars, sidebar dark-mode row + sign-out, `TIDE_ANTHROPIC_API_KEY` fix
+  - Thorough mobile nav (PR #24) — bottom sheet drawer, tab bar, viewport fixes
+  - Mobile bugfixes (PR #25)
+  - Projected income (PR #26) — Phase 5 Items A + B: `categories.type`, declared income, allocation panel, dashboard cards, chat/summary context
+  - Per-row transaction delete (PR #27)
+  - Transaction notes UI + Claude awareness (PR #28) — `NotePopover`, notes in chat + summary context
+  - Transfer exclusion (PR #29) — Phase 5 Item C: `type='transfer'`, excluded from all spend aggregation, Type picker in category UI
+- **Open PRs:**
+  - **PR #30** `feature/multi-household` — multi-household membership + profile-chip switcher (worktree at `/Users/peteroomen/personal/budget-app-multi-household`)
 - **Vercel / build config (main branch):**
   - `vercel.json`: `buildCommand: "pnpm run build"`, `outputDirectory: ".next"` (resolves to `src/.next` from Vercel's `src/` framework root)
   - `next.config.ts`: `distDir: 'src/.next'` + `NormalModuleReplacementPlugin` replacing `testmode/context.js` with noop for edge runtime
   - `scripts/patch-testmode.js`: prebuild that overwrites `node_modules/next/dist/experimental/testmode/context.js` with a noop (busts webpack cache on Vercel)
   - `eslint.config.mjs`: `{ ignores: ['src/.next/**'] }` prevents linting of build artifacts
   - Next.js `15.5.18` — do NOT downgrade; 15.3.3 is Vercel-blocked for CVE
-- **Open PRs:** none on main as of 2026-05-27 (Tide PRs #21–#23, projected income #26, tx delete #27 all merged). A new PR for `feature/transfer-exclusion` (Item C) is open from this session.
-- **Tide/Editorial theme — what's in PRs #21 + #22:**
-  - **Chunk 1 (PR #21):** CSS tokens (warm paper + near-black dark), `next-themes` + ThemeToggle, Fraunces + JetBrains Mono fonts, brand rename → "Tide", primitives (Button density, Card, Badge variants, Progress, Tabs segmented control, Input)
-  - **Chunk 2+3 + layout/feature pass (PR #22):**
-    - Dashboard: "Manage budgets ↗" + "All ↗" card header links
-    - Transactions: merchant search input + category filter dropdown (URL-param driven, debounced)
-    - Budgets: 4 KPI stat cards (Total budget / Spent / Remaining / Over budget) + desktop table + mobile cards
-    - Summary: Sparkles headline card, BigStat inline stats (Spend/Income/Net), CompareBar vs-last-month, "Monthly recap" H1
-    - Chat: sparkle avatar on assistant messages (no bubble), 4 prompt chips on empty state, "Chat with your finances" H1
-    - Import: drag-drop DropZone (DataTransfer API), "What we support" card, redesigned success state
-- **What's in PR #23 (this branch):**
-  - Audit fixes: TransactionTable cell padding, chat bubble style, Dashboard H1, NavLink icon active state, category color migration
-  - Chat fix: `TIDE_ANTHROPIC_API_KEY` (Claude Desktop injects empty `ANTHROPIC_API_KEY` into macOS env, shadowing `.env.local` — see ADR 002)
-  - Summary fix: same env var fix, model `claude-sonnet-4-5`, strip markdown fences from JSON response, error logging in catch
-  - Budget list → proper `<table>` with `<colgroup>` for column alignment; amount + % badge always shown
-  - Dashboard card icons + card header alignment + subheadings
-  - TideLogo component + SVG favicon
-  - Dark mode: `SidebarThemeRow` (Moon icon + label + shadcn Switch) above user chip; hydration fix via `mounted` guard
-  - Sign-out: icon button (`LogOut`) with Tooltip
-  - Sonner toast wired to chat errors
 - **Remaining build order items:**
   - **#17** Import summary — post-upload breakdown (imported / duplicates / from map / from Claude / recurring / uncategorised). Needs `import_history` table.
 - **Deferred (not blocking):**
   - Auto-run recurring detection after each import (currently manual-trigger only)
   - Summary "Regenerate" button
   - Dashboard bottom row (recent transactions + quick actions)
-  - Sidebar collapse to 64px (optional per design spec, skipped)
-  - Header search, notification bell (roadmapped, intentionally not built yet)
+  - Header search, notification bell (roadmapped, not built yet)
   - Set `TIDE_ANTHROPIC_API_KEY` in Vercel project env before deploying to production
-- **Known issues:** Node 22 required — always `source ~/.nvm/nvm.sh && nvm use 22` before pnpm scripts. Edge middleware runtime errors confirmed resolved in `dpl_6axT7v2xMMvzBqm2iXQc9XW13ptK` — monitor first few real requests.
-- **Components available:** `Skeleton`, `Tooltip`, `Avatar`, `Sheet`, `Badge`, `Switch`, `Popover` (all in `src/components/ui/`). `Textarea` is **not** installed — single-line `Input` is used for notes for now.
+- **Known issues:** Node 22 required — always `source ~/.nvm/nvm.sh && nvm use 22` before pnpm scripts.
+- **Components available:** `Skeleton`, `Tooltip`, `Avatar`, `Sheet`, `Badge`, `Switch`, `Popover` (all in `src/components/ui/`). `Textarea` is **not** installed — single-line `Input` is used for notes.
 - **Prop convention:** `MonthSelector` and `SummaryMonthSelector` use `allowFuture` (not `isAdmin`) — the page passes `allowFuture={isAdmin}` so the selector stays role-agnostic.
 - **Theme:** `font-display` = Fraunces (serif, use on H1s + CardTitles + hero metrics). `font-mono` = JetBrains Mono (use on tabular numerics). Badge variants: `accent` (sage wash), `warn` (gold), `danger` (rust), `outline`.
 - **Env vars:** Use `TIDE_ANTHROPIC_API_KEY` (not `ANTHROPIC_API_KEY`) — Claude Desktop shadows the standard name with an empty value on macOS. See `docs/decisions/002-tide-anthropic-api-key-env-var.md`.
