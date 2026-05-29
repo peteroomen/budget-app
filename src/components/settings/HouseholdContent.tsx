@@ -7,9 +7,14 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { HouseholdsPanel } from '@/components/settings/HouseholdsPanel'
+import type { HouseholdMembership } from '@/types'
 
 interface HouseholdContentProps {
   expectedMonthlyIncomeCents: number | null
+  memberships: HouseholdMembership[]
+  activeHouseholdId: string | null
+  openCreateByDefault?: boolean
 }
 
 function centsToDollars(cents: number | null): string {
@@ -17,7 +22,12 @@ function centsToDollars(cents: number | null): string {
   return (cents / 100).toFixed(2)
 }
 
-export function HouseholdContent({ expectedMonthlyIncomeCents }: HouseholdContentProps) {
+export function HouseholdContent({
+  expectedMonthlyIncomeCents,
+  memberships,
+  activeHouseholdId,
+  openCreateByDefault = false,
+}: HouseholdContentProps) {
   const [value, setValue] = useState(centsToDollars(expectedMonthlyIncomeCents))
   const [state, action, pending] = useActionState(updateExpectedMonthlyIncome, { error: null })
   const submitted = useRef(false)
@@ -41,6 +51,12 @@ export function HouseholdContent({ expectedMonthlyIncomeCents }: HouseholdConten
           Settings shared across everyone in your household.
         </p>
       </div>
+
+      <HouseholdsPanel
+        memberships={memberships}
+        activeHouseholdId={activeHouseholdId}
+        openCreateByDefault={openCreateByDefault}
+      />
 
       <Card>
         <CardContent className="pt-6">
