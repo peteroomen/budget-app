@@ -1,7 +1,7 @@
 import { Suspense } from 'react'
 import { createClient } from '@/lib/supabase/server'
-import { currentMonth, formatMonthLabel, monthDateRange } from '@/lib/utils/month'
-import { MonthSelector } from '@/components/dashboard/MonthSelector'
+import { currentMonth, monthDateRange } from '@/lib/utils/month'
+import { DashboardMonthNav } from './DashboardMonthNav'
 import { DashboardContent } from './DashboardContent'
 import { DashboardContentSkeleton } from './loading'
 
@@ -38,14 +38,11 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <div>
-          <h1 className="font-display text-display-h1 font-medium">{formatMonthLabel(month)}</h1>
-          <p className="mt-0.5 text-body-sm text-muted-foreground">
-            {householdName} · {txCount} {txCount === 1 ? 'Transaction' : 'Transactions'}
-          </p>
-        </div>
-        <MonthSelector month={month} isAdmin={isAdmin} />
+      <div>
+        <DashboardMonthNav month={month} isAdmin={isAdmin} />
+        <p className="mt-0.5 text-body-sm text-muted-foreground">
+          {householdName} · {txCount} {txCount === 1 ? 'Transaction' : 'Transactions'}
+        </p>
       </div>
 
       {/* key={month} resets the Suspense boundary so the skeleton shows on month change */}

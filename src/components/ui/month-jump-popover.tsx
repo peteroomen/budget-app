@@ -26,12 +26,15 @@ interface MonthJumpPopoverProps {
   selectedMonth: string
   onSelect: (month: string) => void
   allowFuture?: boolean
+  /** Extra classes applied to the trigger button; when provided, replaces the compact sizing/font defaults. */
+  triggerClassName?: string
 }
 
 export function MonthJumpPopover({
   selectedMonth,
   onSelect,
   allowFuture = false,
+  triggerClassName,
 }: MonthJumpPopoverProps) {
   const [open, setOpen] = useState(false)
   const [viewYear, setViewYear] = useState(() => parseInt(selectedMonth.slice(0, 4), 10))
@@ -66,9 +69,19 @@ export function MonthJumpPopover({
   return (
     <Popover open={open} onOpenChange={handleOpenChange}>
       <PopoverTrigger asChild>
-        <button className="inline-flex min-w-[140px] cursor-pointer items-center justify-center gap-1.5 text-center text-sm font-medium transition-colors hover:text-primary">
+        <button
+          className={cn(
+            'inline-flex cursor-pointer items-center gap-1.5 transition-colors hover:text-primary',
+            triggerClassName ?? 'min-w-[140px] justify-center text-center text-sm font-medium'
+          )}
+        >
           {formatMonthLabel(selectedMonth)}
-          <CalendarDays className="h-3.5 w-3.5 text-muted-foreground" />
+          <CalendarDays
+            className={cn(
+              'shrink-0 text-muted-foreground',
+              triggerClassName ? 'h-5 w-5' : 'h-3.5 w-3.5'
+            )}
+          />
         </button>
       </PopoverTrigger>
       <PopoverContent className="w-56 p-3">
