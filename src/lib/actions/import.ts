@@ -9,19 +9,12 @@ import { normaliseMerchant } from '@/lib/parsers/normalise'
 import { getMerchantMappingsForImport } from '@/lib/queries/merchant-map'
 import { getCategories } from '@/lib/queries/categories'
 import { categoriseMerchantsWithClaude } from '@/lib/categorise'
-
-export type ImportResult = {
-  error: string | null
-  inserted?: number
-  duplicates?: number
-  format?: string
-}
-
-type ParsedTransaction = {
-  date: string
-  amount: number
-  description: string
-}
+import type {
+  AnalyseResult,
+  AnalysedTransaction,
+  CommitResult,
+  AnalyseSuccess,
+} from '@/lib/types/import'
 
 function dedupeKey(
   accountId: string,
@@ -39,6 +32,8 @@ function toCents(dollars: number): number {
   return Math.round(dollars * 100)
 }
 
+type ParsedTransaction = { date: string; amount: number; description: string }
+
 function isParsedTransaction(value: unknown): value is ParsedTransaction {
   return (
     typeof value === 'object' &&
@@ -50,7 +45,6 @@ function isParsedTransaction(value: unknown): value is ParsedTransaction {
 }
 
 async function handleCsv(
-  accountId: string,
   file: File
 ): Promise<
   | { rows: { date: string; amount_cents: number; description: string }[]; format: string }
@@ -71,8 +65,6 @@ async function handlePdf(
   const buffer = await file.arrayBuffer()
   const base64 = Buffer.from(buffer).toString('base64')
 
-  // Prefer TIDE_ANTHROPIC_API_KEY (Claude Desktop shadows ANTHROPIC_API_KEY with empty on macOS);
-  // fall back to ANTHROPIC_API_KEY for Vercel production where only the standard name is set.
   const client = new Anthropic({
     apiKey: process.env.TIDE_ANTHROPIC_API_KEY || process.env.ANTHROPIC_API_KEY,
   })
@@ -111,7 +103,6 @@ Example of the required format (compact, no whitespace):
   const first = response.content[0]
   if (!first || first.type !== 'text') return { error: 'Unexpected response from Claude' }
 
-  // Claude sometimes wraps JSON in markdown fences despite being asked not to — strip them
   const raw = first.text
     .trim()
     .replace(/^```(?:json)?\s*/i, '')
@@ -141,23 +132,123 @@ Example of the required format (compact, no whitespace):
   }
 }
 
-export async function importStatement(
-  _prevState: ImportResult,
-  formData: FormData
-): Promise<ImportResult> {
+export async function analyseImport(formData: FormData): Promise<AnalyseResult> {
   const accountId = formData.get('account_id')
   const file = formData.get('file')
 
-  if (typeof accountId !== 'string' || !accountId) return { error: 'Account is required' }
-  if (!(file instanceof File) || file.size === 0) return { error: 'No file selected' }
+  if (typeof accountId !== 'string' || !accountId)
+    return { ok: false, error: 'Account is required' }
+  if (!(file instanceof File) || file.size === 0) return { ok: false, error: 'No file selected' }
 
   const name = file.name.toLowerCase()
   const isCsv = name.endsWith('.csv')
   const isPdf = name.endsWith('.pdf')
-  if (!isCsv && !isPdf) return { error: 'Only CSV and PDF files are supported' }
+  if (!isCsv && !isPdf) return { ok: false, error: 'Only CSV and PDF files are supported' }
 
-  const result = isCsv ? await handleCsv(accountId, file) : await handlePdf(file)
-  if ('error' in result) return { error: result.error }
+  const fileType: 'csv' | 'pdf' = isCsv ? 'csv' : 'pdf'
+  const parseResult = isCsv ? await handleCsv(file) : await handlePdf(file)
+  if ('error' in parseResult) return { ok: false, error: parseResult.error }
+
+  const supabase = await createClient()
+
+  const { data: account } = await supabase
+    .from('accounts')
+    .select('id, household_id')
+    .eq('id', accountId)
+    .maybeSingle()
+
+  if (!account) return { ok: false, error: 'Account not found' }
+
+  const { data: existing } = await supabase
+    .from('transactions')
+    .select('date, amount_cents, description')
+    .eq('account_id', accountId)
+
+  const existingKeys = new Set(
+    (existing ?? []).map((t) => dedupeKey(accountId, t.date, t.amount_cents, t.description))
+  )
+
+  const allRows = parseResult.rows
+  const duplicates = allRows.filter((row) =>
+    existingKeys.has(dedupeKey(accountId, row.date, row.amount_cents, row.description))
+  ).length
+
+  const newRows = allRows.filter(
+    (row) => !existingKeys.has(dedupeKey(accountId, row.date, row.amount_cents, row.description))
+  )
+
+  const householdId = account.household_id as string
+  const normalisedNames = newRows.map((row) => normaliseMerchant(row.description))
+  const uniqueNames = [...new Set(normalisedNames)]
+  const merchantMap = await getMerchantMappingsForImport(supabase, householdId, uniqueNames)
+
+  // Build analysed transactions with map-based categories applied
+  const analysedRows: AnalysedTransaction[] = newRows.map((row) => {
+    const merchant = normaliseMerchant(row.description)
+    const categoryId = merchantMap.get(merchant) ?? null
+    return {
+      date: row.date,
+      amountCents: row.amount_cents,
+      description: row.description,
+      merchantName: merchant,
+      categoryId,
+      categorySource: (categoryId ? 'map' : null) as 'map' | null,
+      source: fileType,
+    }
+  })
+
+  // Call Claude to categorise merchants not found in the map
+  const unmappedMerchants = [
+    ...new Set(
+      analysedRows
+        .filter((r) => r.categoryId === null && r.merchantName)
+        .map((r) => r.merchantName as string)
+    ),
+  ]
+
+  const newMerchantMappings: { merchantName: string; categoryId: string }[] = []
+
+  if (unmappedMerchants.length > 0) {
+    const categories = await getCategories()
+    const aiMap = await categoriseMerchantsWithClaude(unmappedMerchants, categories)
+
+    for (const row of analysedRows) {
+      if (row.categoryId === null && row.merchantName) {
+        const aiCategory = aiMap.get(row.merchantName) ?? null
+        row.categoryId = aiCategory
+        if (aiCategory) row.categorySource = 'claude'
+      }
+    }
+
+    for (const [merchantName, categoryId] of aiMap.entries()) {
+      newMerchantMappings.push({ merchantName, categoryId })
+    }
+  }
+
+  const fromMap = analysedRows.filter((r) => r.categorySource === 'map').length
+  const fromClaude = analysedRows.filter((r) => r.categorySource === 'claude').length
+  const uncategorised = analysedRows.filter((r) => r.categoryId === null).length
+
+  return {
+    ok: true,
+    transactions: analysedRows,
+    newMerchantMappings,
+    stats: {
+      newCount: newRows.length,
+      duplicates,
+      fromMap,
+      fromClaude,
+      uncategorised,
+    },
+    format: parseResult.format,
+    fileType,
+    accountId,
+    filename: file.name,
+  }
+}
+
+export async function commitImport(params: Omit<AnalyseSuccess, 'ok'>): Promise<CommitResult> {
+  const { transactions, newMerchantMappings, stats, format, fileType, accountId, filename } = params
 
   const supabase = await createClient()
 
@@ -169,92 +260,52 @@ export async function importStatement(
 
   if (!account) return { error: 'Account not found' }
 
-  const { data: existing } = await supabase
-    .from('transactions')
-    .select('date, amount_cents, description')
-    .eq('account_id', accountId)
-
-  const existingKeys = new Set(
-    (existing ?? []).map((t) => dedupeKey(accountId, t.date, t.amount_cents, t.description))
-  )
-
-  const normalisedNames = result.rows.map((row) => normaliseMerchant(row.description))
-  const uniqueNames = [...new Set(normalisedNames)]
   const householdId = account.household_id as string
-  const merchantMap = await getMerchantMappingsForImport(supabase, householdId, uniqueNames)
 
-  const toInsert = result.rows
-    .filter(
-      (row) => !existingKeys.has(dedupeKey(accountId, row.date, row.amount_cents, row.description))
-    )
-    .map((row) => {
-      const merchant = normaliseMerchant(row.description)
-      const categoryId = merchantMap.get(merchant) ?? null
-      return {
-        account_id: accountId,
-        date: row.date,
-        amount_cents: row.amount_cents,
-        description: row.description,
-        merchant_name: merchant,
-        category_id: categoryId,
-        category_source: (categoryId ? 'map' : null) as 'claude' | 'map' | null,
-        source: (isCsv ? 'csv' : 'pdf') as 'csv' | 'pdf',
-      }
-    })
-
-  // Call Claude to categorise merchants not found in the map
-  const unmappedNames = [
-    ...new Set(toInsert.filter((r) => r.category_id === null).map((r) => r.merchant_name)),
-  ]
-
-  if (unmappedNames.length > 0) {
-    const categories = await getCategories()
-    const aiMap = await categoriseMerchantsWithClaude(unmappedNames, categories)
-
-    // Apply AI categories to rows and build new merchant_category_map entries
-    for (const row of toInsert) {
-      if (row.category_id === null && row.merchant_name) {
-        const aiCategory = aiMap.get(row.merchant_name) ?? null
-        row.category_id = aiCategory
-        if (aiCategory) row.category_source = 'claude'
-      }
-    }
-
-    if (aiMap.size > 0) {
-      const mapRows = [...aiMap.entries()].map(([merchant, categoryId]) => ({
-        household_id: householdId,
-        merchant_name: merchant,
-        category_id: categoryId,
-        is_manual: false,
-      }))
-      await supabase
-        .from('merchant_category_map')
-        .upsert(mapRows, { onConflict: 'household_id,merchant_name' })
-    }
-  }
-
-  const duplicates = result.rows.length - toInsert.length
-
-  if (toInsert.length > 0) {
-    const { error: insertError } = await supabase.from('transactions').insert(toInsert)
+  if (transactions.length > 0) {
+    const rows = transactions.map((t) => ({
+      account_id: accountId,
+      date: t.date,
+      amount_cents: t.amountCents,
+      description: t.description,
+      merchant_name: t.merchantName,
+      category_id: t.categoryId,
+      category_source: t.categorySource,
+      source: t.source,
+    }))
+    const { error: insertError } = await supabase.from('transactions').insert(rows)
     if (insertError) return { error: insertError.message }
   }
 
-  await supabase.from('uploads').insert({
+  if (newMerchantMappings.length > 0) {
+    const mapRows = newMerchantMappings.map(({ merchantName, categoryId }) => ({
+      household_id: householdId,
+      merchant_name: merchantName,
+      category_id: categoryId,
+      is_manual: false,
+    }))
+    await supabase
+      .from('merchant_category_map')
+      .upsert(mapRows, { onConflict: 'household_id,merchant_name' })
+  }
+
+  const bankFormat = fileType === 'csv' ? format : null
+
+  await supabase.from('import_history').insert({
+    household_id: householdId,
     account_id: accountId,
-    filename: file.name,
-    file_type: isCsv ? 'csv' : 'pdf',
-    row_count: result.rows.length,
-    status: 'complete',
+    filename,
+    file_type: fileType,
+    bank_format: bankFormat,
+    imported_count: stats.newCount,
+    duplicates_count: stats.duplicates,
+    from_map_count: stats.fromMap,
+    from_claude_count: stats.fromClaude,
+    uncategorised_count: stats.uncategorised,
   })
 
   revalidatePath('/transactions')
   revalidatePath('/import')
 
-  return {
-    error: null,
-    inserted: toInsert.length,
-    duplicates,
-    format: result.format,
-  }
+  return { error: null, stats }
 }
