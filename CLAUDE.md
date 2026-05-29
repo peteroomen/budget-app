@@ -31,9 +31,11 @@ Core loop: import bank statements → AI categorises transactions → set budget
 > **Update this section at the end of every session.**
 
 - **Current phase:** Phase 5 — Polish (in progress). Phases 1–4 fully complete.
-- **Last session:** 2026-05-29 — Import summary preview/confirm flow (Build order #17, PR #31). Split `importStatement` into `analyseImport` + `commitImport`. New `import_history` table (migration `20260529000000`). Three-step UI: upload form → preview stats (New/Duplicates/From memory/From Claude/Uncategorised) → success. Merchant map written at commit time only. "Recent imports" card on import page. See `docs/work/2026-05-29-import-summary.md`.
+- **Last session:** 2026-05-30 — Import summary preview/confirm flow (Build order #17, PR #32). Split `importStatement` into `analyseImport` + `commitImport`. New `import_history` table (migration `20260529000000`). Three-step UI: upload form → preview stats (New/Duplicates/From memory/From Claude/Uncategorised) → success. Merchant map written at commit time only. "Recent imports" card on import page. See `docs/work/2026-05-29-import-summary.md`.
 - **Previous sessions (all merged):**
-  - 2026-05-27 — Transaction notes UI + Claude awareness (PR #28, merged). New `setTransactionNote` server action + `NotePopover` (shadcn Popover + Input + sonner toast). Desktop = hover-revealed pencil when no note, inline pencil next to italic note line when set; mobile = always-visible pencil next to merchant. Notes injected as `— note: …` per transaction in chat context and as a "Transactions with notes" section in the summary prompt. See `docs/work/2026-05-27-transaction-notes-ui.md`.
+  - 2026-05-29 — Month picker enhancement (PR #31). New `MonthJumpPopover` shared component (`src/components/ui/month-jump-popover.tsx`); replaces the static month label in `SummaryMonthSelector` and `MonthPicker` with a clickable trigger that opens a year+month grid Popover. Dashboard uses new `DashboardMonthNav` (H1 as the popover trigger, flanked by prev/next arrows — replaces the old separate `MonthSelector` widget). `allowFuture` controls whether future months are enabled. See `docs/work/2026-05-29-month-picker-enhancement.md`.
+  - 2026-05-28 — Multi-household membership + profile-chip switcher (PR #30). New `household_members` join table; `profiles.household_id` as active pointer; `get_my_household_id()` validates membership; `create_household(text)` RPC; `switchHousehold` server action; sidebar/drawer profile chip with household switcher + create + settings. See `docs/work/2026-05-28-multi-household.md`.
+  - 2026-05-27 — Transaction notes UI + Claude awareness (PR #28). New `setTransactionNote` server action + `NotePopover` (shadcn Popover + Input + sonner toast). Desktop = hover-revealed pencil when no note, inline pencil next to italic note line when set; mobile = always-visible pencil next to merchant. Notes injected as `— note: …` per transaction in chat context and as a "Transactions with notes" section in the summary prompt. See `docs/work/2026-05-27-transaction-notes-ui.md`.
   - 2026-05-27 — Transfer exclusion (Phase 5 Item C, PR #29). `Savings` → `Savings Transfer`, `type='transfer'`; transfers excluded from dashboard totals, summary, chat context, recurring, fixed costs. Category Type picker in create/edit dialogs. See `docs/work/2026-05-27-transfer-exclusion.md`.
   - 2026-05-27 — Projected income (Phase 5 Items A + B, PR #26). `categories.type`, `households.expected_monthly_income_cents`, Household settings tab, AllocationPanel on budgets, income-vs-expected + spend-vs-budgeted dashboard cards, income injected into chat + summary context. See `docs/work/2026-05-27-projected-income.md`.
   - 2026-05-27 — Per-row transaction delete (PR #27). `deleteTransaction` server action + `DeleteTransactionButton` with Dialog confirm + sonner toast. Desktop = hover-revealed trash; mobile = always-visible. See `docs/work/2026-05-27-tx-row-delete.md`.
@@ -60,10 +62,11 @@ Core loop: import bank statements → AI categorises transactions → set budget
   - Per-row transaction delete (PR #27)
   - Transaction notes UI + Claude awareness (PR #28) — `NotePopover`, notes in chat + summary context
   - Transfer exclusion (PR #29) — Phase 5 Item C: `type='transfer'`, excluded from all spend aggregation, Type picker in category UI
-  - Import summary preview/confirm (PR #31, build order #17) — `import_history` table, `analyseImport` + `commitImport` actions, 3-step UI, "Recent imports" card
+  - Multi-household membership + profile-chip switcher (PR #30) — `household_members` join table, `create_household` RPC, `switchHousehold` action, sidebar/drawer profile chip
+  - Month picker enhancement (PR #31) — `MonthJumpPopover`, `DashboardMonthNav`, year+month grid popover on dashboard/budgets/summary
+  - Import summary preview/confirm (PR #32, build order #17) — `import_history` table, `analyseImport` + `commitImport` actions, 3-step UI, "Recent imports" card
 - **Open PRs:**
-  - **PR #30** `feature/multi-household` — multi-household membership + profile-chip switcher (worktree at `/Users/peteroomen/personal/budget-app-multi-household`)
-  - **PR #31** `feature/import-summary` — import preview/confirm flow + import_history table (this session, not yet merged)
+  - **PR #32** `feature/import-summary` — import preview/confirm flow + import_history table (merging now)
 - **Vercel / build config (main branch):**
   - `vercel.json`: `buildCommand: "pnpm run build"`, `outputDirectory: ".next"` (resolves to `src/.next` from Vercel's `src/` framework root)
   - `next.config.ts`: `distDir: 'src/.next'` + `NormalModuleReplacementPlugin` replacing `testmode/context.js` with noop for edge runtime
@@ -71,7 +74,7 @@ Core loop: import bank statements → AI categorises transactions → set budget
   - `eslint.config.mjs`: `{ ignores: ['src/.next/**'] }` prevents linting of build artifacts
   - Next.js `15.5.18` — do NOT downgrade; 15.3.3 is Vercel-blocked for CVE
 - **Remaining build order items:**
-  - ~~**#17** Import summary~~ — shipped in PR #31. All 17 build order items now complete.
+  - ~~**#17** Import summary~~ — shipped in PR #32. All 17 build order items now complete.
 - **Deferred (not blocking):**
   - Auto-run recurring detection after each import (currently manual-trigger only)
   - Summary "Regenerate" button
@@ -79,8 +82,8 @@ Core loop: import bank statements → AI categorises transactions → set budget
   - Header search, notification bell (roadmapped, not built yet)
   - Set `TIDE_ANTHROPIC_API_KEY` in Vercel project env before deploying to production
 - **Known issues:** Node 22 required — always `source ~/.nvm/nvm.sh && nvm use 22` before pnpm scripts.
-- **Components available:** `Skeleton`, `Tooltip`, `Avatar`, `Sheet`, `Badge`, `Switch`, `Popover` (all in `src/components/ui/`). `Textarea` is **not** installed — single-line `Input` is used for notes.
-- **Prop convention:** `MonthSelector` and `SummaryMonthSelector` use `allowFuture` (not `isAdmin`) — the page passes `allowFuture={isAdmin}` so the selector stays role-agnostic.
+- **Components available:** `Skeleton`, `Tooltip`, `Avatar`, `Sheet`, `Badge`, `Switch`, `Popover`, `MonthJumpPopover` (all in `src/components/ui/`). `Textarea` is **not** installed — single-line `Input` is used for notes.
+- **Prop convention:** `SummaryMonthSelector`, `MonthPicker`, and `MonthJumpPopover` use `allowFuture` (not `isAdmin`) — the page passes `allowFuture={isAdmin}` so the selector stays role-agnostic. `DashboardMonthNav` still accepts `isAdmin` (converts internally to `allowFuture`).
 - **Theme:** `font-display` = Fraunces (serif, use on H1s + CardTitles + hero metrics). `font-mono` = JetBrains Mono (use on tabular numerics). Badge variants: `accent` (sage wash), `warn` (gold), `danger` (rust), `outline`.
 - **Env vars:** Use `TIDE_ANTHROPIC_API_KEY` (not `ANTHROPIC_API_KEY`) — Claude Desktop shadows the standard name with an empty value on macOS. See `docs/decisions/002-tide-anthropic-api-key-env-var.md`.
 

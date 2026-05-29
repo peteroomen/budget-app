@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { getAccounts } from '@/lib/queries/accounts'
 import { getCategories } from '@/lib/queries/categories'
 import { getHouseholdSettings } from '@/lib/queries/household'
+import { getCurrentUserContext } from '@/lib/queries/profile'
 import { SettingsTabs } from '@/components/settings/SettingsTabs'
 import { HouseholdContent } from '@/components/settings/HouseholdContent'
 import { AccountsContent } from '@/components/settings/AccountsContent'
@@ -18,10 +19,11 @@ function parseTab(raw: string | undefined): Tab {
 export default async function SettingsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ tab?: string }>
+  searchParams: Promise<{ tab?: string; new?: string }>
 }) {
   const sp = await searchParams
   const activeTab = parseTab(sp.tab)
+  const openCreate = sp.new === '1'
 
   const supabase = await createClient()
   const {
@@ -30,10 +32,11 @@ export default async function SettingsPage({
 
   const isAdmin = user?.app_metadata?.role === 'admin'
 
-  const [accounts, categories, household] = await Promise.all([
+  const [accounts, categories, household, ctx] = await Promise.all([
     getAccounts(),
     getCategories(),
     getHouseholdSettings(),
+    getCurrentUserContext(),
   ])
 
   return (
@@ -51,6 +54,9 @@ export default async function SettingsPage({
         householdContent={
           <HouseholdContent
             expectedMonthlyIncomeCents={household?.expected_monthly_income_cents ?? null}
+            memberships={ctx?.memberships ?? []}
+            activeHouseholdId={ctx?.activeHouseholdId ?? null}
+            openCreateByDefault={openCreate}
           />
         }
         accountsContent={<AccountsContent accounts={accounts} />}

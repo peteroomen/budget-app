@@ -1,23 +1,10 @@
 'use client'
 
 import { useRouter, useSearchParams } from 'next/navigation'
+import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-
-function formatMonthLabel(month: string): string {
-  const parts = month.split('-')
-  const date = new Date(parseInt(parts[0]!), parseInt(parts[1]!) - 1, 1)
-  return date.toLocaleDateString('en-NZ', { month: 'long', year: 'numeric' })
-}
-
-function offsetMonth(month: string, delta: number): string {
-  const parts = month.split('-').map(Number)
-  const year = parts[0]!
-  const m = parts[1]!
-  const date = new Date(year, m - 1 + delta, 1)
-  const newYear = date.getFullYear()
-  const newMonth = String(date.getMonth() + 1).padStart(2, '0')
-  return `${newYear}-${newMonth}`
-}
+import { MonthJumpPopover } from '@/components/ui/month-jump-popover'
+import { prevMonth, nextMonth } from '@/lib/utils/month'
 
 interface MonthPickerProps {
   month: string
@@ -29,23 +16,30 @@ export function MonthPicker({ month, basePath = '/budgets' }: MonthPickerProps) 
   const router = useRouter()
   const searchParams = useSearchParams()
 
-  function navigate(delta: number) {
-    const next = offsetMonth(month, delta)
+  function navigate(target: string) {
     const params = new URLSearchParams(searchParams.toString())
-    params.set('month', next)
+    params.set('month', target)
     router.push(`${basePath}?${params.toString()}`)
   }
 
   return (
     <div className="inline-flex items-center rounded-lg border bg-background">
-      <Button variant="ghost" size="sm" onClick={() => navigate(-1)} aria-label="Previous month">
-        ‹
+      <Button
+        variant="ghost"
+        size="icon"
+        onClick={() => navigate(prevMonth(month))}
+        aria-label="Previous month"
+      >
+        <ChevronLeft className="h-4 w-4" />
       </Button>
-      <span className="min-w-[10rem] text-center text-sm font-medium">
-        {formatMonthLabel(month)}
-      </span>
-      <Button variant="ghost" size="sm" onClick={() => navigate(1)} aria-label="Next month">
-        ›
+      <MonthJumpPopover selectedMonth={month} onSelect={navigate} />
+      <Button
+        variant="ghost"
+        size="icon"
+        onClick={() => navigate(nextMonth(month))}
+        aria-label="Next month"
+      >
+        <ChevronRight className="h-4 w-4" />
       </Button>
     </div>
   )

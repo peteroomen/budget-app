@@ -28,6 +28,18 @@ export interface Profile {
   updated_at: string
 }
 
+export interface HouseholdMembership {
+  id: string
+  name: string
+}
+
+export interface UserContext {
+  profile: Profile
+  activeHouseholdId: string | null
+  activeHouseholdName: string | null
+  memberships: HouseholdMembership[]
+}
+
 export interface Account {
   id: string
   household_id: string
