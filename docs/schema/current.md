@@ -2,8 +2,8 @@
 
 > Auto-maintained. Update this file after every migration.
 
-**Migrations:** up to `20260527000001_savings_to_transfer.sql`
-**Last updated:** 2026-05-27
+**Migrations:** up to `20260529000000_import_history.sql`
+**Last updated:** 2026-05-29
 
 ---
 
@@ -121,6 +121,26 @@ Unique constraint: `(household_id, category_id, month)`
 | created_at  | timestamptz        | Default now()                                |
 | updated_at  | timestamptz        | Auto-updated via trigger                     |
 
+### import_history
+
+| Column              | Type        | Notes                                                        |
+| ------------------- | ----------- | ------------------------------------------------------------ |
+| id                  | uuid (PK)   | Default gen_random_uuid()                                    |
+| household_id        | uuid        | FK → households(id), cascade delete, not null                |
+| account_id          | uuid        | FK → accounts(id), set null on delete, nullable              |
+| filename            | text        | Not null                                                     |
+| file_type           | text        | 'csv' or 'pdf', not null                                     |
+| bank_format         | text        | Nullable. 'ANZ' \| 'ASB' \| 'Westpac' \| 'BNZ' \| null (pdf) |
+| imported_count      | integer     | Transactions inserted. Default 0                             |
+| duplicates_count    | integer     | Transactions skipped as duplicates. Default 0                |
+| from_map_count      | integer     | Categorised from merchant map. Default 0                     |
+| from_claude_count   | integer     | Categorised by Claude AI. Default 0                          |
+| uncategorised_count | integer     | No category assigned. Default 0                              |
+| imported_at         | timestamptz | Default now()                                                |
+| created_at          | timestamptz | Default now()                                                |
+
+Note: new imports write to `import_history` only. The older `uploads` table is preserved for historical records but no longer written to by new code.
+
 ---
 
 ## Enums
@@ -137,4 +157,4 @@ Unique constraint: `(household_id, category_id, month)`
 
 ## RLS
 
-All tables have RLS enabled. Policies enforce household-level isolation via `get_my_household_id()`. Transactions and uploads are scoped through their parent account's household_id.
+All tables have RLS enabled. Policies enforce household-level isolation via `get_my_household_id()`. Transactions and uploads are scoped through their parent account's household_id. `import_history` is scoped directly by `household_id`.
