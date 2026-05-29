@@ -3,7 +3,8 @@
 import { useRouter } from 'next/navigation'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { prevMonth, nextMonth, formatMonthLabel, currentMonth } from '@/lib/utils/month'
+import { MonthJumpPopover } from '@/components/ui/month-jump-popover'
+import { prevMonth, nextMonth, currentMonth } from '@/lib/utils/month'
 
 interface MonthSelectorProps {
   month: string
@@ -25,9 +26,7 @@ export function MonthSelector({ month, isAdmin }: MonthSelectorProps) {
         <ChevronLeft className="h-4 w-4" />
         <span className="sr-only">Previous month</span>
       </Button>
-      <span className="min-w-[140px] text-center text-sm font-medium">
-        {formatMonthLabel(month)}
-      </span>
+      <MonthJumpPopover selectedMonth={month} onSelect={navigate} allowFuture={!!isAdmin} />
       <Button
         variant="ghost"
         size="icon"
