@@ -6,6 +6,7 @@ import { usePathname, useSearchParams } from 'next/navigation'
 import { cn } from '@/lib/utils'
 import { PRIMARY_NAV } from '@/components/nav/nav-items'
 import { useMobileNav } from '@/components/nav/MobileNavContext'
+import { rememberMonth, getRememberedMonth } from '@/lib/utils/persisted-month'
 
 const MONTH_ROUTES = new Set(['/dashboard', '/budgets', '/summary', '/transactions'])
 
@@ -13,7 +14,9 @@ function BottomTabBarInner() {
   const pathname = usePathname()
   const searchParams = useSearchParams()
   const { drawerOpen } = useMobileNav()
-  const month = searchParams.get('month')
+  const rawMonth = searchParams.get('month')
+  rememberMonth(rawMonth)
+  const month = rawMonth ?? getRememberedMonth()
 
   useEffect(() => {
     document.getElementById('page-scroll')?.scrollTo({ top: 0 })

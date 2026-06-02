@@ -4,12 +4,15 @@ import { useSearchParams } from 'next/navigation'
 import { Separator } from '@/components/ui/separator'
 import { NavLink } from '@/components/nav/NavLink'
 import { PRIMARY_NAV, SECONDARY_NAV } from '@/components/nav/nav-items'
+import { rememberMonth, getRememberedMonth } from '@/lib/utils/persisted-month'
 
 const MONTH_ROUTES = new Set(['/dashboard', '/budgets', '/summary', '/transactions'])
 
 export function SidebarNavLinks() {
   const searchParams = useSearchParams()
-  const month = searchParams.get('month')
+  const rawMonth = searchParams.get('month')
+  rememberMonth(rawMonth)
+  const month = rawMonth ?? getRememberedMonth()
 
   function buildHref(base: string) {
     if (month && MONTH_ROUTES.has(base)) return `${base}?month=${month}`

@@ -1,4 +1,5 @@
-import { Target, TrendingUp, Wallet, AlertTriangle } from 'lucide-react'
+import Link from 'next/link'
+import { Target, TrendingUp, Wallet, AlertTriangle, Settings } from 'lucide-react'
 import {
   getBudgetsWithActuals,
   findMostRecentBudgetMonth,
@@ -6,6 +7,7 @@ import {
 } from '@/lib/queries/budgets'
 import { getHouseholdSettings } from '@/lib/queries/household'
 import { Card, CardContent } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
 import { BudgetList } from '@/components/budgets/BudgetList'
 import { OverBudgetCards } from '@/components/budgets/OverBudgetCards'
 import { SeededFromBanner } from '@/components/budgets/SeededFromBanner'
@@ -100,11 +102,19 @@ export default async function BudgetsPage({ searchParams }: BudgetsPageProps) {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="font-display text-display-h1 font-medium">Budgets</h1>
-        <p className="mt-0.5 text-body-sm text-muted-foreground">
-          {items.length} categories · {monthLabel}
-        </p>
+      <div className="flex items-start justify-between gap-2">
+        <div>
+          <h1 className="font-display text-display-h1 font-medium">Budgets</h1>
+          <p className="mt-0.5 text-body-sm text-muted-foreground">
+            {items.length} categories · {monthLabel}
+          </p>
+        </div>
+        <Button asChild variant="outline" size="sm" className="mt-1 shrink-0">
+          <Link href="/settings?tab=categories">
+            <Settings size={14} className="mr-1.5" />
+            Manage categories
+          </Link>
+        </Button>
       </div>
 
       {seededFrom && <SeededFromBanner sourceMonth={seededFrom} />}
@@ -146,9 +156,14 @@ export default async function BudgetsPage({ searchParams }: BudgetsPageProps) {
       <OverBudgetCards items={items} />
 
       {items.length === 0 ? (
-        <p className="text-sm text-muted-foreground">
-          No categories found. Add some categories first.
-        </p>
+        <div className="flex flex-col items-center gap-3 py-12 text-center">
+          <p className="text-sm text-muted-foreground">
+            No categories yet. Add some to start budgeting.
+          </p>
+          <Button asChild size="sm">
+            <Link href="/settings?tab=categories">Add categories</Link>
+          </Button>
+        </div>
       ) : (
         <BudgetList items={items} month={month} />
       )}
