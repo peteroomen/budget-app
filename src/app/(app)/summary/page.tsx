@@ -1,10 +1,8 @@
 import { Suspense } from 'react'
 import { generateText } from 'ai'
 import { createAnthropic } from '@ai-sdk/anthropic'
-import { createClient } from '@/lib/supabase/server'
 import { currentMonth } from '@/lib/utils/month'
 import { getSummaryContext, buildSummaryPrompt } from '@/lib/queries/summary'
-import { SummaryMonthSelector } from '@/components/summary/SummaryMonthSelector'
 import { SummaryDisplay, type MonthlySummaryJSON } from '@/components/summary/SummaryDisplay'
 import { Skeleton } from '@/components/ui/skeleton'
 
@@ -33,27 +31,18 @@ export default async function SummaryPage({ searchParams }: SummaryPageProps) {
   const { month: monthParam } = await searchParams
   const month = monthParam && /^\d{4}-\d{2}$/.test(monthParam) ? monthParam : currentMonth()
 
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-  const isAdmin = user?.app_metadata?.role === 'admin'
-
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <div>
-          <h1 className="font-display text-display-summary-h1 font-medium">Monthly recap</h1>
-          <p className="mt-0.5 font-display italic text-body-sm text-muted-foreground">
-            {new Date().toLocaleDateString('en-NZ', {
-              weekday: 'short',
-              day: 'numeric',
-              month: 'short',
-            })}{' '}
-            · powered by Tide
-          </p>
-        </div>
-        <SummaryMonthSelector month={month} allowFuture={isAdmin} />
+      <div>
+        <h1 className="font-display text-display-summary-h1 font-medium">Monthly recap</h1>
+        <p className="mt-0.5 font-display italic text-body-sm text-muted-foreground">
+          {new Date().toLocaleDateString('en-NZ', {
+            weekday: 'short',
+            day: 'numeric',
+            month: 'short',
+          })}{' '}
+          · powered by Tide
+        </p>
       </div>
 
       <Suspense key={month} fallback={<SummaryLoadingSkeleton />}>

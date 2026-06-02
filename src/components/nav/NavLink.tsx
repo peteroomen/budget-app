@@ -23,7 +23,8 @@ export function NavLink({
   showBar = true,
 }: NavLinkProps) {
   const pathname = usePathname()
-  const isActive = pathname === href || pathname.startsWith(href + '/')
+  const basePath = href.split('?')[0]!
+  const isActive = pathname === basePath || pathname.startsWith(basePath + '/')
 
   return (
     <Link

@@ -8,7 +8,6 @@ import { TransactionTable } from '@/components/transactions/TransactionTable'
 import { TransactionDayList } from '@/components/transactions/TransactionDayList'
 import { RecategoriseButton } from '@/components/transactions/RecategoriseButton'
 import { DetectRecurringButton } from '@/components/transactions/DetectRecurringButton'
-import { MonthPicker } from '@/components/budgets/MonthPicker'
 
 const VALID_SORT_COLS: TransactionSortBy[] = ['date', 'amount_cents', 'merchant_name']
 const VALID_DIRS: SortDir[] = ['asc', 'desc']
@@ -104,9 +103,6 @@ export default async function TransactionsPage({
         <div className="flex flex-wrap items-center gap-2">
           <DetectRecurringButton />
           <RecategoriseButton />
-          <Suspense fallback={null}>
-            <MonthPicker month={month} basePath="/transactions" />
-          </Suspense>
         </div>
       </div>
 

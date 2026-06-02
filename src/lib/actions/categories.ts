@@ -110,7 +110,6 @@ export async function deleteCategory(id: string): Promise<ActionResult> {
     .maybeSingle()
 
   if (!category) return { error: 'Category not found' }
-  if (category.is_system) return { error: 'Default categories cannot be deleted' }
 
   const { error } = await supabase
     .from('categories')

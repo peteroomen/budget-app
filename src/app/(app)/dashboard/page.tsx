@@ -1,7 +1,6 @@
 import { Suspense } from 'react'
 import { createClient } from '@/lib/supabase/server'
-import { currentMonth, monthDateRange } from '@/lib/utils/month'
-import { DashboardMonthNav } from './DashboardMonthNav'
+import { currentMonth, formatMonthLabel, monthDateRange } from '@/lib/utils/month'
 import { DashboardContent } from './DashboardContent'
 import { DashboardContentSkeleton } from './loading'
 
@@ -16,14 +15,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
   const supabase = await createClient()
   const { dateFrom, dateTo } = monthDateRange(month)
 
-  const [
-    {
-      data: { user },
-    },
-    { data: household },
-    { count: transactionCount },
-  ] = await Promise.all([
-    supabase.auth.getUser(),
+  const [{ data: household }, { count: transactionCount }] = await Promise.all([
     supabase.from('households').select('name').maybeSingle(),
     supabase
       .from('transactions')
@@ -32,14 +24,13 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
       .lte('date', dateTo),
   ])
 
-  const isAdmin = user?.app_metadata?.role === 'admin'
   const householdName = household?.name ?? 'My Household'
   const txCount = transactionCount ?? 0
 
   return (
     <div className="space-y-6">
       <div>
-        <DashboardMonthNav month={month} isAdmin={isAdmin} />
+        <h1 className="font-display text-display-h1 font-medium">{formatMonthLabel(month)}</h1>
         <p className="mt-0.5 text-body-sm text-muted-foreground">
           {householdName} · {txCount} {txCount === 1 ? 'Transaction' : 'Transactions'}
         </p>

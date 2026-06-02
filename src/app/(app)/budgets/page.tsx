@@ -1,4 +1,3 @@
-import { Suspense } from 'react'
 import { Target, TrendingUp, Wallet, AlertTriangle } from 'lucide-react'
 import {
   getBudgetsWithActuals,
@@ -7,7 +6,6 @@ import {
 } from '@/lib/queries/budgets'
 import { getHouseholdSettings } from '@/lib/queries/household'
 import { Card, CardContent } from '@/components/ui/card'
-import { MonthPicker } from '@/components/budgets/MonthPicker'
 import { BudgetList } from '@/components/budgets/BudgetList'
 import { OverBudgetCards } from '@/components/budgets/OverBudgetCards'
 import { SeededFromBanner } from '@/components/budgets/SeededFromBanner'
@@ -102,16 +100,11 @@ export default async function BudgetsPage({ searchParams }: BudgetsPageProps) {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between gap-4">
-        <div>
-          <h1 className="font-display text-display-h1 font-medium">Budgets</h1>
-          <p className="mt-0.5 text-body-sm text-muted-foreground">
-            {items.length} categories · {monthLabel}
-          </p>
-        </div>
-        <Suspense fallback={null}>
-          <MonthPicker month={month} />
-        </Suspense>
+      <div>
+        <h1 className="font-display text-display-h1 font-medium">Budgets</h1>
+        <p className="mt-0.5 text-body-sm text-muted-foreground">
+          {items.length} categories · {monthLabel}
+        </p>
       </div>
 
       {seededFrom && <SeededFromBanner sourceMonth={seededFrom} />}
