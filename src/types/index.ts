@@ -38,6 +38,7 @@ export interface UserContext {
   activeHouseholdId: string | null
   activeHouseholdName: string | null
   memberships: HouseholdMembership[]
+  isAdmin: boolean
 }
 
 export interface Account {

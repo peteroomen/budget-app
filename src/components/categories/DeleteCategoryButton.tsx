@@ -34,20 +34,6 @@ export function DeleteCategoryButton({ id, name, isSystem }: DeleteCategoryButto
     })
   }
 
-  if (isSystem) {
-    return (
-      <Button
-        variant="ghost"
-        size="sm"
-        disabled
-        className="text-muted-foreground"
-        title="Default categories cannot be deleted"
-      >
-        Delete
-      </Button>
-    )
-  }
-
   return (
     <Dialog
       open={open}
@@ -65,6 +51,9 @@ export function DeleteCategoryButton({ id, name, isSystem }: DeleteCategoryButto
         <DialogHeader>
           <DialogTitle>Delete &ldquo;{name}&rdquo;?</DialogTitle>
         </DialogHeader>
+        {isSystem && (
+          <p className="text-sm font-medium text-warning">This is a built-in default category.</p>
+        )}
         <p className="text-sm text-muted-foreground">
           Any transactions categorised as &ldquo;{name}&rdquo; will become uncategorised.
         </p>

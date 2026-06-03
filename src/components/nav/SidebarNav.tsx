@@ -1,10 +1,12 @@
 'use client'
 
+import { Suspense } from 'react'
 import { Separator } from '@/components/ui/separator'
 import { NavLink } from '@/components/nav/NavLink'
+import { SidebarNavLinks } from '@/components/nav/SidebarNavLinks'
 import { PRIMARY_NAV, SECONDARY_NAV } from '@/components/nav/nav-items'
 
-export function SidebarNav() {
+function StaticNav() {
   return (
     <nav className="flex-1 space-y-0.5 px-3 py-2">
       {PRIMARY_NAV.map(({ href, label, icon }) => (
@@ -21,5 +23,13 @@ export function SidebarNav() {
         </NavLink>
       ))}
     </nav>
+  )
+}
+
+export function SidebarNav() {
+  return (
+    <Suspense fallback={<StaticNav />}>
+      <SidebarNavLinks />
+    </Suspense>
   )
 }

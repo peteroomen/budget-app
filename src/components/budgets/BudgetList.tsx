@@ -1,6 +1,8 @@
 'use client'
 
 import { useState } from 'react'
+import Link from 'next/link'
+import { ExternalLink } from 'lucide-react'
 import { Progress } from '@/components/ui/progress'
 import { Badge } from '@/components/ui/badge'
 import { SetBudgetDialog } from '@/components/budgets/SetBudgetDialog'
@@ -30,13 +32,14 @@ export function BudgetList({ items, month }: BudgetListProps) {
     <>
       <div className="overflow-hidden rounded-lg border border-border">
         <table className="w-full table-fixed border-collapse">
-          {/* dot / name / bar / amount / badge */}
+          {/* dot / name / bar / amount / badge / link */}
           <colgroup>
             <col className="w-10" />
             <col className="w-52" />
             <col />
             <col className="w-24" />
             <col className="w-20" />
+            <col className="w-10" />
           </colgroup>
 
           {/* Header */}
@@ -47,6 +50,7 @@ export function BudgetList({ items, month }: BudgetListProps) {
                 <p className="text-[13px] font-medium text-foreground">All categories</p>
                 <p className="text-[11px] text-muted-foreground">Click a budget to edit</p>
               </th>
+              <th />
               <th />
               <th />
               <th />
@@ -78,6 +82,8 @@ export function BudgetList({ items, month }: BudgetListProps) {
                   ? { amount: formatNZD(actual_cents - budgetCents), label: 'over', over: true }
                   : { amount: formatNZD(budgetCents - actual_cents), label: 'left', over: false }
                 : null
+
+              const txHref = `/transactions?cat=${category.id}&month=${month}`
 
               return (
                 <tr
@@ -125,7 +131,7 @@ export function BudgetList({ items, month }: BudgetListProps) {
                       <td className="px-3 py-3.5 align-middle text-right font-mono text-[13px] tabular-nums">
                         {formatNZD(budgetCents)}
                       </td>
-                      <td className="pr-4 pl-2 py-3.5 align-middle">
+                      <td className="pr-2 pl-2 py-3.5 align-middle">
                         <Badge variant={pctBadgeVariant} className="font-mono tabular-nums">
                           {Math.round(ratio * 100)}%
                         </Badge>
@@ -138,6 +144,21 @@ export function BudgetList({ items, month }: BudgetListProps) {
                       </span>
                     </td>
                   )}
+
+                  {/* drill-down link — stop propagation so the row click (edit dialog) doesn't fire */}
+                  <td
+                    className="pr-3 py-3.5 align-middle"
+                    onClick={(e) => e.stopPropagation()}
+                    onKeyDown={(e) => e.stopPropagation()}
+                  >
+                    <Link
+                      href={txHref}
+                      title="View transactions"
+                      className="flex items-center justify-center text-muted-foreground/50 transition-colors hover:text-foreground"
+                    >
+                      <ExternalLink size={13} />
+                    </Link>
+                  </td>
                 </tr>
               )
             })}

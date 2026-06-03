@@ -63,5 +63,6 @@ export async function getCurrentUserContext(): Promise<UserContext | null> {
     activeHouseholdId: active?.id ?? null,
     activeHouseholdName: active?.name ?? null,
     memberships: list,
+    isAdmin: user.app_metadata?.role === 'admin',
   }
 }

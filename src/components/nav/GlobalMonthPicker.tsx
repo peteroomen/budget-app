@@ -1,22 +1,33 @@
 'use client'
 
-import { useRouter } from 'next/navigation'
+import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { MonthJumpPopover } from '@/components/ui/month-jump-popover'
 import { prevMonth, nextMonth, currentMonth } from '@/lib/utils/month'
 
-interface DashboardMonthNavProps {
-  month: string
-  isAdmin?: boolean
+const MONTH_ROUTES = new Set(['/dashboard', '/budgets', '/summary', '/transactions'])
+
+interface GlobalMonthPickerProps {
+  allowFuture?: boolean
 }
 
-export function DashboardMonthNav({ month, isAdmin }: DashboardMonthNavProps) {
+export function GlobalMonthPicker({ allowFuture = false }: GlobalMonthPickerProps) {
+  const pathname = usePathname()
+  const searchParams = useSearchParams()
   const router = useRouter()
-  const isCurrentMonth = month === currentMonth()
+
+  if (!MONTH_ROUTES.has(pathname)) return null
+
+  const now = currentMonth()
+  const raw = searchParams.get('month')
+  const month = raw && /^\d{4}-\d{2}$/.test(raw) ? raw : now
+  const isCurrentMonth = month === now
 
   function navigate(target: string) {
-    router.push(`/dashboard?month=${target}`)
+    const params = new URLSearchParams(searchParams.toString())
+    params.set('month', target)
+    router.push(`${pathname}?${params.toString()}`)
   }
 
   return (
@@ -28,14 +39,13 @@ export function DashboardMonthNav({ month, isAdmin }: DashboardMonthNavProps) {
       <MonthJumpPopover
         selectedMonth={month}
         onSelect={navigate}
-        allowFuture={!!isAdmin}
-        triggerClassName="font-display text-display-h1 font-medium px-1"
+        allowFuture={allowFuture}
       />
       <Button
         variant="ghost"
         size="icon"
         onClick={() => navigate(nextMonth(month))}
-        disabled={isCurrentMonth && !isAdmin}
+        disabled={isCurrentMonth && !allowFuture}
       >
         <ChevronRight className="h-5 w-5" />
         <span className="sr-only">Next month</span>

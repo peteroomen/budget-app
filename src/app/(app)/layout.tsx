@@ -1,8 +1,10 @@
+import { Suspense } from 'react'
 import { redirect } from 'next/navigation'
 import { Upload } from 'lucide-react'
 import { getCurrentUserContext } from '@/lib/queries/profile'
 import { SidebarNav } from '@/components/nav/SidebarNav'
 import { BottomTabBar } from '@/components/nav/BottomTabBar'
+import { GlobalMonthPicker } from '@/components/nav/GlobalMonthPicker'
 import { MobileDrawer, MobileNotificationBell } from '@/components/nav/MobileDrawer'
 import { MobileNavProvider } from '@/components/nav/MobileNavContext'
 import { ProfileChip } from '@/components/nav/ProfileChip'
@@ -16,7 +18,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   if (!ctx) {
     redirect('/login')
   }
-  const { profile, activeHouseholdId, activeHouseholdName, memberships } = ctx
+  const { profile, activeHouseholdId, activeHouseholdName, memberships, isAdmin } = ctx
 
   return (
     <div className="flex h-dvh overflow-hidden">
@@ -33,7 +35,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           </div>
         </div>
 
-        {/* Primary + secondary nav — client component owns icon imports */}
+        {/* Primary + secondary nav */}
         <SidebarNav />
 
         {/* Theme toggle row + user chip */}
@@ -50,12 +52,12 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         </div>
       </aside>
 
-      {/* ── Right column — wrapped in MobileNavProvider for drawer↔tab-bar state ── */}
+      {/* ── Right column ── */}
       <MobileNavProvider>
         <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
-          {/* Header */}
-          <header className="flex h-14 shrink-0 items-center justify-between border-b bg-background px-4 md:px-6">
-            {/* Mobile: hamburger + brand */}
+          {/* Header — 3-column grid: left | center (month picker) | right */}
+          <header className="grid h-14 shrink-0 grid-cols-[1fr_auto_1fr] items-center gap-2 border-b bg-background px-4 md:px-6">
+            {/* Left: mobile hamburger + brand */}
             <div className="flex items-center gap-3 md:hidden">
               <MobileDrawer
                 profile={profile}
@@ -68,12 +70,16 @@ export default async function AppLayout({ children }: { children: React.ReactNod
                 <span className="font-display text-display-wordmark font-semibold">Tide</span>
               </div>
             </div>
-
-            {/* Desktop: spacer so Import sits on the right */}
+            {/* Left: desktop empty (keeps grid symmetric) */}
             <div className="hidden md:block" />
 
-            {/* Right cluster: Import (desktop) + Bell (mobile) */}
-            <div className="flex items-center gap-2">
+            {/* Center: global month picker — only on month-aware routes */}
+            <Suspense fallback={null}>
+              <GlobalMonthPicker allowFuture={isAdmin} />
+            </Suspense>
+
+            {/* Right: Import (desktop) + Bell (mobile) */}
+            <div className="flex items-center justify-end gap-2">
               <Button asChild size="sm" className="hidden md:flex">
                 <a href="/import">
                   <Upload size={15} className="mr-1.5" />
