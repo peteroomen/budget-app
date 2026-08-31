@@ -274,6 +274,33 @@ Three items that must be built in order — A is the schema foundation, B and C 
 - [ ] **Unusual transaction flagging** — rule-based anomaly detection surfaces transactions that look out-of-place: amount >2× the historical average for that category, large one-off charges (configurable threshold, default $300) from a merchant never seen before, or amount/category mismatch (e.g. $1,000 categorised as Fuel). Flagged transactions appear in a "Flagged for review" section on the Summary page; dashboard shows a badge count linking through. Dismiss by adding a note to the transaction — a note means "user has acknowledged this", no flag shown again (uses the existing `notes` column, no new schema). Settings page: configurable thresholds (large-transaction floor, category-spike multiplier). Depends on transaction notes UI.
 - [ ] **Import summary** — post-upload breakdown: X imported, X duplicates, X from merchant memory, X from Claude, X recurring, X uncategorised. Display inline on the import page.
 - [ ] **Auto-run recurring detection after import** — currently manual trigger only; run automatically as a post-import step
+- [ ] **Category cap strip on the transactions screen** — when the transactions list is filtered to a
+      category (`?cat=<id>`), show that category's cap and progress on the page, on or around the
+      filter bar. Everything needed is already on the page: `month`, `sp.cat`, and
+      `getBudgetsWithActuals(month)` returns `{category, budget, actual_cents}` directly. Two
+      decisions settled at triage: **(a)** show the category's _full month_ spend, not the
+      currently-filtered spend — otherwise adding a search term makes the figure disagree with the
+      Budgets page for the same category; **(b)** render nothing for income/transfer categories,
+      which have no cap (`getBudgetsWithActuals` filters to `type = 'expense'`). Depends on global
+      caps (PR #37) only in that it removes the "which month's cap?" question. ~half a session.
+
+- [ ] **Chat write actions: budget caps** _(first slice of the "Write actions" backlog item below)_ —
+      let the chat assistant set or clear a category's cap. Decisions settled at triage: - **Stay in the Vercel AI SDK.** `api/chat/route.ts` uses `streamText` + `@ai-sdk/anthropic`
+      feeding Assistant UI; use the AI SDK's own `tools` + Zod surface. Dropping to the raw
+      Anthropic SDK means rebuilding the streaming/UI plumbing for no gain. - **Confirmation is structural, not prompted.** Define the tool _without_ an `execute`
+      function so the call streams to the client, Assistant UI renders a confirm card, and the
+      write runs through the existing `upsertBudget` server action on click.
+      **Why this is a hard requirement:** chat context injects merchant names and transaction
+      descriptions, which come from imported bank statements — attacker-influenceable text. Once
+      Claude can write, a crafted merchant name is a write primitive. A system-prompt rule to
+      "always confirm" does not hold, because injected text competes with the system prompt on
+      equal footing; a UI gate does. - **Resolve server-side.** The tool takes a category ID from an injected list; the handler
+      re-derives `household_id` via `getHouseholdId()` exactly as `upsertBudget` does. Never
+      trust a household or category supplied by the model. - **Caps only in v1.** Recategorising transactions and recurring flags come after the
+      confirmation pattern is proven — different blast radius, different confirmation UI shape. - Global caps (PR #37) shrank this: the tool signature is `(categoryId, amountCents)` with no
+      month argument and no "this month or every month after?" ambiguity to design around. - Bundle in: `route.ts:41` pins `claude-sonnet-4-5`, a 4.5-era model. Tool-calling reliability
+      is exactly where the current Claude 5 family pulls ahead.
+
 - [ ] In-app budget alerts: "You're 80% through Dining & Takeaways"
 - [ ] Multi-account view (net position across all accounts)
 - [ ] CSV export of filtered transactions
