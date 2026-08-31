@@ -111,12 +111,15 @@ Unique constraint: `(household_id, merchant_name)`
 | id           | uuid (PK)   | Default gen_random_uuid()                     |
 | household_id | uuid        | FK → households(id), cascade delete, not null |
 | category_id  | uuid        | FK → categories(id), cascade delete, not null |
-| month        | text        | 'YYYY-MM' format, not null                    |
 | amount_cents | integer     | Not null                                      |
 | created_at   | timestamptz | Default now()                                 |
 | updated_at   | timestamptz | Auto-updated via trigger                      |
 
-Unique constraint: `(household_id, category_id, month)`
+Unique constraint: `(household_id, category_id)`
+
+Caps are **global** — one standing value per category, applying to every month. The `month`
+column was dropped in `20260831000000_global_budget_caps.sql`; the pre-collapse per-month rows
+are retained in `archive.budgets_monthly` (the `archive` schema is not exposed via PostgREST).
 
 ### uploads
 

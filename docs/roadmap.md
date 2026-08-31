@@ -140,10 +140,11 @@ uploads
 
 ### Budgets
 
-- [x] Set a monthly budget per category (amount input, saved per month)
+- [x] Set a budget cap per category (global standing cap — applies to every month; see ADR 003)
 - [x] Budget vs actual bar for each category (green → amber → red as you approach/exceed)
 - [x] "Over budget" callout cards on dashboard
-- [ ] Rollover toggle (Phase 3b): unspent budget rolls to next month
+- [~] ~~Rollover toggle (Phase 3b): unspent budget rolls to next month~~ — dropped 2026-08-31: caps are
+  global, so there is no per-month allocation to roll over. See ADR 003.
 
 ### Recurring Transactions
 

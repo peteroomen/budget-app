@@ -93,11 +93,8 @@ export async function getChatContext(month: string): Promise<ChatContext | null>
       .lte('date', dateTo)
       .order('date', { ascending: false }),
 
-    // Budgets for current month
-    supabase
-      .from('budgets')
-      .select('category_id, amount_cents, category:categories(name)')
-      .eq('month', month),
+    // Budget caps — global, one standing value per category
+    supabase.from('budgets').select('category_id, amount_cents, category:categories(name)'),
 
     // Trend: last 3 months of expense transactions
     supabase
@@ -323,6 +320,9 @@ export function formatChatContext(ctx: ChatContext): string {
 
   // Budget vs actual — all categories, sorted by spend descending
   lines.push(`## Budget vs Actual (${monthLabel})`)
+  lines.push(
+    'Caps are standing values that apply to every month, not figures set for this month alone.'
+  )
   if (ctx.budgetsVsActual.length === 0) {
     lines.push('No categories found.')
   } else {

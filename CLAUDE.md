@@ -31,7 +31,20 @@ Core loop: import bank statements → AI categorises transactions → set budget
 > **Update this section at the end of every session.**
 
 - **Current phase:** Phase 5 — Polish (in progress). Phases 1–4 fully complete.
-- **Last session:** 2026-05-30 — Import summary preview/confirm flow (Build order #17, PR #32). Split `importStatement` into `analyseImport` + `commitImport`. New `import_history` table (migration `20260529000000`). Three-step UI: upload form → preview stats (New/Duplicates/From memory/From Claude/Uncategorised) → success. Merchant map written at commit time only. "Recent imports" card on import page. See `docs/work/2026-05-29-import-summary.md`.
+- **Last session:** 2026-08-31 — Global budget caps (branch `claude/budget-caps-global-monthly-bli79e`).
+  Dropped `budgets.month`; caps are now one standing value per category applying to every month.
+  Migration `20260831000000` archives the per-month rows to `archive.budgets_monthly`, collapses to
+  one row per `(household_id, category_id)`, and re-keys the unique constraint. Removed the
+  auto-seed machinery (`findMostRecentBudgetMonth`, `seedBudgetsFromMonth`, `SeededFromBanner`) and
+  the write-during-server-render it caused. Added `deleteBudget` + "Remove budget". Also applied a
+  one-off **production data patch** copying June's 16 caps into July/August (backup:
+  `backup.budgets_20260831`). See `docs/work/2026-08-31-global-budget-caps.md` + ADR 003.
+  ⚠️ **The migration has not been applied to production** — it must run with the deploy, not before.
+- **Previous session:** 2026-06-02 — UX polish, issues #33/#34/#35 (PR #36). `GlobalMonthPicker` in
+  the app header (month now persists across pages via month-aware nav links + Suspense-wrapped
+  `SidebarNavLinks` / `BottomTabBar`); per-page month selectors deleted (`MonthSelector`,
+  `SummaryMonthSelector`, `MonthPicker`); system categories can now be deleted; budget rows drill
+  through to `/transactions?cat=…&month=…`. See `docs/work/2026-06-02-ux-polish-issues-33-34-35.md`.
 - **Previous sessions (all merged):**
   - 2026-05-29 — Month picker enhancement (PR #31). New `MonthJumpPopover` shared component (`src/components/ui/month-jump-popover.tsx`); replaces the static month label in `SummaryMonthSelector` and `MonthPicker` with a clickable trigger that opens a year+month grid Popover. Dashboard uses new `DashboardMonthNav` (H1 as the popover trigger, flanked by prev/next arrows — replaces the old separate `MonthSelector` widget). `allowFuture` controls whether future months are enabled. See `docs/work/2026-05-29-month-picker-enhancement.md`.
   - 2026-05-28 — Multi-household membership + profile-chip switcher (PR #30). New `household_members` join table; `profiles.household_id` as active pointer; `get_my_household_id()` validates membership; `create_household(text)` RPC; `switchHousehold` server action; sidebar/drawer profile chip with household switcher + create + settings. See `docs/work/2026-05-28-multi-household.md`.
@@ -65,8 +78,7 @@ Core loop: import bank statements → AI categorises transactions → set budget
   - Multi-household membership + profile-chip switcher (PR #30) — `household_members` join table, `create_household` RPC, `switchHousehold` action, sidebar/drawer profile chip
   - Month picker enhancement (PR #31) — `MonthJumpPopover`, `DashboardMonthNav`, year+month grid popover on dashboard/budgets/summary
   - Import summary preview/confirm (PR #32, build order #17) — `import_history` table, `analyseImport` + `commitImport` actions, 3-step UI, "Recent imports" card
-- **Open PRs:**
-  - **PR #32** `feature/import-summary` — import preview/confirm flow + import_history table (merging now)
+- **Open PRs:** none.
 - **Vercel / build config (main branch):**
   - `vercel.json`: `buildCommand: "pnpm run build"`, `outputDirectory: ".next"` (resolves to `src/.next` from Vercel's `src/` framework root)
   - `next.config.ts`: `distDir: 'src/.next'` + `NormalModuleReplacementPlugin` replacing `testmode/context.js` with noop for edge runtime
@@ -81,7 +93,7 @@ Core loop: import bank statements → AI categorises transactions → set budget
   - Dashboard bottom row (recent transactions + quick actions)
   - Header search, notification bell (roadmapped, not built yet)
   - Set `TIDE_ANTHROPIC_API_KEY` in Vercel project env before deploying to production
-- **Known issues:** Node 22 required — always `source ~/.nvm/nvm.sh && nvm use 22` before pnpm scripts.
+- **Known issues:** Node 22 required. On a local Mac: `source ~/.nvm/nvm.sh && nvm use 22` before pnpm scripts. In the Claude Code remote container there is no nvm — Node 22 is already on PATH at `/opt/node22/bin`, so skip that step. `next lint` rewrites `tsconfig.json` as a side effect; revert it before committing.
 - **Components available:** `Skeleton`, `Tooltip`, `Avatar`, `Sheet`, `Badge`, `Switch`, `Popover`, `MonthJumpPopover` (all in `src/components/ui/`). `Textarea` is **not** installed — single-line `Input` is used for notes.
 - **Prop convention:** `SummaryMonthSelector`, `MonthPicker`, and `MonthJumpPopover` use `allowFuture` (not `isAdmin`) — the page passes `allowFuture={isAdmin}` so the selector stays role-agnostic. `DashboardMonthNav` still accepts `isAdmin` (converts internally to `allowFuture`).
 - **Theme:** `font-display` = Fraunces (serif, use on H1s + CardTitles + hero metrics). `font-mono` = JetBrains Mono (use on tabular numerics). Badge variants: `accent` (sage wash), `warn` (gold), `danger` (rust), `outline`.

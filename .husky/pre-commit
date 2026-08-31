@@ -1,3 +1,9 @@
-. ~/.nvm/nvm.sh
-nvm use
+# Use nvm's Node when nvm is present (local dev machines). In CI and the Claude Code
+# remote container there is no nvm and Node 22 is already on PATH, so skip rather than
+# failing the hook.
+if [ -s "$HOME/.nvm/nvm.sh" ]; then
+  . "$HOME/.nvm/nvm.sh"
+  nvm use
+fi
+
 pnpm exec lint-staged

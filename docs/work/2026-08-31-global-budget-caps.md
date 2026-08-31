@@ -29,7 +29,7 @@ column's only real value is retaining the raw cap figure for a past month.
 **Chosen: fully global caps.** Drop `month` from `budgets`; unique on `(household_id, category_id)`.
 
 Rejected alternative — **effective-dated caps** (`month` → `effective_from`, lookup = latest row
-with `effective_from <= M`): preserves history *and* carries forward, but PostgREST has no
+with `effective_from <= M`): preserves history _and_ carries forward, but PostgREST has no
 `DISTINCT ON`, so every read fetches all rows and resolves in JS, and "editing a past month
 rewrites all later months" needs explaining in the UI. Not worth the complexity for a two-person
 tool whose summaries regenerate live anyway.
@@ -52,11 +52,11 @@ of 2026-08-31:
 | 2026-08 | 6                    | $2,302       | 2026-05-25         |
 
 July and August were written on 2026-05-25 — a handful of caps set while browsing ahead. Because
-those months then held *some* rows, the all-or-nothing seed guard never fired for them again and
+those months then held _some_ rows, the all-or-nothing seed guard never fired for them again and
 they froze at 6 stale categories. Greatest-`month` would therefore pick those stale rows over the
 real June ones. Greatest-`updated_at` is also unsafe alone: an August row was touched 2026-08-31.
 
-**Unverified:** whether any category has a cap in May/July/August but *not* in June. Confirm with
+**Unverified:** whether any category has a cap in May/July/August but _not_ in June. Confirm with
 a per-category breakdown before running the migration, and keep the `updated_at` fallback so such
 a category isn't silently dropped.
 
@@ -80,21 +80,21 @@ that capability. Called out here so it can be struck if unwanted.
   - `alter table public.budgets drop constraint budgets_household_id_category_id_month_key;`
   - `alter table public.budgets drop column month;`
   - `alter table public.budgets add constraint budgets_household_id_category_id_key
-    unique (household_id, category_id);`
+unique (household_id, category_id);`
   - `drop index idx_budgets_household_month;` → `create index idx_budgets_household on
-    public.budgets(household_id);`
+public.budgets(household_id);`
   - Verify post-migration row count == distinct `(household_id, category_id)` pairs
 
 - [ ] **2. Type** — `src/types/index.ts`: remove `month` from `interface Budget`
 
 - [ ] **3. Server action** — `src/lib/actions/budgets.ts`
   - `upsertBudget`: drop the `month` form field + its validation; `onConflict:
-    'household_id,category_id'`
+'household_id,category_id'`
   - Add `deleteBudget(categoryId)` — deletes the row for the household + category,
     `revalidatePath('/budgets')`
 
 - [ ] **4. Queries** — remove the four `.eq('month', month)` filters on `budgets`
-  - `src/lib/queries/budgets.ts:71` — keep the `month` param (still scopes *actuals*), drop the
+  - `src/lib/queries/budgets.ts:71` — keep the `month` param (still scopes _actuals_), drop the
     filter on the budgets select; **delete** `findMostRecentBudgetMonth` and `seedBudgetsFromMonth`
   - `src/lib/queries/dashboard.ts:74`
   - `src/lib/queries/summary.ts:92`
@@ -114,7 +114,7 @@ that capability. Called out here so it can be struck if unwanted.
     `deleteBudget`
 
 - [ ] **7. BudgetList** — `src/components/budgets/BudgetList.tsx`: stop passing `month` to
-  `SetBudgetDialog`; keep the `month` prop itself (still used by the drill-down href)
+      `SetBudgetDialog`; keep the `month` prop itself (still used by the drill-down href)
 
 - [ ] **8. Delete dead files**
   - `src/components/budgets/SeededFromBanner.tsx` (no longer used)
@@ -123,8 +123,8 @@ that capability. Called out here so it can be struck if unwanted.
     for a `Budget` type that no longer has one
 
 - [ ] **9. Summary prompt wording** — `src/lib/queries/summary.ts` (~line 300): a retrospective
-  month now compares against the *current* cap. Adjust the prompt line so Claude describes it as
-  the standing cap rather than "the budget set for {month}".
+      month now compares against the _current_ cap. Adjust the prompt line so Claude describes it as
+      the standing cap rather than "the budget set for {month}".
 
 - [ ] **10. Docs**
   - `docs/schema/current.md` — budgets table (drop `month`, new unique constraint) + new
@@ -145,14 +145,14 @@ that capability. Called out here so it can be struck if unwanted.
 
 - [ ] Budgets page, current month: set Groceries to $800; confirm the row shows $800
 - [ ] Jump forward two months via the global month picker → Groceries still $800, no seed banner
-- [ ] Jump back six months → Groceries still $800; spend figures/progress bars reflect *that*
+- [ ] Jump back six months → Groceries still $800; spend figures/progress bars reflect _that_
       month's transactions, not the current month's
 - [ ] Edit Groceries to $900 while viewing a past month → navigate to the current month and a
       future month; both show $900
 
 **The original bug (must no longer reproduce):**
 
-- [ ] Pick a month with no budgets; set exactly one category's cap, reload → every *other*
+- [ ] Pick a month with no budgets; set exactly one category's cap, reload → every _other_
       category still shows its standing cap (previously all would show "No budget set")
 
 **Cross-page consistency:**
@@ -169,7 +169,7 @@ that capability. Called out here so it can be struck if unwanted.
 
 **Edge cases:**
 
-- [ ] Migration collapse: before migrating, set *different* caps for the same category in two
+- [ ] Migration collapse: before migrating, set _different_ caps for the same category in two
       months; after migrating, the later month's value is the one kept
 - [ ] `select count(*) from budgets_monthly_archive` matches the pre-migration `budgets` count
 - [ ] A second household's caps are unaffected (RLS holds on both `budgets` and the archive)
@@ -179,7 +179,7 @@ that capability. Called out here so it can be struck if unwanted.
 ## Out of scope for this session
 
 - Effective-dated caps (option B) — archive table keeps the door open
-- Per-month cap *overrides* on top of a global cap (e.g. "December only, $1200")
+- Per-month cap _overrides_ on top of a global cap (e.g. "December only, $1200")
 - Rollover of unspent budget between months (roadmap Phase 3b — being removed as an item)
 - Backfilling budget figures into any historical view beyond what the global cap now provides
 - In-app budget alerts (separate roadmap item)
@@ -190,12 +190,84 @@ that capability. Called out here so it can be struck if unwanted.
 
 ## What actually happened
 
+**Data patch first (applied to production before the code change).** At the user's request,
+June's 16 caps were copied into July and August so the app read correctly immediately. A
+snapshot was taken to `backup.budgets_20260831` (44 rows) beforehand — deliberately in a
+non-exposed schema rather than `public`, so it is not reachable with the anon key.
+
+Reading the live data first changed the migration. The per-category breakdown showed:
+
+- All 16 expense categories have a June cap, and **no** category has a cap outside June — so
+  the `updated_at` fallback for orphaned categories turned out to be unnecessary (kept anyway
+  as the general collapse rule).
+- July held junk values: Dining & Takeaways and Pharmacy at **$1**, Fuel at $400 against June's
+  $300.
+- Two August rows were touched on 2026-08-31 (Dining, Pharmacy) — both already matched June, so
+  the patch was a no-op for them and no deliberate edit was overwritten.
+- Loan Repayments carries a $2 cap in June. Obviously a placeholder, but carried forward
+  faithfully rather than inventing a number — flagged to the user instead.
+
+After the patch all four months hold identical rows, which makes the migration's collapse
+unambiguous whichever rule is used.
+
+**Collapse rule changed** from "greatest `month`" to "greatest `(updated_at, month)`". The
+original rule would have enshrined the stale July/August rows over the real June caps — caught
+only by looking at the production data before running it.
+
+**Archive location changed** from `public.budgets_monthly_archive` (with RLS) to
+`archive.budgets_monthly`. A table in `public` is exposed through PostgREST and would be
+readable with the anon key if the RLS policy were ever wrong; a non-exposed schema removes that
+class of mistake entirely.
+
+**Extra deletion:** `BudgetProgressBar.tsx` was orphaned by removing `BudgetTable.tsx` and
+`BudgetCard.tsx` (its only two consumers), so it went too.
+
+**Environment note:** this repo's `CLAUDE.md` says to run `source ~/.nvm/nvm.sh && nvm use 22`
+before pnpm scripts. There is no nvm in the Claude Code remote container — Node 22 is already
+on PATH at `/opt/node22/bin`. The nvm line is a local-machine instruction, not a universal one.
+
+`next lint` rewrites `tsconfig.json` as a side effect (reformats it and adds
+`src/.next/types/**/*.ts` to `include`). Reverted to keep the diff clean.
+
 ## Files created / modified
 
+- `supabase/migrations/20260831000000_global_budget_caps.sql` — NEW
+- `docs/decisions/003-global-budget-caps.md` — NEW
+- `src/types/index.ts` — `month` removed from `Budget`
+- `src/lib/actions/budgets.ts` — `upsertBudget` de-monthed; new `deleteBudget`; both now also
+  revalidate `/dashboard`
+- `src/lib/queries/budgets.ts` — dropped `findMostRecentBudgetMonth` + `seedBudgetsFromMonth`;
+  budgets select no longer filtered by month
+- `src/lib/queries/dashboard.ts` · `summary.ts` · `chat-context.ts` — month filter removed
+- `src/lib/queries/summary.ts` + `chat-context.ts` — prompt wording: caps described as standing
+  values, so retrospective months aren't narrated as "what you budgeted at the time"
+- `src/app/(app)/budgets/page.tsx` — seed block + banner removed; subtitle now
+  "N categories · standing caps · spend for {month}"
+- `src/components/budgets/SetBudgetDialog.tsx` — `month` prop gone; "Monthly cap" + helper text;
+  "Remove budget" button
+- `src/components/budgets/BudgetList.tsx` — stops passing `month` to the dialog
+- `docs/schema/current.md`, `docs/roadmap.md` (Rollover toggle dropped), `CLAUDE.md`
+- DELETED: `SeededFromBanner.tsx`, `BudgetTable.tsx`, `BudgetCard.tsx`, `BudgetProgressBar.tsx`
+
+## Verified
+
+- `pnpm type-check` — clean
+- `pnpm lint` — clean
+- `pnpm run build` — succeeds, all 18 routes compile
+
 ## Deferred to next session
+
+- **The migration has NOT been applied to production.** It must run _with_ the deploy, not
+  before: the live app still queries `.eq('month', month)`, so dropping the column ahead of the
+  deploy breaks the budgets page, dashboard, summary and chat.
+- `backup.budgets_20260831` is a one-off safety net from the data patch and is now redundant
+  with `archive.budgets_monthly` once the migration runs. Drop it once the deploy is confirmed
+  healthy.
+- Loan Repayments has a $2 placeholder cap — needs a real number.
+- Manual test steps below are unrun; they need a deployed environment.
 
 ## Status
 
 - [ ] In progress
 - [ ] Complete
-- [ ] Partial — see deferred
+- [x] Partial — code complete and verified locally; migration not yet applied to production

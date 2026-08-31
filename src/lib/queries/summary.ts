@@ -89,7 +89,7 @@ export async function getSummaryContext(month: string): Promise<SummaryContext> 
       )
       .gte('date', dateFrom)
       .lte('date', dateTo),
-    supabase.from('budgets').select('category_id, amount_cents').eq('month', month),
+    supabase.from('budgets').select('category_id, amount_cents'),
     supabase
       .from('transactions')
       .select('amount_cents, category_id, category:categories(name, type)')
@@ -291,7 +291,12 @@ export function buildSummaryPrompt(ctx: SummaryContext): string {
     }
   }
 
-  lines.push('', 'Spending by category:')
+  lines.push(
+    '',
+    'Spending by category (budget figures are current standing caps that apply to every',
+    'month, not figures set for this month alone — describe them as the cap, not as what',
+    'was budgeted at the time):'
+  )
 
   for (const c of ctx.categories) {
     if (c.budget_cents !== null) {
