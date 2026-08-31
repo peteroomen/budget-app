@@ -38,9 +38,27 @@ tool whose summaries regenerate live anyway.
 `budgets_monthly_archive` before collapsing. Nothing reads it; it exists so effective-dating
 remains available later without data loss.
 
-**Collapse rule:** keep the row with the greatest `month` per `(household_id, category_id)` —
-the most recently expressed intent. Because the existing seed copies caps forward, most
-categories already have identical values across months, so this is a no-op for them.
+**Collapse rule:** take **June 2026's caps as the canonical global set**, falling back to the
+row with the greatest `updated_at` for any category June doesn't cover.
+
+The obvious rule — keep the greatest `month` — is **wrong for this data**. Production state as
+of 2026-08-31:
+
+| Month   | Categories with caps | Total budget | Rows first written |
+| ------- | -------------------- | ------------ | ------------------ |
+| 2026-05 | 16                   | $11,353      | 2026-05-24         |
+| 2026-06 | 16                   | $11,656      | 2026-05-25         |
+| 2026-07 | 6                    | $1,504       | 2026-05-25         |
+| 2026-08 | 6                    | $2,302       | 2026-05-25         |
+
+July and August were written on 2026-05-25 — a handful of caps set while browsing ahead. Because
+those months then held *some* rows, the all-or-nothing seed guard never fired for them again and
+they froze at 6 stale categories. Greatest-`month` would therefore pick those stale rows over the
+real June ones. Greatest-`updated_at` is also unsafe alone: an August row was touched 2026-08-31.
+
+**Unverified:** whether any category has a cap in May/July/August but *not* in June. Confirm with
+a per-category breakdown before running the migration, and keep the `updated_at` fallback so such
+a category isn't silently dropped.
 
 **Deliberate scope addition:** with global caps there is no longer any way to unset a cap (you
 used to just not set one next month). Adding a "Remove budget" action to the edit dialog keeps
@@ -51,8 +69,14 @@ that capability. Called out here so it can be struck if unwanted.
 - [ ] **1. Migration** — `supabase/migrations/20260831000000_global_budget_caps.sql`
   - `create table public.budgets_monthly_archive as select * from public.budgets;`
     enable RLS + a household-scoped select policy on it
-  - Collapse: `delete from budgets b using budgets b2 where b.household_id = b2.household_id
-    and b.category_id = b2.category_id and b.month < b2.month;`
+  - Collapse per the rule above — June 2026 wins where present, else greatest `updated_at`:
+    ```sql
+    delete from public.budgets b using public.budgets b2
+     where b.household_id = b2.household_id
+       and b.category_id  = b2.category_id
+       and (b2.month = '2026-06', b2.updated_at) > (b.month = '2026-06', b.updated_at);
+    ```
+    (row-comparison orders June-first, then most-recently-touched)
   - `alter table public.budgets drop constraint budgets_household_id_category_id_month_key;`
   - `alter table public.budgets drop column month;`
   - `alter table public.budgets add constraint budgets_household_id_category_id_key
