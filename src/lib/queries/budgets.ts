@@ -61,3 +61,51 @@ export async function getBudgetsWithActuals(month: string): Promise<BudgetWithAc
     actual_cents: Math.abs(actualMap.get(category.id) ?? 0),
   }))
 }
+
+/** A category a budget cap can be set on, plus its current standing cap. */
+export interface BudgetCapTarget {
+  id: string
+  name: string
+  capCents: number | null
+}
+
+/**
+ * Every category a cap can legitimately be set on (expense categories only), with the cap
+ * it currently has.
+ *
+ * Used in two places, and it matters that both read the same list:
+ *  - the chat context injects it so Claude has real category ids to propose against;
+ *  - the chat page passes it to the confirmation card, which resolves the display name and
+ *    the "currently" figure from it rather than from anything the model said, and refuses
+ *    to offer "Apply" for an id that is not in the list.
+ */
+export async function getBudgetCapTargets(): Promise<BudgetCapTarget[]> {
+  const supabase = await createClient()
+
+  const [categoriesResult, budgetsResult] = await Promise.all([
+    supabase
+      .from('categories')
+      .select('id, name')
+      .eq('type', 'expense')
+      .order('name', { ascending: true }),
+    supabase.from('budgets').select('category_id, amount_cents'),
+  ])
+
+  if (categoriesResult.error)
+    console.error('getBudgetCapTargets/categories:', categoriesResult.error.message)
+  if (budgetsResult.error)
+    console.error('getBudgetCapTargets/budgets:', budgetsResult.error.message)
+
+  const capMap = new Map<string, number>(
+    (budgetsResult.data ?? []).map((b: { category_id: string; amount_cents: number }) => [
+      b.category_id,
+      b.amount_cents,
+    ])
+  )
+
+  return (categoriesResult.data ?? []).map((c: { id: string; name: string }) => ({
+    id: c.id,
+    name: c.name,
+    capCents: capMap.get(c.id) ?? null,
+  }))
+}

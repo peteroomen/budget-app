@@ -31,7 +31,18 @@ Core loop: import bank statements → AI categorises transactions → set budget
 > **Update this section at the end of every session.**
 
 - **Current phase:** Phase 5 — Polish (in progress). Phases 1–4 fully complete.
-- **Last session:** 2026-08-31 — Global budget caps (branch `claude/budget-caps-global-monthly-bli79e`).
+- **Last session:** 2026-09-01 — Chat write actions: budget caps (branch `claude/chat-budget-write-tool`).
+  The chat assistant can now propose setting or clearing a category's cap. Two AI SDK tools
+  (`setBudgetCap`, `clearBudgetCap` in `src/lib/ai/budget-tools.ts`) declared **without an
+  `execute` function** — the call streams to the client, Assistant UI renders a confirmation card,
+  and the write only runs on click through the existing `upsertBudget` / `deleteBudget` server
+  actions. ⚠️ **Do not add `execute` to those tools** — that removes the safety gate. The chat
+  context injects statement-derived text (merchant names, descriptions), so a prompted "always
+  confirm" rule would not hold; the UI gate is the mechanism. Chat model moved from
+  `claude-sonnet-4-5` to **`claude-opus-5`**. `zod` promoted to a direct dependency (it was already
+  `ai`'s resolved peer at 4.4.3 but not resolvable under pnpm's strict layout). No migration.
+  See `docs/work/2026-09-01-chat-budget-write-tool.md` + ADR 004.
+- **Previous session:** 2026-08-31 — Global budget caps (branch `claude/budget-caps-global-monthly-bli79e`).
   Dropped `budgets.month`; caps are now one standing value per category applying to every month.
   Migration `20260831000000` archives the per-month rows to `archive.budgets_monthly`, collapses to
   one row per `(household_id, category_id)`, and re-keys the unique constraint. Removed the
@@ -40,7 +51,7 @@ Core loop: import bank statements → AI categorises transactions → set budget
   one-off **production data patch** copying June's 16 caps into July/August (backup:
   `backup.budgets_20260831`). See `docs/work/2026-08-31-global-budget-caps.md` + ADR 003.
   ⚠️ **The migration has not been applied to production** — it must run with the deploy, not before.
-- **Previous session:** 2026-06-02 — UX polish, issues #33/#34/#35 (PR #36). `GlobalMonthPicker` in
+- **Previous sessions:** 2026-06-02 — UX polish, issues #33/#34/#35 (PR #36). `GlobalMonthPicker` in
   the app header (month now persists across pages via month-aware nav links + Suspense-wrapped
   `SidebarNavLinks` / `BottomTabBar`); per-page month selectors deleted (`MonthSelector`,
   `SummaryMonthSelector`, `MonthPicker`); system categories can now be deleted; budget rows drill
@@ -78,7 +89,7 @@ Core loop: import bank statements → AI categorises transactions → set budget
   - Multi-household membership + profile-chip switcher (PR #30) — `household_members` join table, `create_household` RPC, `switchHousehold` action, sidebar/drawer profile chip
   - Month picker enhancement (PR #31) — `MonthJumpPopover`, `DashboardMonthNav`, year+month grid popover on dashboard/budgets/summary
   - Import summary preview/confirm (PR #32, build order #17) — `import_history` table, `analyseImport` + `commitImport` actions, 3-step UI, "Recent imports" card
-- **Open PRs:** none.
+- **Open PRs:** chat budget write tool (`claude/chat-budget-write-tool`) — awaiting review, do not merge without one.
 - **Vercel / build config (main branch):**
   - `vercel.json`: `buildCommand: "pnpm run build"`, `outputDirectory: ".next"` (resolves to `src/.next` from Vercel's `src/` framework root)
   - `next.config.ts`: `distDir: 'src/.next'` + `NormalModuleReplacementPlugin` replacing `testmode/context.js` with noop for edge runtime
@@ -94,7 +105,7 @@ Core loop: import bank statements → AI categorises transactions → set budget
   - Header search, notification bell (roadmapped, not built yet)
   - Set `TIDE_ANTHROPIC_API_KEY` in Vercel project env before deploying to production
 - **Known issues:** Node 22 required. On a local Mac: `source ~/.nvm/nvm.sh && nvm use 22` before pnpm scripts. In the Claude Code remote container there is no nvm — Node 22 is already on PATH at `/opt/node22/bin`, so skip that step. `next lint` rewrites `tsconfig.json` as a side effect; revert it before committing.
-- **Components available:** `Skeleton`, `Tooltip`, `Avatar`, `Sheet`, `Badge`, `Switch`, `Popover`, `MonthJumpPopover` (all in `src/components/ui/`). `Textarea` is **not** installed — single-line `Input` is used for notes.
+- **Components available:** `Skeleton`, `Tooltip`, `Avatar`, `Sheet`, `Badge`, `Switch`, `Popover`, `MonthJumpPopover` (all in `src/components/ui/`). Chat write confirmations: `BudgetCapCard` / `BudgetCapToolUI` in `src/components/chat/`. `Textarea` is **not** installed — single-line `Input` is used for notes.
 - **Prop convention:** `SummaryMonthSelector`, `MonthPicker`, and `MonthJumpPopover` use `allowFuture` (not `isAdmin`) — the page passes `allowFuture={isAdmin}` so the selector stays role-agnostic. `DashboardMonthNav` still accepts `isAdmin` (converts internally to `allowFuture`).
 - **Theme:** `font-display` = Fraunces (serif, use on H1s + CardTitles + hero metrics). `font-mono` = JetBrains Mono (use on tabular numerics). Badge variants: `accent` (sage wash), `warn` (gold), `danger` (rust), `outline`.
 - **Env vars:** Use `TIDE_ANTHROPIC_API_KEY` (not `ANTHROPIC_API_KEY`) — Claude Desktop shadows the standard name with an empty value on macOS. See `docs/decisions/002-tide-anthropic-api-key-env-var.md`.
