@@ -3,11 +3,19 @@
 import { useEffect, useState } from 'react'
 import { AssistantRuntimeProvider, useAssistantRuntime } from '@assistant-ui/react'
 import { useChatRuntime } from '@assistant-ui/react-ai-sdk'
+import { lastAssistantMessageIsCompleteWithToolCalls } from 'ai'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
+import type { BudgetCapTarget } from '@/lib/queries/budgets'
+import { BudgetCategoriesProvider } from './budget-categories-context'
 import { Thread } from './Thread'
 
-export function ChatPanel() {
+interface ChatPanelProps {
+  /** Fetched on the server — the confirmation card resolves names against this, not the model. */
+  budgetCategories: BudgetCapTarget[]
+}
+
+export function ChatPanel({ budgetCategories }: ChatPanelProps) {
   const [sessionKey, setSessionKey] = useState(0)
 
   return (
@@ -23,7 +31,9 @@ export function ChatPanel() {
           Clear chat
         </Button>
       </div>
-      <ChatSession key={sessionKey} />
+      <BudgetCategoriesProvider categories={budgetCategories}>
+        <ChatSession key={sessionKey} />
+      </BudgetCategoriesProvider>
     </div>
   )
 }
@@ -55,7 +65,12 @@ function ChatErrorWatcher() {
 }
 
 function ChatSession() {
-  const runtime = useChatRuntime()
+  // Once a confirmation card has been answered (applied, dismissed, or rejected as an
+  // unknown category), hand the outcome back to the model so it can respond to what
+  // actually happened rather than to what it proposed.
+  const runtime = useChatRuntime({
+    sendAutomaticallyWhen: lastAssistantMessageIsCompleteWithToolCalls,
+  })
 
   return (
     <AssistantRuntimeProvider runtime={runtime}>

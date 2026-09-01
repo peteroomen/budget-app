@@ -6,27 +6,28 @@
 
 ## Tech Stack
 
-| Layer           | Choice                               | Reason                                                           |
-| --------------- | ------------------------------------ | ---------------------------------------------------------------- |
-| Framework       | Next.js 15 (App Router)              | File-based routing, server components, API routes, Vercel-native |
-| Language        | TypeScript (strict)                  | Catch errors early, better DX, required for this stack           |
-| Database        | Supabase (Postgres)                  | Auth + DB + Storage + RLS in one, generous free tier             |
-| Auth            | Supabase Auth                        | Built-in, handles sessions, pairs with RLS cleanly               |
-| Hosting         | Vercel                               | Zero-config Next.js deploys, preview URLs per PR                 |
-| UI Components   | shadcn/ui                            | Copy-owned components, Tailwind-based, highly customisable       |
-| Styling         | Tailwind CSS v4                      | Utility-first, co-located with shadcn                            |
-| Charts          | shadcn Charts (Recharts)             | Already in the shadcn ecosystem                                  |
-| AI SDK          | Vercel AI SDK                        | Streaming, `useChat` hook, Next.js API route helpers             |
-| Chat UI         | Assistant UI                         | shadcn-compatible chat components built on Vercel AI SDK         |
-| AI Model        | Anthropic Claude (claude-sonnet-4-6) | Categorisation + chat + PDF parsing                              |
-| CSV Parsing     | papaparse                            | Best-in-class browser/Node CSV parser                            |
-| PDF Parsing     | pdfjs-dist                           | Mozilla's PDF.js — extract raw text from bank PDFs               |
-| Package Manager | pnpm                                 | Faster installs, better disk usage than npm/yarn                 |
-| Linting         | ESLint + Prettier                    | Code quality + consistent formatting                             |
-| Pre-commit      | Husky + lint-staged                  | Enforce lint/format before every commit                          |
-| Version Control | Git + GitHub                         | Standard; enables Vercel GitHub integration                      |
-| CI/CD           | Vercel (auto)                        | Push to main → production deploy. PRs → preview deploy.          |
-| Future CI       | GitHub Actions                       | Add later for running tests, type checks on PR                   |
+| Layer             | Choice                                 | Reason                                                             |
+| ----------------- | -------------------------------------- | ------------------------------------------------------------------ |
+| Framework         | Next.js 15 (App Router)                | File-based routing, server components, API routes, Vercel-native   |
+| Language          | TypeScript (strict)                    | Catch errors early, better DX, required for this stack             |
+| Database          | Supabase (Postgres)                    | Auth + DB + Storage + RLS in one, generous free tier               |
+| Auth              | Supabase Auth                          | Built-in, handles sessions, pairs with RLS cleanly                 |
+| Hosting           | Vercel                                 | Zero-config Next.js deploys, preview URLs per PR                   |
+| UI Components     | shadcn/ui                              | Copy-owned components, Tailwind-based, highly customisable         |
+| Styling           | Tailwind CSS v4                        | Utility-first, co-located with shadcn                              |
+| Charts            | shadcn Charts (Recharts)               | Already in the shadcn ecosystem                                    |
+| AI SDK            | Vercel AI SDK                          | Streaming, `useChat` hook, Next.js API route helpers               |
+| Chat UI           | Assistant UI                           | shadcn-compatible chat components built on Vercel AI SDK           |
+| AI Model          | Anthropic Claude (chat: claude-opus-5) | Categorisation + chat + PDF parsing                                |
+| Schema validation | zod                                    | Tool input/output schemas for the AI SDK (already `ai`'s peer dep) |
+| CSV Parsing       | papaparse                              | Best-in-class browser/Node CSV parser                              |
+| PDF Parsing       | pdfjs-dist                             | Mozilla's PDF.js — extract raw text from bank PDFs                 |
+| Package Manager   | pnpm                                   | Faster installs, better disk usage than npm/yarn                   |
+| Linting           | ESLint + Prettier                      | Code quality + consistent formatting                               |
+| Pre-commit        | Husky + lint-staged                    | Enforce lint/format before every commit                            |
+| Version Control   | Git + GitHub                           | Standard; enables Vercel GitHub integration                        |
+| CI/CD             | Vercel (auto)                          | Push to main → production deploy. PRs → preview deploy.            |
+| Future CI         | GitHub Actions                         | Add later for running tests, type checks on PR                     |
 
 ---
 
@@ -50,7 +51,7 @@ budget-app/
 │   │   │   ├── summary/            # page.tsx, loading.tsx — Claude-generated monthly recap
 │   │   │   └── transactions/       # page.tsx, loading.tsx
 │   │   ├── api/
-│   │   │   └── chat/route.ts       # Vercel AI SDK streaming (streamText + Anthropic)
+│   │   │   └── chat/route.ts       # Vercel AI SDK streaming (streamText + Anthropic) + budget write tools
 │   │   ├── auth/                   # Supabase auth callbacks (callback, confirm, set-password)
 │   │   └── layout.tsx              # Root layout
 │   ├── components/
@@ -62,7 +63,9 @@ budget-app/
 │   │   ├── auth/                   # LoginForm, SignOutButton
 │   │   ├── budgets/                # BudgetProgressBar, MonthPicker, OverBudgetCards, SetBudgetDialog
 │   │   ├── categories/             # AddCategoryDialog, ColorPicker, DeleteCategoryButton, EditCategoryDialog
-│   │   ├── chat/                   # Thread.tsx (assistant-ui primitives), ChatPanel.tsx (runtime + clear)
+│   │   ├── chat/                   # Thread.tsx (assistant-ui primitives), ChatPanel.tsx (runtime + clear),
+│   │   │                           #   BudgetCapToolUI/BudgetCapCard (write confirmation cards — ADR 004),
+│   │   │                           #   budget-categories-context.tsx
 │   │   ├── dashboard/              # FixedCostsCard, IncomeVsSpendCards, MonthSelector,
 │   │   │                           #   SpendByCategoryChart, TopMerchantsTable
 │   │   ├── import/                 # ImportForm
@@ -75,10 +78,13 @@ budget-app/
 │   │   │   ├── client.ts           # Browser Supabase client
 │   │   │   ├── server.ts           # Server Supabase client (cookies)
 │   │   │   └── middleware.ts       # Auth middleware
+│   │   ├── ai/
+│   │   │   ├── budget-tool-contract.ts  # Tool names + arg/result types (dependency-free, client-safe)
+│   │   │   └── budget-tools.ts     # setBudgetCap/clearBudgetCap — NO `execute`, see ADR 004
 │   │   ├── actions/                # Next.js server actions (all DB writes go through here)
 │   │   │   ├── auth.ts
 │   │   │   ├── accounts.ts
-│   │   │   ├── budgets.ts          # upsertBudget
+│   │   │   ├── budgets.ts          # upsertBudget, deleteBudget
 │   │   │   ├── categories.ts
 │   │   │   ├── categorise.ts       # recategoriseAll (server action wrapper)
 │   │   │   ├── import.ts           # CSV/PDF upload → parse → categorise pipeline
@@ -87,7 +93,7 @@ budget-app/
 │   │   │   └── transactions.ts     # deleteAllTransactions
 │   │   ├── queries/                # DB query helpers — server-only, never import from client components
 │   │   │   ├── accounts.ts
-│   │   │   ├── budgets.ts          # getBudgetsWithActuals
+│   │   │   ├── budgets.ts          # getBudgetsWithActuals, getBudgetCapTargets
 │   │   │   ├── categories.ts
 │   │   │   ├── chat-context.ts     # getChatContext + formatChatContext — builds <financial_data> system prompt block
 │   │   │   ├── dashboard.ts        # getDashboardData (aggregations for charts)

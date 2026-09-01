@@ -284,8 +284,10 @@ Three items that must be built in order — A is the schema foundation, B and C 
       which have no cap (`getBudgetsWithActuals` filters to `type = 'expense'`). Depends on global
       caps (PR #37) only in that it removes the "which month's cap?" question. ~half a session.
 
-- [ ] **Chat write actions: budget caps** _(first slice of the "Write actions" backlog item below)_ —
-      let the chat assistant set or clear a category's cap. Decisions settled at triage: - **Stay in the Vercel AI SDK.** `api/chat/route.ts` uses `streamText` + `@ai-sdk/anthropic`
+- [x] **Chat write actions: budget caps** _(first slice of the "Write actions" backlog item below)_ —
+      **shipped 2026-09-01** — `setBudgetCap` + `clearBudgetCap`, no `execute`, confirmation card in
+      the thread; chat model moved to `claude-opus-5`. See
+      `docs/work/2026-09-01-chat-budget-write-tool.md` + ADR 004. Decisions settled at triage: - **Stay in the Vercel AI SDK.** `api/chat/route.ts` uses `streamText` + `@ai-sdk/anthropic`
       feeding Assistant UI; use the AI SDK's own `tools` + Zod surface. Dropping to the raw
       Anthropic SDK means rebuilding the streaming/UI plumbing for no gain. - **Confirmation is structural, not prompted.** Define the tool _without_ an `execute`
       function so the call streams to the client, Assistant UI renders a confirm card, and the
