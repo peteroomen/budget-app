@@ -1,7 +1,7 @@
 'use client'
 
-import { useActionState, useEffect, useRef, useState } from 'react'
-import { upsertBudget } from '@/lib/actions/budgets'
+import { useActionState, useEffect, useRef, useState, useTransition } from 'react'
+import { upsertBudget, deleteBudget } from '@/lib/actions/budgets'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -17,7 +17,6 @@ import type { Budget } from '@/types'
 interface SetBudgetDialogProps {
   categoryId: string
   categoryName: string
-  month: string
   existing: Budget | null
   /** If provided, the dialog is externally controlled and no trigger button is rendered */
   open?: boolean
@@ -27,7 +26,6 @@ interface SetBudgetDialogProps {
 export function SetBudgetDialog({
   categoryId,
   categoryName,
-  month,
   existing,
   open: openProp,
   onOpenChange: onOpenChangeProp,
@@ -36,8 +34,10 @@ export function SetBudgetDialog({
   const [openInternal, setOpenInternal] = useState(false)
   const open = controlled ? openProp : openInternal
   const [amountError, setAmountError] = useState<string | null>(null)
+  const [removeError, setRemoveError] = useState<string | null>(null)
   const [formKey, setFormKey] = useState(0)
   const [state, action, pending] = useActionState(upsertBudget, { error: null })
+  const [removing, startRemove] = useTransition()
   const submitted = useRef(false)
 
   const defaultAmount = existing !== null ? (existing.amount_cents / 100).toFixed(2) : ''
@@ -61,10 +61,25 @@ export function SetBudgetDialog({
     }
     if (!next) {
       setAmountError(null)
+      setRemoveError(null)
       setFormKey((k) => k + 1)
       submitted.current = false
     }
   }
+
+  function handleRemove() {
+    setRemoveError(null)
+    startRemove(async () => {
+      const result = await deleteBudget(categoryId)
+      if (result.error) {
+        setRemoveError(result.error)
+        return
+      }
+      handleOpenChange(false)
+    })
+  }
+
+  const busy = pending || removing
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
@@ -99,10 +114,9 @@ export function SetBudgetDialog({
           className="space-y-4 pt-2"
         >
           <input type="hidden" name="category_id" value={categoryId} />
-          <input type="hidden" name="month" value={month} />
 
           <div className="space-y-1.5">
-            <Label htmlFor="budget-amount">Monthly budget (NZD)</Label>
+            <Label htmlFor="budget-amount">Monthly cap (NZD)</Label>
             <div className="relative">
               <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
                 $
@@ -118,18 +132,38 @@ export function SetBudgetDialog({
                 className="pl-7"
               />
             </div>
+            <p className="text-[11.5px] text-muted-foreground">
+              Applies to every month until you change it.
+            </p>
             {amountError && <p className="text-sm text-destructive">{amountError}</p>}
           </div>
 
           {state.error && <p className="text-sm text-destructive">{state.error}</p>}
+          {removeError && <p className="text-sm text-destructive">{removeError}</p>}
 
-          <div className="flex justify-end gap-2 pt-2">
-            <Button type="button" variant="outline" onClick={() => handleOpenChange(false)}>
-              Cancel
-            </Button>
-            <Button type="submit" disabled={pending}>
-              {pending ? 'Saving…' : 'Save'}
-            </Button>
+          <div className="flex items-center justify-between gap-2 pt-2">
+            {existing ? (
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={handleRemove}
+                disabled={busy}
+                className="text-destructive hover:bg-destructive/10 hover:text-destructive"
+              >
+                {removing ? 'Removing…' : 'Remove budget'}
+              </Button>
+            ) : (
+              <span />
+            )}
+            <div className="flex gap-2">
+              <Button type="button" variant="outline" onClick={() => handleOpenChange(false)}>
+                Cancel
+              </Button>
+              <Button type="submit" disabled={busy}>
+                {pending ? 'Saving…' : 'Save'}
+              </Button>
+            </div>
           </div>
         </form>
       </DialogContent>

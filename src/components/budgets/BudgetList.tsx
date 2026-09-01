@@ -172,7 +172,6 @@ export function BudgetList({ items, month }: BudgetListProps) {
           key={category.id}
           categoryId={category.id}
           categoryName={category.name}
-          month={month}
           existing={budget}
           open={openId === category.id}
           onOpenChange={(open) => setOpenId(open ? category.id : null)}

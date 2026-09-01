@@ -94,7 +94,6 @@ export interface Budget {
   id: string
   household_id: string
   category_id: string
-  month: string // YYYY-MM
   amount_cents: number
   created_at: string
   updated_at: string

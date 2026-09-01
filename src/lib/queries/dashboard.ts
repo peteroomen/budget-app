@@ -71,7 +71,7 @@ export async function getDashboardData(month: string): Promise<DashboardData> {
       )
       .gte('date', dateFrom)
       .lte('date', dateTo),
-    supabase.from('budgets').select('amount_cents').eq('month', month),
+    supabase.from('budgets').select('amount_cents'),
   ])
 
   if (txResult.error) console.error('getDashboardData/tx:', txResult.error.message)

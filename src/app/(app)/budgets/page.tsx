@@ -1,16 +1,11 @@
 import Link from 'next/link'
 import { Target, TrendingUp, Wallet, AlertTriangle, Settings } from 'lucide-react'
-import {
-  getBudgetsWithActuals,
-  findMostRecentBudgetMonth,
-  seedBudgetsFromMonth,
-} from '@/lib/queries/budgets'
+import { getBudgetsWithActuals } from '@/lib/queries/budgets'
 import { getHouseholdSettings } from '@/lib/queries/household'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { BudgetList } from '@/components/budgets/BudgetList'
 import { OverBudgetCards } from '@/components/budgets/OverBudgetCards'
-import { SeededFromBanner } from '@/components/budgets/SeededFromBanner'
 import { AllocationPanel } from '@/components/budgets/AllocationPanel'
 
 const nzd = new Intl.NumberFormat('en-NZ', {
@@ -44,21 +39,10 @@ export default async function BudgetsPage({ searchParams }: BudgetsPageProps) {
   const month =
     typeof params.month === 'string' && isValidMonth(params.month) ? params.month : currentMonth()
 
-  const [household, initialItems] = await Promise.all([
+  const [household, items] = await Promise.all([
     getHouseholdSettings(),
     getBudgetsWithActuals(month),
   ])
-  let items = initialItems
-  let seededFrom: string | null = null
-
-  if (!items.some((item) => item.budget !== null)) {
-    const sourceMonth = await findMostRecentBudgetMonth(month)
-    if (sourceMonth) {
-      await seedBudgetsFromMonth(sourceMonth, month)
-      items = await getBudgetsWithActuals(month)
-      seededFrom = sourceMonth
-    }
-  }
 
   // KPI totals
   const totalBudget = items.reduce((s, i) => s + (i.budget?.amount_cents ?? 0), 0)
@@ -106,7 +90,7 @@ export default async function BudgetsPage({ searchParams }: BudgetsPageProps) {
         <div>
           <h1 className="font-display text-display-h1 font-medium">Budgets</h1>
           <p className="mt-0.5 text-body-sm text-muted-foreground">
-            {items.length} categories · {monthLabel}
+            {items.length} categories · standing caps · spend for {monthLabel}
           </p>
         </div>
         <Button asChild variant="outline" size="sm" className="mt-1 shrink-0">
@@ -116,8 +100,6 @@ export default async function BudgetsPage({ searchParams }: BudgetsPageProps) {
           </Link>
         </Button>
       </div>
-
-      {seededFrom && <SeededFromBanner sourceMonth={seededFrom} />}
 
       <AllocationPanel
         expectedIncomeCents={household?.expected_monthly_income_cents ?? null}
