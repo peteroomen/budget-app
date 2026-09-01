@@ -31,7 +31,18 @@ Core loop: import bank statements → AI categorises transactions → set budget
 > **Update this section at the end of every session.**
 
 - **Current phase:** Phase 5 — Polish (in progress). Phases 1–4 fully complete.
-- **Last session:** 2026-08-31 — Global budget caps (branch `claude/budget-caps-global-monthly-bli79e`).
+- **Last session:** 2026-09-01 — Category cap strip on the transactions screen (branch
+  `claude/tx-category-cap-strip`). When `/transactions` is filtered to a category (`?cat=…`), a new
+  server component `CategoryCapStrip` (`src/components/transactions/CategoryCapStrip.tsx`) shows
+  that category's standing cap, the month's spend against it, a `Progress` bar and a % badge —
+  same thresholds/colours as `BudgetList` so the two screens agree. The page calls
+  `getBudgetsWithActuals(month)` only when `cat` is set. Two decisions carried over from triage:
+  the strip shows the **full-month** spend (not the filtered subtotal, which a search term would
+  change and put it out of step with the Budgets page), and it renders **nothing** for categories
+  with no cap and for income/transfer categories (`getBudgetsWithActuals` is expense-only). No
+  migration. See `docs/work/2026-09-01-tx-category-cap-strip.md`.
+  ⚠️ Not manually tested — no Supabase data in the build container.
+- **Previous session:** 2026-08-31 — Global budget caps (branch `claude/budget-caps-global-monthly-bli79e`).
   Dropped `budgets.month`; caps are now one standing value per category applying to every month.
   Migration `20260831000000` archives the per-month rows to `archive.budgets_monthly`, collapses to
   one row per `(household_id, category_id)`, and re-keys the unique constraint. Removed the
@@ -40,7 +51,7 @@ Core loop: import bank statements → AI categorises transactions → set budget
   one-off **production data patch** copying June's 16 caps into July/August (backup:
   `backup.budgets_20260831`). See `docs/work/2026-08-31-global-budget-caps.md` + ADR 003.
   ⚠️ **The migration has not been applied to production** — it must run with the deploy, not before.
-- **Previous session:** 2026-06-02 — UX polish, issues #33/#34/#35 (PR #36). `GlobalMonthPicker` in
+- **Session before that:** 2026-06-02 — UX polish, issues #33/#34/#35 (PR #36). `GlobalMonthPicker` in
   the app header (month now persists across pages via month-aware nav links + Suspense-wrapped
   `SidebarNavLinks` / `BottomTabBar`); per-page month selectors deleted (`MonthSelector`,
   `SummaryMonthSelector`, `MonthPicker`); system categories can now be deleted; budget rows drill
