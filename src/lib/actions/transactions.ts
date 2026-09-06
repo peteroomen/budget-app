@@ -2,7 +2,6 @@
 
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
-import { upsertMerchantMapping } from '@/lib/actions/merchant-map'
 
 type ActionResult = { error: string | null }
 
@@ -17,7 +16,7 @@ export async function deleteTransaction(id: string): Promise<ActionResult> {
   const { error } = await supabase.from('transactions').delete().eq('id', id)
   if (error) return { error: error.message }
 
-  revalidatePath('/transactions')
+  revalidatePath('/', 'layout')
   return { error: null }
 }
 
@@ -38,7 +37,7 @@ export async function deleteAllTransactions(): Promise<ActionResult> {
     if (error) return { error: error.message }
   }
 
-  revalidatePath('/transactions')
+  revalidatePath('/', 'layout')
   return { error: null }
 }
 
@@ -57,7 +56,7 @@ export async function setTransactionNote(id: string, note: string): Promise<Acti
   const { error } = await supabase.from('transactions').update({ notes: value }).eq('id', id)
   if (error) return { error: error.message }
 
-  revalidatePath('/transactions')
+  revalidatePath('/', 'layout')
   revalidatePath('/summary')
   revalidatePath('/chat')
   return { error: null }
@@ -66,23 +65,17 @@ export async function setTransactionNote(id: string, note: string): Promise<Acti
 // null categoryId clears the transaction category without touching the merchant map.
 export async function setCategoryOverride(
   transactionId: string,
-  merchantName: string | null,
+  _merchantName: string | null,
   categoryId: string | null
 ): Promise<ActionResult> {
   const supabase = await createClient()
 
-  const { error } = await supabase
-    .from('transactions')
-    .update({ category_id: categoryId, category_source: categoryId ? 'manual' : null })
-    .eq('id', transactionId)
-
+  const { error } = await supabase.rpc('set_transaction_category', {
+    p_id: transactionId,
+    p_category: categoryId,
+  })
   if (error) return { error: error.message }
 
-  if (categoryId && merchantName) {
-    const mapResult = await upsertMerchantMapping(merchantName, categoryId, true)
-    if (mapResult.error) return { error: mapResult.error }
-  }
-
-  revalidatePath('/transactions')
+  revalidatePath('/', 'layout')
   return { error: null }
 }

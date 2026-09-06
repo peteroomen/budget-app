@@ -4,6 +4,7 @@ import { Progress } from '@/components/ui/progress'
 
 interface SpendVsBudgetedCardProps {
   spend_cents: number
+  hasBudget: boolean
   budgeted_cents: number
 }
 
@@ -16,12 +17,19 @@ function formatNZD(cents: number): string {
   }).format(cents / 100)
 }
 
-export function SpendVsBudgetedCard({ spend_cents, budgeted_cents }: SpendVsBudgetedCardProps) {
-  const hasBudget = budgeted_cents > 0
-  const ratio = hasBudget ? spend_cents / budgeted_cents : 0
-  const pct = Math.min(ratio * 100, 100)
+export function SpendVsBudgetedCard({
+  spend_cents,
+  budgeted_cents,
+  hasBudget,
+}: SpendVsBudgetedCardProps) {
+  const ratio = budgeted_cents > 0 ? spend_cents / budgeted_cents : 0
+  const pct = Math.max(0, Math.min(ratio * 100, 100))
   const indicatorClassName =
-    ratio >= 1 ? 'bg-destructive' : ratio >= 0.8 ? 'bg-warning' : 'bg-success'
+    hasBudget && spend_cents > budgeted_cents
+      ? 'bg-destructive'
+      : ratio >= 0.8
+        ? 'bg-warning'
+        : 'bg-success'
 
   return (
     <Card>
@@ -42,11 +50,19 @@ export function SpendVsBudgetedCard({ spend_cents, budgeted_cents }: SpendVsBudg
             <p className="text-label text-muted-foreground">
               of {formatNZD(budgeted_cents)} budgeted
             </p>
-            <Progress value={pct} className="h-1.5" indicatorClassName={indicatorClassName} />
+            <Progress
+              value={hasBudget && budgeted_cents === 0 && spend_cents > 0 ? 100 : pct}
+              className="h-1.5"
+              indicatorClassName={indicatorClassName}
+            />
             <p className="text-label text-muted-foreground">
-              {ratio >= 1
-                ? `${Math.round((ratio - 1) * 100)}% over budget`
-                : `${Math.round(ratio * 100)}% of budget`}
+              {budgeted_cents === 0
+                ? spend_cents > 0
+                  ? 'Over zero budget'
+                  : 'Within zero budget'
+                : ratio > 1
+                  ? `${Math.round((ratio - 1) * 100)}% over budget`
+                  : `${Math.round(ratio * 100)}% of budget`}
             </p>
           </>
         ) : (

@@ -1,5 +1,7 @@
 'use client'
 
+import { isValidMonth } from '@/lib/utils/month'
+
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -21,7 +23,7 @@ export function GlobalMonthPicker({ allowFuture = false }: GlobalMonthPickerProp
 
   const now = currentMonth()
   const raw = searchParams.get('month')
-  const month = raw && /^\d{4}-\d{2}$/.test(raw) ? raw : now
+  const month = raw && isValidMonth(raw) ? raw : now
   const isCurrentMonth = month === now
 
   function navigate(target: string) {
@@ -36,11 +38,7 @@ export function GlobalMonthPicker({ allowFuture = false }: GlobalMonthPickerProp
         <ChevronLeft className="h-5 w-5" />
         <span className="sr-only">Previous month</span>
       </Button>
-      <MonthJumpPopover
-        selectedMonth={month}
-        onSelect={navigate}
-        allowFuture={allowFuture}
-      />
+      <MonthJumpPopover selectedMonth={month} onSelect={navigate} allowFuture={allowFuture} />
       <Button
         variant="ghost"
         size="icon"

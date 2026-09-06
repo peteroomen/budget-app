@@ -57,7 +57,7 @@ export function OverBudgetCards({ items }: OverBudgetCardsProps) {
                 </p>
               </div>
               <span className="font-mono text-[12px] font-semibold text-destructive tabular-nums shrink-0">
-                {pct}%
+                {budgetCents === 0 ? 'Zero cap' : `${pct}%`}
               </span>
             </div>
           )

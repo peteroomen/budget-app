@@ -1,5 +1,6 @@
 'use client'
 
+import { budgetState } from '@/lib/finance/amounts'
 import { useState } from 'react'
 import Link from 'next/link'
 import { ExternalLink } from 'lucide-react'
@@ -30,8 +31,8 @@ export function BudgetList({ items, month }: BudgetListProps) {
 
   return (
     <>
-      <div className="overflow-hidden rounded-lg border border-border">
-        <table className="w-full table-fixed border-collapse">
+      <div className="overflow-x-auto rounded-lg border border-border">
+        <table className="w-full min-w-[560px] table-fixed border-collapse">
           {/* dot / name / bar / amount / badge / link */}
           <colgroup>
             <col className="w-10" />
@@ -60,10 +61,10 @@ export function BudgetList({ items, month }: BudgetListProps) {
           <tbody className="divide-y divide-border">
             {items.map(({ category, budget, actual_cents }) => {
               const budgetCents = budget?.amount_cents ?? 0
-              const ratio = budgetCents > 0 ? actual_cents / budgetCents : 0
-              const pct = Math.min(ratio * 100, 100)
-              const isOver = ratio >= 1
-              const isApproaching = ratio >= 0.8
+              const state = budgetState(actual_cents, budget?.amount_cents ?? null)
+              const pct = state.progress
+              const isOver = state.over
+              const isApproaching = state.approaching
 
               const indicatorClassName = isOver
                 ? 'bg-destructive'
@@ -89,7 +90,12 @@ export function BudgetList({ items, month }: BudgetListProps) {
                 <tr
                   key={category.id}
                   onClick={() => setOpenId(category.id)}
-                  onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && setOpenId(category.id)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault()
+                      setOpenId(category.id)
+                    }
+                  }}
                   tabIndex={0}
                   role="button"
                   className="cursor-pointer transition-colors hover:bg-muted/30 focus-visible:outline-none focus-visible:bg-muted/30"
@@ -133,7 +139,13 @@ export function BudgetList({ items, month }: BudgetListProps) {
                       </td>
                       <td className="pr-2 pl-2 py-3.5 align-middle">
                         <Badge variant={pctBadgeVariant} className="font-mono tabular-nums">
-                          {Math.round(ratio * 100)}%
+                          {state.percent === null
+                            ? isOver
+                              ? 'Over'
+                              : state.at
+                                ? 'At cap'
+                                : 'Under'
+                            : `${state.percent}%`}
                         </Badge>
                       </td>
                     </>

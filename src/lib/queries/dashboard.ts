@@ -1,4 +1,5 @@
-import { createClient } from '@/lib/supabase/server'
+import { getFinancialSnapshot } from './financial-snapshot'
+import { expenseCents, incomeCents } from '@/lib/finance/amounts'
 import { monthDateRange } from '@/lib/utils/month'
 
 export interface CategorySpend {
@@ -23,62 +24,22 @@ export interface DashboardSummary {
 }
 
 export interface DashboardData {
+  transactionCount: number
+  budgetCount: number
   month: string // YYYY-MM
   summary: DashboardSummary
   byCategory: CategorySpend[]
   topMerchants: MerchantSpend[]
 }
 
-type TxRow = {
-  amount_cents: number
-  merchant_name: string | null
-  description: string
-  category_id: string | null
-  category: { name: string; color: string | null; type: string } | null
-}
-
 export async function getDashboardData(month: string): Promise<DashboardData> {
-  const supabase = await createClient()
   const { dateFrom, dateTo } = monthDateRange(month)
-
   const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  let expected_income_cents: number | null = null
-  if (user) {
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('household_id')
-      .eq('id', user.id)
-      .maybeSingle()
-
-    if (profile?.household_id) {
-      const { data: household } = await supabase
-        .from('households')
-        .select('expected_monthly_income_cents')
-        .eq('id', profile.household_id)
-        .maybeSingle()
-      expected_income_cents = household?.expected_monthly_income_cents ?? null
-    }
-  }
-
-  const [txResult, budgetsResult] = await Promise.all([
-    supabase
-      .from('transactions')
-      .select(
-        'amount_cents, merchant_name, description, category_id, category:categories(name, color, type)'
-      )
-      .gte('date', dateFrom)
-      .lte('date', dateTo),
-    supabase.from('budgets').select('amount_cents'),
-  ])
-
-  if (txResult.error) console.error('getDashboardData/tx:', txResult.error.message)
-  if (budgetsResult.error) console.error('getDashboardData/budgets:', budgetsResult.error.message)
-
-  const transactions = (txResult.data ?? []) as unknown as TxRow[]
-  const budgetRows = (budgetsResult.data ?? []) as { amount_cents: number }[]
+    transactions,
+    budgets: budgetRows,
+    household,
+  } = await getFinancialSnapshot(dateFrom, dateTo)
+  const expected_income_cents = household.expected_monthly_income_cents
 
   const total_budgeted_cents = budgetRows.reduce((s, b) => s + (b.amount_cents ?? 0), 0)
 
@@ -88,15 +49,9 @@ export async function getDashboardData(month: string): Promise<DashboardData> {
   let received_income_cents = 0
   let spend_cents = 0
   for (const t of transactions) {
-    if (t.category?.type === 'transfer') continue
-    if (t.amount_cents > 0) {
-      income_cents += t.amount_cents
-      if (t.category?.type === 'income') {
-        received_income_cents += t.amount_cents
-      }
-    } else {
-      spend_cents += Math.abs(t.amount_cents)
-    }
+    income_cents += incomeCents(t.amount_cents, t.category?.type)
+    if (t.category?.type === 'income') received_income_cents += t.amount_cents
+    spend_cents += expenseCents(t.amount_cents, t.category?.type)
   }
 
   // Spend by category (expenses only; transfers excluded)
@@ -106,19 +61,19 @@ export async function getDashboardData(month: string): Promise<DashboardData> {
   >()
 
   for (const t of transactions) {
-    if (t.amount_cents >= 0) continue
-    if (t.category?.type === 'transfer') continue
+    const spend = expenseCents(t.amount_cents, t.category?.type)
+    if (spend === 0) continue
     const key = t.category_id ?? '__uncategorised__'
     const name = t.category?.name ?? 'Uncategorised'
     const color = t.category?.color ?? null
     const existing = categoryMap.get(key)
     if (existing) {
-      existing.spend_cents += Math.abs(t.amount_cents)
+      existing.spend_cents += spend
     } else {
       categoryMap.set(key, {
         category_name: name,
         category_color: color,
-        spend_cents: Math.abs(t.amount_cents),
+        spend_cents: spend,
       })
     }
   }
@@ -133,10 +88,10 @@ export async function getDashboardData(month: string): Promise<DashboardData> {
   // Top 5 merchants by spend (expenses only; transfers excluded)
   const merchantMap = new Map<string, number>()
   for (const t of transactions) {
-    if (t.amount_cents >= 0) continue
-    if (t.category?.type === 'transfer') continue
+    const spend = expenseCents(t.amount_cents, t.category?.type)
+    if (spend === 0) continue
     const key = t.merchant_name ?? t.description
-    merchantMap.set(key, (merchantMap.get(key) ?? 0) + Math.abs(t.amount_cents))
+    merchantMap.set(key, (merchantMap.get(key) ?? 0) + spend)
   }
 
   const topMerchants: MerchantSpend[] = Array.from(merchantMap.entries())
@@ -146,6 +101,8 @@ export async function getDashboardData(month: string): Promise<DashboardData> {
 
   return {
     month,
+    transactionCount: transactions.length,
+    budgetCount: budgetRows.length,
     summary: {
       income_cents,
       received_income_cents,

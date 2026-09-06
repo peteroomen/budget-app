@@ -1,3 +1,4 @@
+import { localRedirect } from '@/lib/utils/local-redirect'
 import { type EmailOtpType } from '@supabase/supabase-js'
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
@@ -13,7 +14,7 @@ export async function GET(request: Request) {
     const { error } = await supabase.auth.verifyOtp({ token_hash, type })
     if (!error) {
       const redirectTo = type === 'invite' ? '/auth/set-password' : next
-      return NextResponse.redirect(`${origin}${redirectTo}`)
+      return NextResponse.redirect(localRedirect(redirectTo, origin))
     }
   }
 

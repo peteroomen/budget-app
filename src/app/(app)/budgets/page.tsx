@@ -1,7 +1,8 @@
+import { isValidMonth, currentMonth } from '@/lib/utils/month'
 import Link from 'next/link'
 import { Target, TrendingUp, Wallet, AlertTriangle, Settings } from 'lucide-react'
 import { getBudgetsWithActuals } from '@/lib/queries/budgets'
-import { getHouseholdSettings } from '@/lib/queries/household'
+import { getDashboardData } from '@/lib/queries/dashboard'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { BudgetList } from '@/components/budgets/BudgetList'
@@ -19,17 +20,6 @@ function formatNZD(cents: number) {
   return nzd.format(cents / 100)
 }
 
-function currentMonth(): string {
-  const now = new Date()
-  const year = now.getFullYear()
-  const month = String(now.getMonth() + 1).padStart(2, '0')
-  return `${year}-${month}`
-}
-
-function isValidMonth(value: string): boolean {
-  return /^\d{4}-\d{2}$/.test(value)
-}
-
 interface BudgetsPageProps {
   searchParams: Promise<{ month?: string }>
 }
@@ -39,14 +29,14 @@ export default async function BudgetsPage({ searchParams }: BudgetsPageProps) {
   const month =
     typeof params.month === 'string' && isValidMonth(params.month) ? params.month : currentMonth()
 
-  const [household, items] = await Promise.all([
-    getHouseholdSettings(),
+  const [dashboard, items] = await Promise.all([
+    getDashboardData(month),
     getBudgetsWithActuals(month),
   ])
 
   // KPI totals
   const totalBudget = items.reduce((s, i) => s + (i.budget?.amount_cents ?? 0), 0)
-  const totalSpent = items.reduce((s, i) => s + i.actual_cents, 0)
+  const totalSpent = dashboard.summary.spend_cents
   const remaining = Math.max(0, totalBudget - totalSpent)
   const overCount = items.filter((i) => i.budget && i.actual_cents > i.budget.amount_cents).length
 
@@ -102,7 +92,7 @@ export default async function BudgetsPage({ searchParams }: BudgetsPageProps) {
       </div>
 
       <AllocationPanel
-        expectedIncomeCents={household?.expected_monthly_income_cents ?? null}
+        expectedIncomeCents={dashboard.summary.expected_income_cents}
         totalBudgetedCents={totalBudget}
       />
 
@@ -134,6 +124,11 @@ export default async function BudgetsPage({ searchParams }: BudgetsPageProps) {
           )
         })}
       </div>
+
+      <p className="text-body-sm text-muted-foreground">
+        Total spent includes uncategorised expenses and subtracts refunds. Uncategorised
+        transactions need review.
+      </p>
 
       <OverBudgetCards items={items} />
 
