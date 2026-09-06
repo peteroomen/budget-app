@@ -75,6 +75,7 @@ export function TransactionFilters({ accounts, categories }: Props) {
         <Input
           className="pl-8 w-full sm:w-56"
           placeholder="Search merchant or description…"
+          key={search}
           defaultValue={search}
           onChange={(e) => handleSearch(e.target.value)}
         />

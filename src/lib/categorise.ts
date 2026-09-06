@@ -7,6 +7,7 @@ function isRawResult(val: unknown): val is RawResult {
   return (
     typeof val === 'object' &&
     val !== null &&
+    Number.isInteger((val as RawResult).index) &&
     typeof (val as RawResult).index === 'number' &&
     typeof (val as RawResult).category === 'string'
   )
@@ -17,6 +18,14 @@ export async function categoriseMerchantsWithClaude(
   categories: Category[]
 ): Promise<Map<string, string>> {
   if (merchantNames.length === 0) return new Map()
+  if (merchantNames.length > 100) {
+    const combined = new Map<string, string>()
+    for (let i = 0; i < merchantNames.length; i += 100) {
+      const batch = await categoriseMerchantsWithClaude(merchantNames.slice(i, i + 100), categories)
+      for (const [merchant, category] of batch) combined.set(merchant, category)
+    }
+    return combined
+  }
 
   const categoryNames = categories.map((c) => c.name).join('\n- ')
   const categoryIdByName = new Map(categories.map((c) => [c.name.toLowerCase(), c.id]))
@@ -67,8 +76,9 @@ ${indexedList}`,
     ],
   })
 
+  if (response.stop_reason !== 'end_turn') throw new Error('Incomplete categorisation')
   const first = response.content[0]
-  if (!first || first.type !== 'text') return new Map()
+  if (!first || first.type !== 'text') throw new Error('Invalid categorisation response')
 
   const raw = first.text
     .trim()
@@ -80,15 +90,14 @@ ${indexedList}`,
   try {
     parsed = JSON.parse(raw)
   } catch {
-    console.error('[categorise] Claude returned invalid JSON:', raw)
-    return new Map()
+    throw new Error('Invalid categorisation response')
   }
 
-  if (!Array.isArray(parsed)) return new Map()
+  if (!Array.isArray(parsed)) throw new Error('Invalid categorisation response')
 
   const result = new Map<string, string>()
   for (const item of parsed) {
-    if (!isRawResult(item)) continue
+    if (!isRawResult(item)) throw new Error('Invalid categorisation response')
     const merchantName = merchantNames[item.index]
     if (!merchantName) continue
     const categoryId = categoryIdByName.get(item.category.toLowerCase())
@@ -97,5 +106,6 @@ ${indexedList}`,
     }
   }
 
+  if (result.size !== merchantNames.length) throw new Error('Incomplete categorisation')
   return result
 }

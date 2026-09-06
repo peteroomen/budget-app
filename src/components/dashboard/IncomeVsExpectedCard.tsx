@@ -1,3 +1,4 @@
+import { monthStatus } from '@/lib/utils/month'
 import { ArrowDown } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Progress } from '@/components/ui/progress'
@@ -18,17 +19,15 @@ function formatNZD(cents: number): string {
 }
 
 function paceForMonth(month: string): { dayLabel: string; isCurrent: boolean } {
-  const now = new Date()
-  const [yr, mo] = month.split('-').map(Number)
-  const isCurrent = now.getFullYear() === yr && now.getMonth() + 1 === mo
-  if (!isCurrent) {
-    const isPast = new Date(yr!, mo!, 0) < new Date(now.getFullYear(), now.getMonth(), 1)
-    return { dayLabel: isPast ? 'Past month' : 'Future month', isCurrent: false }
-  }
-  const daysInMonth = new Date(yr!, mo!, 0).getDate()
-  const day = now.getDate()
-  const pct = Math.round((day / daysInMonth) * 100)
-  return { dayLabel: `Day ${day} of ${daysInMonth} (${pct}% through)`, isCurrent: true }
+  const status = monthStatus(month)
+  if (status.status !== 'in_progress')
+    return {
+      dayLabel: status.status === 'closed' ? 'Past month' : 'Future month',
+      isCurrent: false,
+    }
+  const day = status.dayOfMonth!
+  const pct = Math.round((day / status.daysInMonth) * 100)
+  return { dayLabel: `Day ${day} of ${status.daysInMonth} (${pct}% through)`, isCurrent: true }
 }
 
 export function IncomeVsExpectedCard({
@@ -37,7 +36,7 @@ export function IncomeVsExpectedCard({
   month,
 }: IncomeVsExpectedCardProps) {
   const hasExpected = expected_cents !== null && expected_cents > 0
-  const pct = hasExpected ? Math.min((received_cents / expected_cents!) * 100, 100) : 0
+  const pct = hasExpected ? Math.max(0, Math.min((received_cents / expected_cents!) * 100, 100)) : 0
   const pace = paceForMonth(month)
 
   return (

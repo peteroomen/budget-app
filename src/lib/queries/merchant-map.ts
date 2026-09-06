@@ -1,3 +1,4 @@
+import { readAll } from './all-rows'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase/server'
 
@@ -9,13 +10,20 @@ export async function getMerchantMappingsForImport(
 ): Promise<Map<string, string>> {
   if (merchantNames.length === 0) return new Map()
 
-  const { data, error } = await supabase
-    .from('merchant_category_map')
-    .select('merchant_name, category_id')
-    .eq('household_id', householdId)
-    .in('merchant_name', merchantNames)
-
-  if (error) console.error('getMerchantMappingsForImport:', error.message)
+  // Bound each URL even for large statements with thousands of unique merchants.
+  const data: { merchant_name: string; category_id: string }[] = []
+  for (let i = 0; i < merchantNames.length; i += 50) {
+    const rows = await readAll<{ merchant_name: string; category_id: string }>((from, to) =>
+      supabase
+        .from('merchant_category_map')
+        .select('merchant_name, category_id')
+        .eq('household_id', householdId)
+        .in('merchant_name', merchantNames.slice(i, i + 50))
+        .order('id')
+        .range(from, to)
+    )
+    data.push(...rows)
+  }
   const map = new Map<string, string>()
   for (const row of data ?? []) {
     if (row.merchant_name && row.category_id) {
@@ -28,9 +36,10 @@ export async function getMerchantMappingsForImport(
 export async function getMappedMerchantNames(): Promise<Set<string>> {
   const supabase = await createClient()
 
-  const { data, error } = await supabase.from('merchant_category_map').select('merchant_name')
+  const data = await readAll<{ merchant_name: string }>((from, to) =>
+    supabase.from('merchant_category_map').select('merchant_name').order('id').range(from, to)
+  )
 
-  if (error) console.error('getMappedMerchantNames:', error.message)
   const names = new Set<string>()
   for (const row of data ?? []) {
     if (row.merchant_name) names.add(row.merchant_name)

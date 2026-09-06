@@ -31,6 +31,7 @@ Core loop: import bank statements → AI categorises transactions → set budget
 > **Update this section at the end of every session.**
 
 - **Current phase:** Phase 5 — Polish (in progress). Phases 1–4 fully complete.
+- **Reliability session:** 2026-09-07 — branch `fix/financial-data-integrity`; approved by the user after the audit. Atomic staged imports, household boundary enforcement, consistent full financial snapshots and refund accounting, manual override protection, NZ dates, visible error states, strict parsing and local PostgreSQL regression tests. See `docs/work/2026-09-07-financial-data-integrity.md` and ADR 004. Migration `20260907000000` is **not applied to production** and requires the preceding global-caps migration. Existing recurring flags are conservatively preserved as manual; new activity remains eligible for detection. Bank feeds, catch-up and weekly emails remain separate stages.
 - **Last session:** 2026-08-31 — Global budget caps (branch `claude/budget-caps-global-monthly-bli79e`).
   Dropped `budgets.month`; caps are now one standing value per category applying to every month.
   Migration `20260831000000` archives the per-month rows to `archive.budgets_monthly`, collapses to
@@ -78,7 +79,7 @@ Core loop: import bank statements → AI categorises transactions → set budget
   - Multi-household membership + profile-chip switcher (PR #30) — `household_members` join table, `create_household` RPC, `switchHousehold` action, sidebar/drawer profile chip
   - Month picker enhancement (PR #31) — `MonthJumpPopover`, `DashboardMonthNav`, year+month grid popover on dashboard/budgets/summary
   - Import summary preview/confirm (PR #32, build order #17) — `import_history` table, `analyseImport` + `commitImport` actions, 3-step UI, "Recent imports" card
-- **Open PRs:** none.
+- **Open PRs at session start:** #38 transaction category cap strip, #39 chat budget write tool. Reliability PR being opened from `fix/financial-data-integrity`.
 - **Vercel / build config (main branch):**
   - `vercel.json`: `buildCommand: "pnpm run build"`, `outputDirectory: ".next"` (resolves to `src/.next` from Vercel's `src/` framework root)
   - `next.config.ts`: `distDir: 'src/.next'` + `NormalModuleReplacementPlugin` replacing `testmode/context.js` with noop for edge runtime

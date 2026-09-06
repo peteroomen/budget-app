@@ -55,12 +55,16 @@ export function ImportForm({ accounts }: { accounts: Account[] }) {
     setError(null)
     const formData = new FormData(e.currentTarget)
     startAnalysis(async () => {
-      const result = await analyseImport(formData)
-      if (!result.ok) {
-        setError(result.error)
-        return
+      try {
+        const result = await analyseImport(formData)
+        if (!result.ok) {
+          setError(result.error)
+          return
+        }
+        setStep({ name: 'preview', data: result })
+      } catch {
+        setError('Unable to analyse this file. Please retry.')
       }
-      setStep({ name: 'preview', data: result })
     })
   }
 
@@ -68,12 +72,17 @@ export function ImportForm({ accounts }: { accounts: Account[] }) {
     if (step.name !== 'preview') return
     const data = step.data
     startCommit(async () => {
-      const result = await commitImport(data)
-      if (result.error !== null) {
-        setError(result.error)
-        return
+      setError(null)
+      try {
+        const result = await commitImport(data.draftId)
+        if (result.error !== null) {
+          setError(result.error)
+          return
+        }
+        setStep({ name: 'success', stats: result.stats, format: data.format })
+      } catch {
+        setError('Confirmation could not be verified. Retry this preview safely.')
       }
-      setStep({ name: 'success', stats: result.stats, format: data.format })
     })
   }
 
@@ -134,6 +143,36 @@ export function ImportForm({ accounts }: { accounts: Account[] }) {
     return (
       <div className="max-w-lg space-y-4">
         {error && <p className="text-body-sm text-destructive">{error}</p>}
+        {step.data.warnings.map((warning) => (
+          <p key={warning} role="status" className="text-body-sm text-muted-foreground">
+            {warning}
+          </p>
+        ))}
+        <details className="rounded-lg border p-3">
+          <summary className="cursor-pointer text-body-sm">
+            Review {step.data.transactions.length} new transactions
+          </summary>
+          <div className="mt-3 max-h-80 overflow-auto">
+            <table className="w-full text-left text-body-sm">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Description</th>
+                  <th className="text-right">NZD</th>
+                </tr>
+              </thead>
+              <tbody>
+                {step.data.transactions.map((t, i) => (
+                  <tr key={i} className="border-t">
+                    <td className="whitespace-nowrap py-2 pr-2">{t.date}</td>
+                    <td className="break-words">{t.description}</td>
+                    <td className="text-right tabular-nums">{(t.amountCents / 100).toFixed(2)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </details>
         <ImportPreview
           stats={step.data.stats}
           format={step.data.format}

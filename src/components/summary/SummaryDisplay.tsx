@@ -2,14 +2,8 @@ import { SparklesIcon } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import type { SummaryContext } from '@/lib/queries/summary'
 
-export interface MonthlySummaryJSON {
-  headline: string
-  spendNote: string
-  overBudgetCategories: Array<{ category: string; note: string }>
-  biggestMerchantNote: string | null
-  vsLastMonthNote: string | null
-  notablePatterns: string[]
-}
+import type { MonthlySummaryJSON } from '@/lib/finance/summary-schema'
+export type { MonthlySummaryJSON } from '@/lib/finance/summary-schema'
 
 interface SummaryDisplayProps {
   summary: MonthlySummaryJSON
@@ -89,7 +83,7 @@ function CompareBar({
   max: number
   primary?: boolean
 }) {
-  const pct = max > 0 ? (value / max) * 100 : 0
+  const pct = max > 0 ? Math.max(0, Math.min(100, (value / max) * 100)) : 0
   return (
     <div className="grid grid-cols-[56px_1fr_72px] items-center gap-2.5 text-label">
       <span className="text-muted-foreground truncate">{label}</span>

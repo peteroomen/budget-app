@@ -6,6 +6,7 @@ const nextConfig: NextConfig = {
   // and expects build output at src/.next. Setting distDir to match prevents the
   // "output directory not found" error on every Vercel deploy.
   distDir: 'src/.next',
+  experimental: { serverActions: { bodySizeLimit: '5mb' } },
   webpack(config, { nextRuntime, webpack }) {
     if (nextRuntime === 'edge') {
       // Disable Webpack caching for Edge to prevent stale middleware bundles.

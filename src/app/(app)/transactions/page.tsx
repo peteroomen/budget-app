@@ -1,3 +1,4 @@
+import { isValidMonth, currentMonth, formatMonthLabel } from '@/lib/utils/month'
 import { Suspense } from 'react'
 import { getAccounts } from '@/lib/queries/accounts'
 import { getTransactions, type TransactionSortBy, type SortDir } from '@/lib/queries/transactions'
@@ -20,21 +21,6 @@ function parseSortBy(value: string | undefined): TransactionSortBy {
 
 function parseSortDir(value: string | undefined): SortDir {
   return VALID_DIRS.includes(value as SortDir) ? (value as SortDir) : 'desc'
-}
-
-function currentMonth(): string {
-  const now = new Date()
-  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
-}
-
-function isValidMonth(value: string): boolean {
-  return /^\d{4}-\d{2}$/.test(value)
-}
-
-function formatMonthLabel(month: string): string {
-  const [yearStr, mStr] = month.split('-')
-  const date = new Date(parseInt(yearStr!), parseInt(mStr!) - 1, 1)
-  return date.toLocaleDateString('en-NZ', { month: 'long', year: 'numeric' })
 }
 
 interface SearchParams {
