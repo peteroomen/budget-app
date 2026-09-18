@@ -23,6 +23,7 @@ export async function detectRecurring(): Promise<ActionResult & { flagged: numbe
         .from('transactions')
         .select('id, merchant_name, account_id, amount_cents, date, category:categories(type)')
         .lt('amount_cents', 0)
+        .is('bank_removed_at', null)
         .not('merchant_name', 'is', null)
         .order('id')
         .range(from, to)

@@ -31,6 +31,7 @@ Core loop: import bank statements → AI categorises transactions → set budget
 > **Update this section at the end of every session.**
 
 - **Current phase:** Phase 5 — Polish (in progress). Phases 1–4 fully complete.
+- **ANZ progress, 2026-09-18:** Reliability PR #40 merged (`e39827d`), with CI passing after the pnpm 11 build-policy fix. Branch `feature/anz-auto-import` contains the Akahu adapter, production-only cron, owner-checked actions, resumable staging/reconciliation migration and synthetic regression tests. This is a **draft**, not ready to activate: account setup/status UI, visible freshness in financial screens and full worker/cron integration coverage remain. See `docs/work/2026-09-18-anz-auto-import.md` and ADR 005. Weekly update emails are explicitly roadmapped after auto-import and transaction catch-up. No live bank or email activation; production migrations remain unverified.
 - **Reliability session:** 2026-09-07 — branch `fix/financial-data-integrity`; approved by the user after the audit. Atomic staged imports, household boundary enforcement, consistent full financial snapshots and refund accounting, manual override protection, NZ dates, visible error states, strict parsing and local PostgreSQL regression tests. See `docs/work/2026-09-07-financial-data-integrity.md` and ADR 004. Migration `20260907000000` is **not applied to production** and requires the preceding global-caps migration. Existing recurring flags are conservatively preserved as manual; new activity remains eligible for detection. Bank feeds, catch-up and weekly emails remain separate stages.
 - **Last session:** 2026-08-31 — Global budget caps (branch `claude/budget-caps-global-monthly-bli79e`).
   Dropped `budgets.month`; caps are now one standing value per category applying to every month.
@@ -276,7 +277,7 @@ What are the trade-offs? What does this make easier or harder?
 - Don't add new dependencies without checking `docs/architecture.md` first
 - Don't build features outside the current phase — check the roadmap
 - Don't persist chat history to the DB (session-only by design — see roadmap)
-- Don't implement direct bank API integration (far future — see roadmap)
+- Bank integration is now approved in the roadmap: ANZ through a single-user Akahu Personal App only. Additional banks and broader access remain deferred.
 - Don't add Axiom or other observability tooling yet
 - Don't add tests in Phase 1–2 — add Vitest at Phase 3 for parsing/categorisation logic
 - Don't bypass Husky hooks

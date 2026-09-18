@@ -174,6 +174,7 @@ async function analyse(formData: FormData): Promise<AnalyseResult> {
       supabase
         .from('transactions')
         .select('date, amount_cents, description')
+        .is('bank_removed_at', null)
         .eq('account_id', accountId)
         .order('id')
         .range(from, to)
