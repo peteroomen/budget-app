@@ -1,3 +1,4 @@
+import { BankFeedBanner } from '@/components/bank/BankFeedBanner'
 import { Suspense } from 'react'
 import { redirect } from 'next/navigation'
 import { Upload } from 'lucide-react'
@@ -92,7 +93,10 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
           {/* Page content */}
           <main id="page-scroll" className="flex flex-1 flex-col overflow-y-auto">
-            <div className="mx-auto w-full max-w-screen-xl px-8 py-7">{children}</div>
+            <div className="mx-auto w-full max-w-screen-xl px-8 py-7">
+              <BankFeedBanner />
+              {children}
+            </div>
           </main>
 
           {/* Mobile bottom tab bar */}

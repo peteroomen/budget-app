@@ -7,7 +7,7 @@
 export type AccountType = 'spending' | 'saving'
 export type UploadStatus = 'pending' | 'processing' | 'complete' | 'error'
 export type FileType = 'csv' | 'pdf'
-export type TransactionSource = 'csv' | 'pdf'
+export type TransactionSource = 'csv' | 'pdf' | 'bank'
 export type CategorySource = 'claude' | 'manual' | 'map'
 export type CategoryType = 'income' | 'expense' | 'transfer'
 

@@ -1,3 +1,4 @@
+import { bankContext } from '@/lib/bank/status'
 import { getFinancialSnapshot } from './financial-snapshot'
 import { expenseCents } from '@/lib/finance/amounts'
 import {
@@ -9,6 +10,7 @@ import {
 } from '@/lib/utils/month'
 
 export interface ChatContext {
+  bankNotice?: string
   householdName: string
   month: string
   expectedIncomeCents: number | null
@@ -50,7 +52,7 @@ export async function getChatContext(month: string): Promise<ChatContext | null>
     prevMonth(prevMonth(month)),
     prevMonth(month),
   ]
-  const { transactions, categories, budgets, household } = await getFinancialSnapshot(
+  const { transactions, categories, budgets, household, bankLinks } = await getFinancialSnapshot(
     firstDayOfMonth(trendMonths[0]!),
     dateTo
   )
@@ -141,6 +143,7 @@ export async function getChatContext(month: string): Promise<ChatContext | null>
     .sort((a, b) => b.amount_cents - a.amount_cents)
 
   return {
+    bankNotice: bankContext(bankLinks),
     householdName,
     month,
     expectedIncomeCents,
@@ -164,6 +167,7 @@ export function formatChatContext(ctx: ChatContext): string {
   const lines: string[] = [
     `<financial_data>`,
     `Household: ${ctx.householdName}`,
+    ctx.bankNotice ?? '',
     `Today: ${today}`,
     `Current month: ${monthLabel}`,
     'Expense credits reduce spending. Uncategorised credits need review; do not assume they are earned income. Trends include full prior months; compare partial current months cautiously.',

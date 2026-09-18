@@ -1,3 +1,4 @@
+import { bankContext } from '@/lib/bank/status'
 import { getFinancialSnapshot } from './financial-snapshot'
 import { expenseCents, incomeCents } from '@/lib/finance/amounts'
 import { monthDateRange, formatMonthLabel, prevMonth, monthStatus } from '@/lib/utils/month'
@@ -21,6 +22,7 @@ export interface NotedTransactionRow {
 }
 
 export interface SummaryContext {
+  bankNotice?: string
   month: string
   monthLabel: string
   income_cents: number
@@ -47,6 +49,7 @@ export async function getSummaryContext(month: string): Promise<SummaryContext> 
     budgets,
     household,
     categories: allCategories,
+    bankLinks,
   } = await getFinancialSnapshot(priorFrom, dateTo)
   const expected_income_cents = household.expected_monthly_income_cents
   const status = monthStatus(month)
@@ -64,6 +67,7 @@ export async function getSummaryContext(month: string): Promise<SummaryContext> 
   if (current.length === 0) {
     return {
       month,
+      bankNotice: bankContext(bankLinks),
       monthLabel: formatMonthLabel(month),
       income_cents: 0,
       received_income_cents: 0,
@@ -177,6 +181,7 @@ export async function getSummaryContext(month: string): Promise<SummaryContext> 
 
   return {
     month,
+    bankNotice: bankContext(bankLinks),
     monthLabel: formatMonthLabel(month),
     income_cents,
     received_income_cents,
@@ -216,6 +221,7 @@ export function buildSummaryPrompt(ctx: SummaryContext): string {
   const lines: string[] = [
     `Month: ${ctx.monthLabel}`,
     statusLine,
+    ctx.bankNotice ?? '',
     'Expense credits reduce spend; income debits reduce income. Uncategorised credits are provisional income and need classification. Compare elapsed periods only; do not infer full-month savings from partial data.',
     `Total income: ${fmt(ctx.income_cents)}`,
     `Total spend: ${fmt(ctx.spend_cents)}`,

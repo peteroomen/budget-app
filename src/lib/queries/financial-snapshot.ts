@@ -1,3 +1,4 @@
+import type { BankLink } from '@/lib/bank/status'
 import { cache } from 'react'
 import { createClient } from '@/lib/supabase/server'
 import type { Budget, Category, Household } from '@/types'
@@ -16,6 +17,7 @@ export interface FinancialTransaction {
 }
 
 export interface FinancialSnapshot {
+  bankLinks?: BankLink[]
   transactions: FinancialTransaction[]
   categories: Category[]
   budgets: Budget[]

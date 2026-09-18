@@ -52,6 +52,7 @@ export async function getTransactions(filters: TransactionFilters = {}): Promise
     let query = supabase
       .from('transactions')
       .select('*, account:accounts(name, institution), category:categories(name, type)')
+      .is('bank_removed_at', null)
       .order(sortBy, { ascending: sortDir === 'asc' })
       .order('id')
 
