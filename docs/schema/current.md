@@ -2,8 +2,8 @@
 
 > Auto-maintained. Update this file after every migration.
 
-**Migrations:** up to `20260529000000_import_history.sql`
-**Last updated:** 2026-05-30
+**Migrations:** up to `20260907000000_financial_reliability.sql` (repository schema; production deployment not verified)
+**Last updated:** 2026-09-07
 
 ---
 
@@ -168,7 +168,7 @@ Note: new imports write to `import_history` only. The older `uploads` table is p
 - `handle_updated_at()` — trigger function, sets `updated_at = now()` on update
 - `handle_new_user()` — trigger function, inserts a `profiles` row when `auth.users` row is created
 - `get_my_household_id()` — helper for RLS policies, returns the **active** household for the current user. Validates that `profiles.household_id` is still a real membership row in `household_members`; falls back to the oldest membership if not; returns null if the user has no memberships.
-- `seed_default_categories(p_household_id uuid)` — inserts the Tide default category set (system flag = true, Income → type='income', Savings Transfer → type='transfer' to match `20260527000001_savings_to_transfer.sql`, everything else → type='expense'). Called by `create_household`; safe to call repeatedly thanks to ON CONFLICT DO NOTHING.
+- `seed_default_categories(p_household_id uuid)` — inserts the Tide default category set (system flag = true, Income → type='income', Savings Transfer → type='transfer' to match `20260527000001_savings_to_transfer.sql`, everything else → type='expense'). Callable only internally by `create_household` (execution revoked from public, anon and authenticated); safe to call repeatedly thanks to ON CONFLICT DO NOTHING.
 - `create_household(p_name text)` — `security definer` RPC that atomically inserts a new household, makes the calling user its owner via `household_members`, seeds default categories, and flips `profiles.household_id` to the new id. Returns the new `uuid`. Used by the `createHousehold` server action; bypasses RLS for the multi-step setup so no `households` INSERT policy is needed.
 
 ## RLS
@@ -176,4 +176,21 @@ Note: new imports write to `import_history` only. The older `uploads` table is p
 All tables have RLS enabled. Policies enforce household-level isolation via `get_my_household_id()` (the active household). Transactions and uploads are scoped through their parent account's household_id. `import_history` is scoped directly by `household_id`.
 
 - `households` SELECT is broader: a user can read **any** household they belong to (powers the switcher). UPDATE on households remains scoped to the active household.
-- `household_members` has SELECT and INSERT policies that match `user_id = auth.uid()` — users can see and insert their own membership rows. No UPDATE/DELETE policies (leave/transfer-ownership flows are out of scope for now).
+- `household_members` permits only SELECT of the current user's memberships. Membership creation is restricted to `create_household`; direct self-enrolment is forbidden. No UPDATE/DELETE policies.
+
+## Reliability migration
+
+- `transactions.recurring_source`: nullable text, `manual` or `detected`. All existing flags are preserved as `manual`; newly imported rows start null.
+- `import_drafts`: internal table with UUID `id`, `user_id` (auth FK), `account_id` (account FK), `filename`, `file_type`, `bank_format`, `rows` JSONB, nullable `result` JSONB and `created_at`. RLS enabled; no client table grants or policies. Rows are cleared on successful commit; results support durable retries.
+- `stage_import(uuid,jsonb,text,text,text)`: validates account ownership and each row, creates a one-day preview and removes the caller's abandoned previews older than two days.
+- `commit_import(uuid)`: validates draft ownership and active household; locks draft/account; reconciles occurrence counts; atomically writes transactions, non-overwriting merchant memory, history and cached result.
+- `financial_snapshot(date,date)`: security-invoker/RLS JSON aggregate of the active household, categories, expense caps and all transactions in a bounded date range. One MVCC snapshot, unaffected by the PostgREST result-row limit.
+- `set_transaction_category(uuid,uuid)`: atomic manual category/merchant-memory update, deriving the merchant from the owned transaction. A null category is an explicit manual choice.
+- `apply_automatic_categories(jsonb)`: atomically applies automatic suggestions while preserving both manual merchant mappings and manual transaction categories.
+- `apply_recurring_detection(uuid[],uuid[])`: atomically writes detection results, excluding manual decisions at write time.
+- Category ownership triggers enforce household consistency on transaction, budget and merchant-map writes. New budget category references must be expense categories. Account/category household IDs cannot be moved.
+- Upload access requires an account in the active household. Legacy orphan uploads are no longer globally visible.
+- Security-definer functions use an empty search path and schema-qualified references. Internal seed/trigger functions are not callable by clients.
+- Index: `transactions(account_id,date)`.
+
+The preceding `20260831000000_global_budget_caps.sql` migration removes `budgets.month`, archives old monthly rows to `archive.budgets_monthly`, and enforces one standing cap per `(household_id,category_id)`. Historical migration/production status must be checked before deployment.

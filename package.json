@@ -11,7 +11,8 @@
     "type-check": "tsc --noEmit",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "prepare": "husky"
+    "prepare": "husky",
+    "test": "node --require ./tests/register.cjs --test tests/*.test.cjs"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^3.0.79",
@@ -54,6 +55,7 @@
     "zustand": "^5.0.13"
   },
   "devDependencies": {
+    "@electric-sql/pglite": "^0.5.8",
     "@eslint/eslintrc": "^3.3.5",
     "@tailwindcss/typography": "^0.5.19",
     "@types/node": "^20",

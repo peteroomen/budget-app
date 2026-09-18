@@ -1,4 +1,5 @@
-import { createClient } from '@/lib/supabase/server'
+import { getFinancialSnapshot } from './financial-snapshot'
+import { expenseCents, incomeCents } from '@/lib/finance/amounts'
 import { monthDateRange, formatMonthLabel, prevMonth, monthStatus } from '@/lib/utils/month'
 
 export interface CategorySummaryRow {
@@ -37,69 +38,28 @@ export interface SummaryContext {
   hasTransactions: boolean
 }
 
-type TxRow = {
-  date: string
-  amount_cents: number
-  merchant_name: string | null
-  description: string
-  notes: string | null
-  category_id: string | null
-  category: { name: string; type: string } | null
-}
-
-type PriorTxRow = {
-  amount_cents: number
-  category_id: string | null
-  category: { name: string; type: string } | null
-}
-
 export async function getSummaryContext(month: string): Promise<SummaryContext> {
-  const supabase = await createClient()
   const { dateFrom, dateTo } = monthDateRange(month)
   const prior = prevMonth(month)
   const { dateFrom: priorFrom, dateTo: priorTo } = monthDateRange(prior)
-
   const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  let expected_income_cents: number | null = null
-  if (user) {
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('household_id')
-      .eq('id', user.id)
-      .maybeSingle()
-
-    if (profile?.household_id) {
-      const { data: household } = await supabase
-        .from('households')
-        .select('expected_monthly_income_cents')
-        .eq('id', profile.household_id)
-        .maybeSingle()
-      expected_income_cents = household?.expected_monthly_income_cents ?? null
-    }
-  }
-
-  const [currentResult, budgetResult, priorResult] = await Promise.all([
-    supabase
-      .from('transactions')
-      .select(
-        'date, amount_cents, merchant_name, description, notes, category_id, category:categories(name, type)'
-      )
-      .gte('date', dateFrom)
-      .lte('date', dateTo),
-    supabase.from('budgets').select('category_id, amount_cents'),
-    supabase
-      .from('transactions')
-      .select('amount_cents, category_id, category:categories(name, type)')
-      .gte('date', priorFrom)
-      .lte('date', priorTo),
-  ])
-
-  const current = (currentResult.data ?? []) as unknown as TxRow[]
-  const budgets = budgetResult.data ?? []
-  const priorTxs = (priorResult.data ?? []) as unknown as PriorTxRow[]
+    transactions,
+    budgets,
+    household,
+    categories: allCategories,
+  } = await getFinancialSnapshot(priorFrom, dateTo)
+  const expected_income_cents = household.expected_monthly_income_cents
+  const status = monthStatus(month)
+  const comparisonDay =
+    status.status === 'in_progress' ? Math.min(status.dayOfMonth!, Number(priorTo.slice(8))) : null
+  const priorCutoff =
+    comparisonDay === null ? priorTo : `${prior}-${String(comparisonDay).padStart(2, '0')}`
+  const currentCutoff =
+    status.status === 'in_progress'
+      ? `${month}-${String(status.dayOfMonth).padStart(2, '0')}`
+      : dateTo
+  const current = transactions.filter((t) => t.date >= dateFrom && t.date <= currentCutoff)
+  const priorTxs = transactions.filter((t) => t.date >= priorFrom && t.date <= priorCutoff)
 
   if (current.length === 0) {
     return {
@@ -126,23 +86,23 @@ export async function getSummaryContext(month: string): Promise<SummaryContext> 
   let received_income_cents = 0
   let spend_cents = 0
   for (const t of current) {
-    if (t.category?.type === 'transfer') continue
-    if (t.amount_cents > 0) {
-      income_cents += t.amount_cents
-      if (t.category?.type === 'income') received_income_cents += t.amount_cents
-    } else {
-      spend_cents += Math.abs(t.amount_cents)
-    }
+    income_cents += incomeCents(t.amount_cents, t.category?.type)
+    if (t.category?.type === 'income') received_income_cents += t.amount_cents
+    spend_cents += expenseCents(t.amount_cents, t.category?.type)
   }
 
   // Category actuals (expenses only; transfers excluded)
   const actualMap = new Map<string, number>()
   const categoryNames = new Map<string, string>()
+  for (const c of allCategories.filter((c) => c.type === 'expense')) {
+    actualMap.set(c.id, 0)
+    categoryNames.set(c.id, c.name)
+  }
   for (const t of current) {
-    if (t.amount_cents >= 0) continue
-    if (t.category?.type === 'transfer') continue
+    const spend = expenseCents(t.amount_cents, t.category?.type)
+    if (spend === 0) continue
     const key = t.category_id ?? '__uncategorised__'
-    actualMap.set(key, (actualMap.get(key) ?? 0) + Math.abs(t.amount_cents))
+    actualMap.set(key, (actualMap.get(key) ?? 0) + spend)
     if (t.category?.name) categoryNames.set(key, t.category.name)
   }
   if (actualMap.has('__uncategorised__')) categoryNames.set('__uncategorised__', 'Uncategorised')
@@ -163,10 +123,10 @@ export async function getSummaryContext(month: string): Promise<SummaryContext> 
   // Top 5 merchants (expenses only; transfers excluded)
   const merchantMap = new Map<string, number>()
   for (const t of current) {
-    if (t.amount_cents >= 0) continue
-    if (t.category?.type === 'transfer') continue
+    const spend = expenseCents(t.amount_cents, t.category?.type)
+    if (spend === 0) continue
     const key = t.merchant_name ?? t.description
-    merchantMap.set(key, (merchantMap.get(key) ?? 0) + Math.abs(t.amount_cents))
+    merchantMap.set(key, (merchantMap.get(key) ?? 0) + spend)
   }
   const topMerchants: MerchantSummaryRow[] = Array.from(merchantMap.entries())
     .map(([merchant, spend_cents]) => ({ merchant, spend_cents }))
@@ -195,10 +155,11 @@ export async function getSummaryContext(month: string): Promise<SummaryContext> 
     const priorNames = new Map<string, string>()
 
     for (const t of priorTxs) {
-      if (t.amount_cents < 0 && t.category?.type !== 'transfer') {
-        priorMonthSpend += Math.abs(t.amount_cents)
+      const spend = expenseCents(t.amount_cents, t.category?.type)
+      if (spend !== 0) {
+        priorMonthSpend += spend
         const key = t.category_id ?? '__uncategorised__'
-        priorActualMap.set(key, (priorActualMap.get(key) ?? 0) + Math.abs(t.amount_cents))
+        priorActualMap.set(key, (priorActualMap.get(key) ?? 0) + spend)
         if (t.category?.name) priorNames.set(key, t.category.name)
       }
     }
@@ -226,7 +187,10 @@ export async function getSummaryContext(month: string): Promise<SummaryContext> 
     topMerchants,
     notedTransactions,
     priorMonthSpend,
-    priorMonthLabel: priorTxs.length > 0 ? formatMonthLabel(prior) : null,
+    priorMonthLabel:
+      priorTxs.length > 0
+        ? `${formatMonthLabel(prior)}${comparisonDay === null ? '' : ` through day ${comparisonDay}`}`
+        : null,
     priorMonthCategories,
     hasBudgets: budgets.length > 0,
     hasTransactions: true,
@@ -252,6 +216,7 @@ export function buildSummaryPrompt(ctx: SummaryContext): string {
   const lines: string[] = [
     `Month: ${ctx.monthLabel}`,
     statusLine,
+    'Expense credits reduce spend; income debits reduce income. Uncategorised credits are provisional income and need classification. Compare elapsed periods only; do not infer full-month savings from partial data.',
     `Total income: ${fmt(ctx.income_cents)}`,
     `Total spend: ${fmt(ctx.spend_cents)}`,
     `Net: ${fmt(Math.abs(ctx.net_cents))} ${ctx.net_cents >= 0 ? 'saved' : 'deficit'}`,

@@ -74,6 +74,7 @@ export interface Transaction {
   category_id: string | null
   category_source: CategorySource | null
   is_recurring: boolean
+  recurring_source: 'manual' | 'detected' | null
   notes: string | null
   source: TransactionSource | null
   created_at: string

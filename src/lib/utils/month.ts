@@ -1,59 +1,66 @@
-import { format, parseISO, startOfMonth, endOfMonth } from 'date-fns'
+export const HOUSEHOLD_TIMEZONE = 'Pacific/Auckland'
+
+export function nzDate(now: Date = new Date()): string {
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone: HOUSEHOLD_TIMEZONE,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(now)
+}
+
+export function isValidMonth(value: unknown): value is string {
+  return typeof value === 'string' && /^[1-9]\d{3}-(0[1-9]|1[0-2])$/.test(value)
+}
+
+function parts(month: string): [number, number] {
+  if (!isValidMonth(month)) throw new Error('Invalid month')
+  return [Number(month.slice(0, 4)), Number(month.slice(5, 7))]
+}
 
 export function currentMonth(): string {
-  return format(new Date(), 'yyyy-MM')
+  return nzDate().slice(0, 7)
 }
 
 export function prevMonth(month: string): string {
-  const d = parseISO(`${month}-01`)
-  d.setMonth(d.getMonth() - 1)
-  return format(d, 'yyyy-MM')
+  const [y, m] = parts(month)
+  return `${m === 1 ? y - 1 : y}-${String(m === 1 ? 12 : m - 1).padStart(2, '0')}`
 }
 
 export function nextMonth(month: string): string {
-  const d = parseISO(`${month}-01`)
-  d.setMonth(d.getMonth() + 1)
-  return format(d, 'yyyy-MM')
+  const [y, m] = parts(month)
+  return `${m === 12 ? y + 1 : y}-${String(m === 12 ? 1 : m + 1).padStart(2, '0')}`
 }
 
 export function formatMonthLabel(month: string): string {
-  return format(parseISO(`${month}-01`), 'MMMM yyyy')
+  parts(month)
+  return new Intl.DateTimeFormat('en-NZ', {
+    timeZone: 'UTC',
+    month: 'long',
+    year: 'numeric',
+  }).format(new Date(`${month}-01T00:00:00Z`))
 }
 
 export function monthDateRange(month: string): { dateFrom: string; dateTo: string } {
-  const monthDate = parseISO(`${month}-01`)
-  return {
-    dateFrom: format(startOfMonth(monthDate), 'yyyy-MM-dd'),
-    dateTo: format(endOfMonth(monthDate), 'yyyy-MM-dd'),
-  }
+  const [y, m] = parts(month)
+  const days = new Date(Date.UTC(y, m, 0)).getUTCDate()
+  return { dateFrom: `${month}-01`, dateTo: `${month}-${days}` }
 }
 
 export type MonthStatus = 'future' | 'in_progress' | 'closed'
-
 export interface MonthStatusInfo {
   status: MonthStatus
   dayOfMonth: number | null
   daysInMonth: number
 }
 
-/**
- * Classifies a YYYY-MM month relative to today.
- * - 'in_progress' if the month contains today
- * - 'closed' if the month ended before today
- * - 'future' if the month starts after today
- * dayOfMonth is null for closed/future months.
- */
 export function monthStatus(month: string, now: Date = new Date()): MonthStatusInfo {
-  const monthDate = parseISO(`${month}-01`)
-  const start = startOfMonth(monthDate)
-  const end = endOfMonth(monthDate)
-  const daysInMonth = end.getDate()
-
-  if (now < start) {
-    return { status: 'future', dayOfMonth: null, daysInMonth }
+  const { dateFrom, dateTo } = monthDateRange(month)
+  const today = nzDate(now)
+  const status = today < dateFrom ? 'future' : today > dateTo ? 'closed' : 'in_progress'
+  return {
+    status,
+    dayOfMonth: status === 'in_progress' ? Number(today.slice(8)) : null,
+    daysInMonth: Number(dateTo.slice(8)),
   }
-  if (now > end) {
-    return { status: 'closed', dayOfMonth: null, daysInMonth }
-  }
-  return { status: 'in_progress', dayOfMonth: now.getDate(), daysInMonth }
 }

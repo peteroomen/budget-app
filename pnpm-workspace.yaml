@@ -1,2 +1,5 @@
-onlyBuiltDependencies:
-  - sharp
+# pnpm 11 uses allowBuilds; keep unlisted dependency scripts blocked.
+allowBuilds:
+  sharp: true
+  # The locked resolver ships its native binaries as optional dependencies.
+  unrs-resolver: false

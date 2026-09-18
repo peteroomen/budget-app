@@ -1,5 +1,6 @@
 'use client'
 
+import { toast } from 'sonner'
 import { useTransition } from 'react'
 import { Button } from '@/components/ui/button'
 import { detectRecurring } from '@/lib/actions/recurring'
@@ -9,7 +10,13 @@ export function DetectRecurringButton() {
 
   function handleClick() {
     startTransition(async () => {
-      await detectRecurring()
+      try {
+        const result = await detectRecurring()
+        if (result.error) toast.error(result.error)
+        else toast.success('Recurring flags updated; manual choices preserved.')
+      } catch {
+        toast.error('Unable to complete this update. Please retry.')
+      }
     })
   }
 
