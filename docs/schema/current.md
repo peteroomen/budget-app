@@ -2,7 +2,7 @@
 
 > Auto-maintained. Update this file after every migration.
 
-**Migrations:** up to draft `20260918000000_anz_bank_sync.sql` on `feature/anz-auto-import` (not approved for production; deployment not verified)
+**Migrations:** up to `20260918000000_anz_bank_sync.sql` on `feature/anz-auto-import` (production deployment not verified)
 **Last updated:** 2026-09-18
 
 ---
@@ -86,7 +86,7 @@ Unique constraint: `(household_id, name)`
 | category_source | text        | Nullable. 'claude' \| 'manual' \| 'map' — how category was assigned |
 | is_recurring    | boolean     | Default false                                                       |
 | notes           | text        | Nullable                                                            |
-| source          | text        | 'csv' or 'pdf'                                                      |
+| source          | text        | 'csv', 'pdf' or 'bank'                                              |
 | created_at      | timestamptz | Default now()                                                       |
 | updated_at      | timestamptz | Auto-updated via trigger                                            |
 
@@ -195,7 +195,7 @@ All tables have RLS enabled. Policies enforce household-level isolation via `get
 
 The preceding `20260831000000_global_budget_caps.sql` migration removes `budgets.month`, archives old monthly rows to `archive.budgets_monthly`, and enforces one standing cap per `(household_id,category_id)`. Historical migration/production status must be checked before deployment.
 
-## ANZ bank sync — draft migration
+## ANZ bank sync
 
 - `transactions.source` also accepts `bank`; `bank_removed_at` soft-removes provider-deleted rows, `bank_revision` counts material changes and `bank_changed_at` records their time. Financial snapshots and transaction queries exclude bank-removed rows. File-import duplicate checks also exclude them.
 - `bank_links`: UUID ID; unique account FK; household and owner FKs; provider user/account IDs (external account unique); display name; enabled flag; cutover date and history cursor; bank refresh time, last successful import, last recent-window date and safe error code. Authenticated users can read active-household status; only service code writes links.
@@ -206,4 +206,6 @@ The preceding `20260831000000_global_budget_caps.sql` migration removes `budgets
 - Service-only security-definer RPCs: `link_bank_account`, `claim_bank_sync`, `stage_bank_page`, `finish_bank_sync`. Membership and account scope are checked at mapping and commit. Completion applies corrections, conservative statement adoption, removals, run result and link status atomically.
 - `bank_delete_tombstone` is a before-delete transaction trigger. Trigger/RPC execution is revoked from anonymous and authenticated callers except explicitly granted service RPCs.
 
-This schema is under test. No production bank connection is enabled by its presence in the repository.
+No production bank connection is enabled by this migration alone. See `docs/anz-setup.md` for activation steps.
+
+Bank status also stores `recent_refreshed_at` (separate from any history refresh), `initial_history_complete`, `sync_pending` and `last_attempt_at`. The worker rotates attempts fairly and returns a distinct busy/continuing result. `financial_snapshot` includes household-scoped `bankLinks` in the same MVCC snapshot, so recap/chat can qualify stale or incomplete data.

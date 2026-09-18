@@ -32,6 +32,7 @@ const rows = [
   tx(200, e, '2026-04-02'),
 ]
 let failed = false
+let bankLinks = []
 const snapshotPath = path.resolve('src/lib/queries/financial-snapshot.ts')
 require.cache[snapshotPath] = {
   id: snapshotPath,
@@ -41,6 +42,7 @@ require.cache[snapshotPath] = {
     getFinancialSnapshot: async (from, to) => {
       if (failed) throw new Error('Financial data is unavailable')
       return {
+        bankLinks,
         household: { id: 'house', name: 'Fixture', expected_monthly_income_cents: 200000 },
         categories: [e, refund, salary, transfer],
         budgets: [
@@ -98,5 +100,19 @@ test('a failed snapshot propagates instead of appearing as an empty healthy mont
       await assert.rejects(query('2026-05'), /unavailable/)
   } finally {
     failed = false
+  }
+})
+
+test('recap and chat receive stale-feed warnings from their financial snapshot', async () => {
+  bankLinks = [{ name: 'ANZ', enabled: false, cutover_date: '2026-05-01' }]
+  try {
+    const { buildSummaryPrompt } = require('../src/lib/queries/summary.ts')
+    assert.match(
+      buildSummaryPrompt(await getSummaryContext('2026-05')),
+      /Do not interpret low spending/
+    )
+    assert.match(formatChatContext(await getChatContext('2026-05')), /ANZ: Paused/)
+  } finally {
+    bankLinks = []
   }
 })

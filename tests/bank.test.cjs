@@ -92,6 +92,7 @@ test('provider pagination retains date bounds and credentials stay in headers', 
 test('preview deployments cannot enable bank access, even with all credentials present', () => {
   const names = [
     'BANK_SYNC_ENABLED',
+    'CRON_SECRET',
     'VERCEL_ENV',
     'AKAHU_APP_TOKEN',
     'AKAHU_USER_TOKEN',
@@ -108,6 +109,9 @@ test('preview deployments cannot enable bank access, even with all credentials p
     assert.equal(bankConfig(), null)
     process.env.VERCEL_ENV = 'production'
     assert.ok(bankConfig())
+    process.env.BANK_SYNC_ENABLED = 'false'
+    assert.equal(bankConfig(), null)
+    assert.ok(bankConfig(false)) // production setup/manual sync may precede scheduled imports
     delete process.env.AKAHU_USER_TOKEN
     assert.equal(bankConfig(), null)
   } finally {
@@ -116,4 +120,68 @@ test('preview deployments cannot enable bank access, even with all credentials p
       else process.env[k] = before[k]
     }
   }
+})
+
+test('documented user identity fields and stale/inactive accounts fail safely', async () => {
+  const api = new Akahu('fixture', 'fixture', async () =>
+    Response.json({
+      success: true,
+      item: { _id: 'user_one', access_granted_at: '2026-09-18T01:00:00Z' },
+    })
+  )
+  const identity = await api.identity()
+  assert.equal(identity.id, 'user_one')
+  assert.equal(identity.earliestDate, '2024-09-18')
+  for (const item of [
+    {
+      _id: 'acc_one',
+      name: 'Test',
+      connection: { name: 'ANZ' },
+      type: 'CHECKING',
+      balance: { currency: 'NZD' },
+      attributes: ['TRANSACTIONS'],
+      status: 'INACTIVE',
+    },
+    {
+      _id: 'acc_one',
+      name: 'Test',
+      connection: { name: 'ANZ' },
+      type: 'CHECKING',
+      balance: { currency: 'NZD' },
+      attributes: ['TRANSACTIONS'],
+      status: 'ACTIVE',
+      refreshed: { transactions: '2020-01-01T00:00:00Z' },
+    },
+  ])
+    await assert.rejects(
+      new Akahu('x', 'y', async () => Response.json({ success: true, item })).account('acc_one')
+    )
+})
+test('feed status does not confuse partial imports or fresh history with fresh current totals', () => {
+  const { bankStatus, bankContext } = require('../src/lib/bank/status.ts')
+  const now = Date.parse('2026-09-18T12:00:00Z')
+  const link = {
+    name: 'ANZ',
+    enabled: true,
+    last_recent_date: '2026-09-18',
+    last_success_at: new Date(now).toISOString(),
+    recent_refreshed_at: new Date(now).toISOString(),
+    initial_history_complete: true,
+  }
+  assert.match(bankStatus(link, now), /^Connected/)
+  assert.match(bankStatus({ ...link, enabled: false }, now), /Paused/)
+  assert.match(bankStatus({ ...link, sync_pending: true }, now), /progress/)
+  assert.match(bankStatus({ ...link, initial_history_complete: false }, now), /history/)
+  assert.match(
+    bankStatus(
+      {
+        ...link,
+        recent_refreshed_at: '2020-01-01T00:00:00Z',
+        refreshed_at: new Date(now).toISOString(),
+      },
+      now
+    ),
+    /36 hours/
+  )
+  assert.match(bankContext([{ ...link, enabled: false }]), /Do not interpret low spending/)
 })

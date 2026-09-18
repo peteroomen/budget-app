@@ -41,18 +41,25 @@ export async function syncLink(
   deadline = Date.now() + 40000
 ) {
   let run: SyncRun | null = null
+  let busy = false
   try {
+    if (Date.now() > deadline - 18000) return { status: 'continuing' as const }
     const identity = await provider.identity()
     if (identity.id !== link.provider_user_id || link.cutover_date < identity.earliestDate)
       throw new BankError('reconnect')
     for (const kind of ['recent', 'history']) {
       if (Date.now() > deadline - 10000) return { status: 'continuing' as const }
       const account = await provider.account(link.provider_account_id)
-      run = await rpc<SyncRun | null>(db, 'claim_bank_sync', {
+      const claim = await rpc<SyncRun | { busy: true } | null>(db, 'claim_bank_sync', {
         p_link: link.id,
         p_kind: kind,
         p_refresh: account.refreshedAt,
       })
+      if (claim && 'busy' in claim) {
+        busy = true
+        continue
+      }
+      run = claim
       if (!run) continue
       let pages = 0
       while (!run.complete_pages && pages < 12 && Date.now() < deadline - 10000) {
@@ -91,7 +98,7 @@ export async function syncLink(
       })
       run = null
     }
-    return { status: 'complete' as const }
+    return { status: busy ? ('continuing' as const) : ('complete' as const) }
   } catch (error) {
     const code = safeBankError(error)
     const { error: statusError } = await db
@@ -111,7 +118,7 @@ export async function syncLink(
   }
 }
 export async function runBankSync(onlyLink?: string) {
-  const config = bankConfig()
+  const config = bankConfig(!onlyLink)
   if (!config) return { disabled: true, results: [] }
   const db = bankService(config)
   const { data: membership, error: membershipError } = await db
@@ -129,7 +136,7 @@ export async function runBankSync(onlyLink?: string) {
     .eq('enabled', true)
   if (onlyLink) query = query.eq('id', onlyLink)
   const { data, error } = await query
-    .order('last_success_at', { ascending: true, nullsFirst: true })
+    .order('last_attempt_at', { ascending: true, nullsFirst: true })
     .order('id')
     .limit(10)
   if (error) throw new BankError('unavailable')
@@ -137,7 +144,18 @@ export async function runBankSync(onlyLink?: string) {
   const results = []
   const deadline = Date.now() + 45000
   for (const link of (data ?? []) as BankLink[]) {
-    if (Date.now() > deadline - 18000) break
+    if (Date.now() > deadline - 18000) {
+      results.push({ id: link.id, status: 'continuing' as const })
+      continue
+    }
+    const { error: attemptError } = await db
+      .from('bank_links')
+      .update({ last_attempt_at: new Date().toISOString() })
+      .eq('id', link.id)
+    if (attemptError) {
+      results.push({ id: link.id, status: 'error' as const, code: 'unavailable' })
+      continue
+    }
     results.push({ id: link.id, ...(await syncLink(db, provider, link, deadline)) })
   }
   return { disabled: false, results }

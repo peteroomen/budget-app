@@ -15,6 +15,8 @@ create table public.bank_links (
  name text not null, enabled boolean not null default true,
  cutover_date date not null, history_cursor date not null,
  last_success_at timestamptz, refreshed_at timestamptz, last_recent_date date,
+ recent_refreshed_at timestamptz, initial_history_complete boolean not null default false,
+ sync_pending boolean not null default false, last_attempt_at timestamptz,
  error_code text, created_at timestamptz not null default now()
 );
 create table public.bank_sync_runs (
@@ -73,7 +75,7 @@ begin
  if p_kind not in ('recent','history') or p_refresh is null or p_refresh < now()-interval '72 hours' or p_refresh>now()+interval '5 minutes' then raise exception 'Invalid sync scope'; end if;
  select * into r from public.bank_sync_runs where link_id=l.id and kind=p_kind and state='fetching' for update;
  if found then
-   if r.lease_until>now() then return null; end if;
+   if r.lease_until>now() then return jsonb_build_object('busy',true); end if;
    if r.refreshed_at<>p_refresh then
      delete from public.bank_sync_items where run_id=r.id;
      update public.bank_sync_runs set cursor=null,cursors='{}',pages=0,complete_pages=false,refreshed_at=p_refresh where id=r.id;
@@ -88,6 +90,7 @@ begin
    end if;
    insert into public.bank_sync_runs(link_id,kind,date_from,date_to,refreshed_at) values(l.id,p_kind,v_from,v_to,p_refresh) returning * into r;
  end if;
+ if p_kind='recent' then update public.bank_links set sync_pending=true where id=l.id; end if;
  update public.bank_sync_runs set lease=v_lease,lease_until=now()+interval '2 minutes' where id=r.id returning * into r;
  return to_jsonb(r);
 end $$;
@@ -179,6 +182,9 @@ begin
  v_result:=jsonb_build_object('inserted',v_new,'updated',v_updates,'removed',v_removed);
  update public.bank_sync_runs set state='complete',result=v_result,finished_at=now(),lease=null,lease_until=null where id=r.id;
  update public.bank_links set last_success_at=now(),refreshed_at=greatest(refreshed_at,r.refreshed_at),error_code=null,
+   recent_refreshed_at=case when r.kind='recent' then r.refreshed_at else recent_refreshed_at end,
+   sync_pending=case when r.kind='recent' then false else sync_pending end,
+   initial_history_complete=initial_history_complete or (r.kind='history' and r.date_to >= (now() at time zone 'Pacific/Auckland')::date-31) or l.cutover_date >= (now() at time zone 'Pacific/Auckland')::date-30,
    last_recent_date=case when r.kind='recent' then r.date_to else last_recent_date end,
    history_cursor=case when r.kind='history' then r.date_to+1 else history_cursor end where id=l.id;
  delete from public.bank_sync_items where run_id=r.id;
@@ -203,6 +209,7 @@ grant execute on function public.link_bank_account(uuid,uuid,uuid,text,text,text
 do $$ declare definition text; begin
  select pg_get_functiondef('public.financial_snapshot(date,date)'::regprocedure) into definition;
  if position('where a.household_id=v_household and t.date between p_from and p_to' in definition)=0 then raise exception 'Unexpected financial snapshot definition'; end if;
+ definition:=replace(definition,'''household'', (select', '''bankLinks'', coalesce((select jsonb_agg(l) from public.bank_links l where l.household_id=v_household), ''[]''::jsonb), ''household'', (select');
  execute replace(definition,'where a.household_id=v_household and t.date between p_from and p_to','where a.household_id=v_household and t.bank_removed_at is null and t.date between p_from and p_to');
 end $$;
 -- A removed bank row must not suppress a later explicit statement import.

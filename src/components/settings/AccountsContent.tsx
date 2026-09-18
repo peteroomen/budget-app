@@ -1,3 +1,4 @@
+import { BankConnections } from '@/components/bank/BankConnections'
 import type { Account } from '@/types'
 import { AccountCard } from '@/components/accounts/AccountCard'
 import { AddAccountDialog } from '@/components/accounts/AddAccountDialog'
@@ -26,6 +27,7 @@ export function AccountsContent({ accounts }: AccountsContentProps) {
           ))}
         </div>
       )}
+      <BankConnections accounts={accounts} />
     </div>
   )
 }

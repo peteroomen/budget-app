@@ -1,3 +1,5 @@
+export const maxDuration = 60
+
 import { createClient } from '@/lib/supabase/server'
 import { getAccounts } from '@/lib/queries/accounts'
 import { getCategories } from '@/lib/queries/categories'

@@ -1,7 +1,7 @@
 # ADR 005: ANZ imports through an Akahu Personal App
 
 Date: 2026-09-18
-Status: Accepted design; implementation in draft
+Status: Accepted
 
 ## Context
 
@@ -22,7 +22,7 @@ Each invocation handles a recent overlap and an older 30-day window, within a ti
 - Historical reconciliation is gradual. Corrections moving between windows can be reflected across separate invocations.
 - Provider timestamp stability is the available consistency check; it cannot guarantee a snapshot if the provider changes data without updating that timestamp.
 - `bank_revision` and `bank_changed_at` provide hooks for the later review queue; this PR does not implement review state or email sending.
-- Deployment requires migration verification, completed setup/status UI, credentials and explicit account mapping. The draft must remain disabled.
+- Deployment requires migration verification, credentials and explicit account mapping. Scheduled imports remain disabled until the first manual import is verified.
 
 ## Provider references
 
@@ -30,3 +30,5 @@ Each invocation handles a recent overlap and an older 30-day window, within a ti
 - [Transaction access and pagination](https://developers.akahu.nz/docs/accessing-transactional-data)
 - [Account model](https://developers.akahu.nz/docs/the-account-model)
 - [Data refreshes](https://developers.akahu.nz/docs/data-refreshes)
+
+Setup and explicit manual imports are separately gated from the daily schedule. Production credentials plus a configured current owner/household permit setup; scheduled imports also require `BANK_SYNC_ENABLED=true` and `CRON_SECRET`. See `docs/anz-setup.md` for deployment and reconciliation limitations.

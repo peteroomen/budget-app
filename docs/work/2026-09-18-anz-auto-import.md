@@ -33,7 +33,7 @@ With synthetic fixtures, select an external ANZ NZD spending/savings account and
 - `tests/bank.test.cjs`, `tests/bank-database.test.cjs`, service role in the existing migration fixture.
 - Roadmap, schema, ADR 005, environment example and session instructions.
 
-## Remaining before ready for review/activation
+## Original draft checklist (resolved in completion session below)
 
 - Build account selection/cutover UI, owner sync/pause/reconnect controls and household-readable connection status.
 - Show stale, failed, incomplete and paused feed warnings on financial screens and in recap/chat context; do not infer good performance from missing data.
@@ -45,4 +45,23 @@ With synthetic fixtures, select an external ANZ NZD spending/savings account and
 
 ## Status
 
-Partial — publishing as a draft PR, not ready to merge. Local 32-test suite, lint, TypeScript checks and production build pass (22 routes). Remote CI will run on the draft PR. Live consent, credentials and production schema activation remain disabled.
+Implementation complete for PR review. Local 39 tests, lint, TypeScript checks and production build pass (22 routes). Mobile/desktop component checks pass with synthetic actions. Remote CI gates the ready-for-review transition. Production activation remains a separate step.
+
+## Completion session
+
+User explicitly approved steps 1–2: finish setup/status UI, freshness warnings and integration verification, then mark PR #41 ready. Keep scheduled imports disabled; do not use previously shared credentials or modify production settings. Separate production setup availability from the daily-import switch so mapping can precede activation. Validate the provider identity contract, worker/cron failures, historical reconciliation, mobile UI and production build before publishing.
+
+### Completion outcome
+
+- Added the Settings account discovery, explicit mapping/cutover and household-sharing confirmation; inactive accounts cannot be selected. Added manual sync, pause/resume, external Akahu reconnect access and separate bank-refresh/import/coverage timestamps. Setup and manual sync work in production while scheduled imports remain disabled.
+- Added global visible warnings for failed, paused, stale, pending and incomplete-history feeds. Bank status is part of the financial snapshot used by recap/chat; prompts explicitly qualify conclusions when data is incomplete.
+- Distinguish busy/time-limited workers from completed syncs, rotate accounts by last attempt to avoid starvation and require the cron secret before treating scheduling as enabled. Recent freshness is independent of history refreshes.
+- Confirmed `/me` user fields against Akahu's official SDK user model and transaction history limits against the provider guide. No authenticated provider requests were made.
+- Expanded to 39 local tests: actual adapter → worker → PostgreSQL staging/commit, failed later pages/resume, refresh reset, rotating history, busy workers, time limits, replacement IDs and cross-window corrections; owner/household action boundaries; cron authentication; snapshot freshness in recap/chat.
+- Browser story: account discovery → account/date selection → link confirmation → sync result → pause/resume. Verified at 360px and 1280px using real components with synthetic actions; inactive options, readonly/error states, no horizontal overflow and no page errors. The agent-browser daemon could not start in this runtime; direct Playwright with a local Chromium package completed the checks. Fixed a confirmation-message state capture found during inspection.
+- React checklist: server-only auth/config access, typed client props, no DB access in client components, labelled controls, disabled pending actions, live status messages and focused components. Production build succeeds with all 22 routes.
+- Added `docs/anz-setup.md` with production-only variable names, migration prerequisites, first-import comparison, enabling the schedule, recovery and explicit provider-ID/history limitations. No production changes or credential reads were made.
+
+### Remaining deployment checks (steps 3–4, not part of this approval)
+
+Verify/apply production migrations; configure owner/household UUIDs and cron secret; deploy; have the configured owner map accounts and compare the first manual import with a real statement; then approve scheduled activation. Replacement IDs cannot inherit guessed annotations or tombstones, and cross-window historical corrections converge over later checks; these limitations are documented rather than hidden.

@@ -1,7 +1,8 @@
 /** No credentials reach client components or previews. One personal app, one explicit owner/household. */
-export function bankConfig() {
+export function bankConfig(requireScheduled = true) {
   const {
     BANK_SYNC_ENABLED,
+    CRON_SECRET,
     VERCEL_ENV,
     AKAHU_APP_TOKEN,
     AKAHU_USER_TOKEN,
@@ -11,7 +12,7 @@ export function bankConfig() {
     NEXT_PUBLIC_SUPABASE_URL,
   } = process.env
   if (
-    BANK_SYNC_ENABLED !== 'true' ||
+    (requireScheduled && (BANK_SYNC_ENABLED !== 'true' || !CRON_SECRET)) ||
     VERCEL_ENV !== 'production' ||
     !AKAHU_APP_TOKEN ||
     !AKAHU_USER_TOKEN ||

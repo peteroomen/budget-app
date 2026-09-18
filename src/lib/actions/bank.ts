@@ -9,7 +9,7 @@ import { isValidDate } from '@/lib/import/validation'
 import { nzDate } from '@/lib/utils/month'
 
 async function owner() {
-  const config = bankConfig()
+  const config = bankConfig(false)
   if (!config) throw new BankError('unavailable')
   const db = await createClient()
   const {
@@ -63,7 +63,7 @@ export async function linkBankAccount(accountId: string, externalId: string, cut
       return {
         error: 'This Tide or Akahu account may already be linked. Refresh and check the mapping.',
       }
-    revalidatePath('/settings')
+    revalidatePath('/', 'layout')
     return { error: null }
   } catch {
     return { error: 'Unable to link this account. Check its connection and import start date.' }
@@ -82,7 +82,7 @@ export async function setBankLinkEnabled(id: string, enabled: boolean) {
       .select('id')
       .single()
     if (error || !data) throw new BankError('unavailable')
-    revalidatePath('/settings')
+    revalidatePath('/', 'layout')
     return { error: null }
   } catch {
     return { error: 'Unable to change this connection.' }
@@ -91,6 +91,7 @@ export async function setBankLinkEnabled(id: string, enabled: boolean) {
 export async function syncBankAccount(id: string) {
   try {
     await owner()
+    if (typeof id !== 'string' || !/^[0-9a-f-]{36}$/i.test(id)) throw new BankError('invalid_data')
     const result = await runBankSync(id)
     revalidatePath('/', 'layout')
     if (!result.results.length) return { error: 'This connection is paused or unavailable.' }
