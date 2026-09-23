@@ -1,5 +1,5 @@
 import { getFinancialSnapshot } from './financial-snapshot'
-import { monthDateRange } from '@/lib/utils/month'
+import { currentMonth, monthDateRange } from '@/lib/utils/month'
 import { expenseCents } from '@/lib/finance/amounts'
 import type { Category, Budget } from '@/types'
 
@@ -29,4 +29,40 @@ export async function getBudgetsWithActuals(month: string): Promise<BudgetWithAc
       budget: budgetMap.get(category.id) ?? null,
       actual_cents: actualMap.get(category.id) ?? 0,
     }))
+}
+
+/** A category a budget cap can be set on, plus its current standing cap. */
+export interface BudgetCapTarget {
+  id: string
+  name: string
+  capCents: number | null
+}
+
+/**
+ * Every category a cap can legitimately be set on (expense categories only), with the cap
+ * it currently has.
+ *
+ * Used in two places, and it matters that both read the same list:
+ *  - the chat context injects it so Claude has real category ids to propose against;
+ *  - the chat page passes it to the confirmation card, which resolves the display name and
+ *    the "currently" figure from it rather than from anything the model said, and refuses
+ *    to offer "Apply" for an id that is not in the list.
+ */
+export async function getBudgetCapTargets(): Promise<BudgetCapTarget[]> {
+  // A one-day window keeps the transaction payload empty; categories and caps are global.
+  const { dateTo } = monthDateRange(currentMonth())
+  const { categories, budgets } = await getFinancialSnapshot(dateTo, dateTo)
+  return capTargets(categories, budgets)
+}
+
+/** Expense categories with their standing caps, from one snapshot. */
+export function capTargets(
+  categories: Pick<Category, 'id' | 'name' | 'type'>[],
+  budgets: Pick<Budget, 'category_id' | 'amount_cents'>[]
+): BudgetCapTarget[] {
+  const capMap = new Map(budgets.map((b) => [b.category_id, b.amount_cents]))
+  return categories
+    .filter((c) => c.type === 'expense')
+    .sort((a, b) => a.name.localeCompare(b.name))
+    .map((c) => ({ id: c.id, name: c.name, capCents: capMap.get(c.id) ?? null }))
 }

@@ -1,6 +1,7 @@
 import { bankContext } from '@/lib/bank/status'
 import { getFinancialSnapshot } from './financial-snapshot'
 import { expenseCents } from '@/lib/finance/amounts'
+import { capTargets, type BudgetCapTarget } from '@/lib/queries/budgets'
 import {
   currentMonth,
   prevMonth,
@@ -35,6 +36,12 @@ export interface ChatContext {
     merchant: string
     amount_cents: number
   }>
+  /**
+   * Categories a budget cap can be set on, with their ids. Injected so the budget-cap
+   * write tools have real ids to propose against — the tools take an id, never a name,
+   * and a name-resolved category is never trusted from the model.
+   */
+  budgetCategories: BudgetCapTarget[]
 }
 
 function centsToNZD(cents: number): string {
@@ -152,6 +159,8 @@ export async function getChatContext(month: string): Promise<ChatContext | null>
     budgetsVsActual,
     trends,
     recurring,
+    // Same snapshot as the figures above, so the id list and caps agree with them.
+    budgetCategories: capTargets(categories, budgets),
   }
 }
 
@@ -278,6 +287,21 @@ export function formatChatContext(ctx: ChatContext): string {
       total += r.amount_cents
     }
     lines.push(`Total fixed costs: ${centsToNZD(total)}/month`)
+  }
+
+  lines.push('')
+
+  // Category ids for the budget-cap write tools. Ids are the only thing the tools accept —
+  // they must be copied verbatim from here, never guessed from a name.
+  lines.push(`## Category IDs (for setBudgetCap / clearBudgetCap)`)
+  lines.push('Copy the id exactly. Caps are standing values — no month applies.')
+  if (ctx.budgetCategories.length === 0) {
+    lines.push('No spending categories exist yet, so no cap can be set.')
+  } else {
+    for (const c of ctx.budgetCategories) {
+      const cap = c.capCents === null ? 'no cap set' : `cap ${centsToNZD(c.capCents)}`
+      lines.push(`${c.id} | ${c.name} | ${cap}`)
+    }
   }
 
   lines.push(`</financial_data>`)

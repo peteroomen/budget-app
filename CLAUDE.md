@@ -31,6 +31,17 @@ Core loop: import bank statements → AI categorises transactions → set budget
 > **Update this section at the end of every session.**
 
 - **Current phase:** Phase 5 — Polish (in progress). Phases 1–4 fully complete.
+- **Chat write actions, 2026-09-01 (PR #39):** Chat write actions: budget caps (branch `claude/chat-budget-write-tool`).
+  The chat assistant can now propose setting or clearing a category's cap. Two AI SDK tools
+  (`setBudgetCap`, `clearBudgetCap` in `src/lib/ai/budget-tools.ts`) declared **without an
+  `execute` function** — the call streams to the client, Assistant UI renders a confirmation card,
+  and the write only runs on click through the existing `upsertBudget` / `deleteBudget` server
+  actions. ⚠️ **Do not add `execute` to those tools** — that removes the safety gate. The chat
+  context injects statement-derived text (merchant names, descriptions), so a prompted "always
+  confirm" rule would not hold; the UI gate is the mechanism. Chat model moved from
+  `claude-sonnet-4-5` to **`claude-opus-5`**. `zod` promoted to a direct dependency (it was already
+  `ai`'s resolved peer at 4.4.3 but not resolvable under pnpm's strict layout). No migration.
+  See `docs/work/2026-09-01-chat-budget-write-tool.md` + ADR 006.
 - **Cap strip, 2026-09-01 (PR #38):** — Category cap strip on the transactions screen (branch
   `claude/tx-category-cap-strip`). When `/transactions` is filtered to a category (`?cat=…`), a new
   server component `CategoryCapStrip` (`src/components/transactions/CategoryCapStrip.tsx`) shows
@@ -107,7 +118,7 @@ Core loop: import bank statements → AI categorises transactions → set budget
   - Header search, notification bell (roadmapped, not built yet)
   - Set `TIDE_ANTHROPIC_API_KEY` in Vercel project env before deploying to production
 - **Known issues:** Node 22 required. On a local Mac: `source ~/.nvm/nvm.sh && nvm use 22` before pnpm scripts. In the Claude Code remote container there is no nvm — Node 22 is already on PATH at `/opt/node22/bin`, so skip that step. `next lint` rewrites `tsconfig.json` as a side effect; revert it before committing.
-- **Components available:** `Skeleton`, `Tooltip`, `Avatar`, `Sheet`, `Badge`, `Switch`, `Popover`, `MonthJumpPopover` (all in `src/components/ui/`). `Textarea` is **not** installed — single-line `Input` is used for notes.
+- **Components available:** `Skeleton`, `Tooltip`, `Avatar`, `Sheet`, `Badge`, `Switch`, `Popover`, `MonthJumpPopover` (all in `src/components/ui/`). Chat write confirmations: `BudgetCapCard` / `BudgetCapToolUI` in `src/components/chat/`. `Textarea` is **not** installed — single-line `Input` is used for notes.
 - **Prop convention:** `SummaryMonthSelector`, `MonthPicker`, and `MonthJumpPopover` use `allowFuture` (not `isAdmin`) — the page passes `allowFuture={isAdmin}` so the selector stays role-agnostic. `DashboardMonthNav` still accepts `isAdmin` (converts internally to `allowFuture`).
 - **Theme:** `font-display` = Fraunces (serif, use on H1s + CardTitles + hero metrics). `font-mono` = JetBrains Mono (use on tabular numerics). Badge variants: `accent` (sage wash), `warn` (gold), `danger` (rust), `outline`.
 - **Env vars:** Use `TIDE_ANTHROPIC_API_KEY` (not `ANTHROPIC_API_KEY`) — Claude Desktop shadows the standard name with an empty value on macOS. See `docs/decisions/002-tide-anthropic-api-key-env-var.md`.
