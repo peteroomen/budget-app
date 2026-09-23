@@ -39,8 +39,8 @@ export async function categoriseMerchantsWithClaude(
     apiKey: process.env.TIDE_ANTHROPIC_API_KEY || process.env.ANTHROPIC_API_KEY,
   })
   const response = await client.messages.create({
-    model: 'claude-sonnet-4-6',
-    max_tokens: 4096,
+    model: 'claude-sonnet-5',
+    max_tokens: 8192,
     messages: [
       {
         role: 'user',

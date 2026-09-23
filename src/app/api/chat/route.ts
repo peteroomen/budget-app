@@ -38,10 +38,10 @@ export async function POST(req: Request) {
     : BASE_SYSTEM_PROMPT
 
   const result = streamText({
-    model: anthropic('claude-sonnet-4-5'),
+    model: anthropic('claude-sonnet-5'),
     system: systemPrompt,
     messages: await convertToModelMessages(messages),
-    maxOutputTokens: 2048,
+    maxOutputTokens: 8192,
   })
 
   return result.toUIMessageStreamResponse()

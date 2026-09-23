@@ -83,7 +83,7 @@ async function SummaryContent({ month }: { month: string }) {
 
   try {
     const { text } = await generateText({
-      model: anthropic('claude-sonnet-4-5'),
+      model: anthropic('claude-sonnet-5'),
       system:
         'You are a financial analyst for a NZ household. ' +
         'Analyse the provided spending data and return ONLY a raw JSON object — no markdown, no code fences, no explanation. ' +
@@ -92,7 +92,7 @@ async function SummaryContent({ month }: { month: string }) {
         'When bank data is stale, paused or incomplete, qualify all conclusions; missing transactions must never be described as savings, good budget performance or an income shortfall. This takes priority over income framing below. ' +
         'Income framing: when the month is in progress, treat pending expected income as on-track to arrive — do not flag it as a problem. When the month is closed, if expected income met plan and spending stayed within budget, report it as the expected outcome without celebration. If income fell short of plan, or spending exceeded income or budget, be realistic about what went wrong — do not soften the analysis.',
       prompt,
-      maxOutputTokens: 1024,
+      maxOutputTokens: 4096,
     })
 
     // Claude sometimes wraps JSON in markdown code fences — strip them before parsing.
