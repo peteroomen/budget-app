@@ -7,7 +7,7 @@
 export type AccountType = 'spending' | 'saving'
 export type UploadStatus = 'pending' | 'processing' | 'complete' | 'error'
 export type FileType = 'csv' | 'pdf'
-export type TransactionSource = 'csv' | 'pdf'
+export type TransactionSource = 'csv' | 'pdf' | 'bank'
 export type CategorySource = 'claude' | 'manual' | 'map'
 export type CategoryType = 'income' | 'expense' | 'transfer'
 
@@ -74,6 +74,7 @@ export interface Transaction {
   category_id: string | null
   category_source: CategorySource | null
   is_recurring: boolean
+  recurring_source: 'manual' | 'detected' | null
   notes: string | null
   source: TransactionSource | null
   created_at: string

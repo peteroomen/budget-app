@@ -1,3 +1,5 @@
+import { parseSummary } from '@/lib/finance/summary-schema'
+import { isValidMonth } from '@/lib/utils/month'
 import { Suspense } from 'react'
 import { generateText } from 'ai'
 import { createAnthropic } from '@ai-sdk/anthropic'
@@ -29,7 +31,7 @@ function SummaryLoadingSkeleton() {
 
 export default async function SummaryPage({ searchParams }: SummaryPageProps) {
   const { month: monthParam } = await searchParams
-  const month = monthParam && /^\d{4}-\d{2}$/.test(monthParam) ? monthParam : currentMonth()
+  const month = monthParam && isValidMonth(monthParam) ? monthParam : currentMonth()
 
   return (
     <div className="space-y-6">
@@ -37,6 +39,7 @@ export default async function SummaryPage({ searchParams }: SummaryPageProps) {
         <h1 className="font-display text-display-summary-h1 font-medium">Monthly recap</h1>
         <p className="mt-0.5 font-display italic text-body-sm text-muted-foreground">
           {new Date().toLocaleDateString('en-NZ', {
+            timeZone: 'Pacific/Auckland',
             weekday: 'short',
             day: 'numeric',
             month: 'short',
@@ -86,6 +89,7 @@ async function SummaryContent({ month }: { month: string }) {
         'Analyse the provided spending data and return ONLY a raw JSON object — no markdown, no code fences, no explanation. ' +
         'Be specific, honest, and reference exact NZD amounts. ' +
         'Keep notes concise — one to three sentences each. ' +
+        'When bank data is stale, paused or incomplete, qualify all conclusions; missing transactions must never be described as savings, good budget performance or an income shortfall. This takes priority over income framing below. ' +
         'Income framing: when the month is in progress, treat pending expected income as on-track to arrive — do not flag it as a problem. When the month is closed, if expected income met plan and spending stayed within budget, report it as the expected outcome without celebration. If income fell short of plan, or spending exceeded income or budget, be realistic about what went wrong — do not soften the analysis.',
       prompt,
       maxOutputTokens: 1024,
@@ -96,9 +100,8 @@ async function SummaryContent({ month }: { month: string }) {
       .replace(/^```(?:json)?\s*/i, '')
       .replace(/\s*```\s*$/i, '')
       .trim()
-    summary = JSON.parse(raw) as MonthlySummaryJSON
-  } catch (err) {
-    console.error('[summary] generateText/parse failed:', err)
+    summary = parseSummary(raw)
+  } catch {
     parseError = 'Could not generate summary — please try again.'
   }
 

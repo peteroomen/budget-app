@@ -8,11 +8,6 @@ export interface AnalysedTransaction {
   source: 'csv' | 'pdf'
 }
 
-export interface NewMerchantMapping {
-  merchantName: string
-  categoryId: string
-}
-
 export interface ImportStats {
   newCount: number
   duplicates: number
@@ -23,8 +18,9 @@ export interface ImportStats {
 
 export type AnalyseSuccess = {
   ok: true
+  draftId: string
+  warnings: string[]
   transactions: AnalysedTransaction[]
-  newMerchantMappings: NewMerchantMapping[]
   stats: ImportStats
   format: string
   fileType: 'csv' | 'pdf'

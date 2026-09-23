@@ -30,7 +30,7 @@ import {
  *
  * DO NOT add an `execute` function to these tools, and do not write to the database from
  * this file. If a future tool needs to perform a write without confirmation, that is a
- * separate decision that has to be made explicitly — see `docs/decisions/004-*`.
+ * separate decision that has to be made explicitly — see `docs/decisions/006-chat-write-actions-confirmation-gate.md`.
  * ─────────────────────────────────────────────────────────────────────────────
  *
  * Note also that `categoryId` is only ever a *proposal*. It is matched against the

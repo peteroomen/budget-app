@@ -1,4 +1,4 @@
-# ADR 004: Chat write actions are gated by a UI confirmation, not a prompt rule
+# ADR 006: Chat write actions are gated by a UI confirmation, not a prompt rule
 
 Date: 2026-09-01
 Status: Accepted

@@ -28,7 +28,7 @@ export async function getRecentImportHistory(limit = 5): Promise<ImportHistoryRo
     .order('imported_at', { ascending: false })
     .limit(limit)
 
-  if (error) console.error('getRecentImportHistory:', error.message)
+  if (error) throw new Error('Import history is unavailable. Please retry.')
 
   return (data ?? []).map((row) => ({
     id: row.id,

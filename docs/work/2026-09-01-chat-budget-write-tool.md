@@ -66,7 +66,7 @@ No genuinely new package enters the tree. `docs/architecture.md` updated accordi
       set `sendAutomaticallyWhen: lastAssistantMessageIsCompleteWithToolCalls` so the model
       gets a turn to acknowledge the outcome
 - [x] `src/app/(app)/chat/page.tsx`: fetch the list server-side and pass it down
-- [x] ADR 004, roadmap tick, CLAUDE.md Current State, architecture doc
+- [x] ADR 006, roadmap tick, CLAUDE.md Current State, architecture doc
 - [x] `pnpm lint`, `pnpm type-check`, `pnpm run build`
 
 ## Manual test steps
@@ -139,7 +139,7 @@ transfers" to "Budget changes need your approval · …", since the first half w
 - `src/components/chat/BudgetCapToolUI.tsx` — the two tool renderers
 - `src/components/chat/BudgetCapCard.tsx` — the confirmation card shell + settled states
 - `src/components/chat/budget-categories-context.tsx` — server-fetched category list for the card
-- `docs/decisions/004-chat-write-actions-confirmation-gate.md`
+- `docs/decisions/006-chat-write-actions-confirmation-gate.md`
 
 **Modified**
 

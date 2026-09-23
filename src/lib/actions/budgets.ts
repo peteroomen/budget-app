@@ -1,5 +1,6 @@
 'use server'
 
+import { isCents } from '@/lib/import/validation'
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 
@@ -35,8 +36,8 @@ export async function upsertBudget(
   if (typeof categoryId !== 'string' || !categoryId) return { error: 'Category is required' }
   if (typeof amountCentsRaw !== 'string' || !amountCentsRaw) return { error: 'Amount is required' }
 
-  const amountCents = parseInt(amountCentsRaw, 10)
-  if (isNaN(amountCents) || amountCents < 0) return { error: 'Amount must be a positive number' }
+  const amountCents = /^\d+$/.test(amountCentsRaw) ? Number(amountCentsRaw) : NaN
+  if (!isCents(amountCents) || amountCents < 0) return { error: 'Amount must be a positive number' }
 
   const householdId = await getHouseholdId()
   if (!householdId) return { error: 'No household found' }

@@ -1,5 +1,7 @@
-import { createClient } from '@/lib/supabase/server'
-import { getBudgetCapTargets, type BudgetCapTarget } from '@/lib/queries/budgets'
+import { bankContext } from '@/lib/bank/status'
+import { getFinancialSnapshot } from './financial-snapshot'
+import { expenseCents } from '@/lib/finance/amounts'
+import { capTargets, type BudgetCapTarget } from '@/lib/queries/budgets'
 import {
   currentMonth,
   prevMonth,
@@ -9,6 +11,7 @@ import {
 } from '@/lib/utils/month'
 
 export interface ChatContext {
+  bankNotice?: string
   householdName: string
   month: string
   expectedIncomeCents: number | null
@@ -42,7 +45,7 @@ export interface ChatContext {
 }
 
 function centsToNZD(cents: number): string {
-  return `$${(Math.abs(cents) / 100).toFixed(2)}`
+  return `${cents < 0 ? '-' : ''}$${(Math.abs(cents) / 100).toFixed(2)}`
 }
 
 function firstDayOfMonth(month: string): string {
@@ -50,103 +53,19 @@ function firstDayOfMonth(month: string): string {
 }
 
 export async function getChatContext(month: string): Promise<ChatContext | null> {
-  const supabase = await createClient()
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-  if (!user) return null
-
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('household_id')
-    .eq('id', user.id)
-    .maybeSingle()
-
-  if (!profile?.household_id) return null
-
   const { dateFrom, dateTo } = monthDateRange(month)
-
-  // Trend: 3 months prior to current
   const trendMonths = [
     prevMonth(prevMonth(prevMonth(month))),
     prevMonth(prevMonth(month)),
     prevMonth(month),
   ]
-  const trendStart = firstDayOfMonth(trendMonths[0]!)
-  const trendEnd = firstDayOfMonth(month) // exclusive
-
-  const [
-    householdResult,
-    txResult,
-    budgetsResult,
-    trendTxResult,
-    recurringResult,
-    categoriesResult,
-    budgetCategories,
-  ] = await Promise.all([
-    supabase
-      .from('households')
-      .select('name, expected_monthly_income_cents')
-      .eq('id', profile.household_id)
-      .single(),
-
-    // Current month transactions (expenses + income)
-    supabase
-      .from('transactions')
-      .select(
-        'date, amount_cents, merchant_name, description, notes, category:categories(name, type)'
-      )
-      .gte('date', dateFrom)
-      .lte('date', dateTo)
-      .order('date', { ascending: false }),
-
-    // Budget caps — global, one standing value per category
-    supabase.from('budgets').select('category_id, amount_cents, category:categories(name)'),
-
-    // Trend: last 3 months of expense transactions
-    supabase
-      .from('transactions')
-      .select('date, amount_cents, category:categories(name, type)')
-      .gte('date', trendStart)
-      .lt('date', trendEnd)
-      .lt('amount_cents', 0),
-
-    // Recurring transactions this month
-    supabase
-      .from('transactions')
-      .select('merchant_name, description, amount_cents, category:categories(type)')
-      .gte('date', dateFrom)
-      .lte('date', dateTo)
-      .eq('is_recurring', true)
-      .lt('amount_cents', 0),
-
-    // Expense + income categories — transfer categories aren't shown to Claude
-    // (they're internal money moves, excluded from spend analysis).
-    supabase
-      .from('categories')
-      .select('name')
-      .neq('type', 'transfer')
-      .order('name', { ascending: true }),
-
-    // Expense categories + their current caps — the id list the write tools draw from
-    getBudgetCapTargets(),
-  ])
-
-  const householdName = householdResult.data?.name ?? 'Household'
-  const expectedIncomeCents = householdResult.data?.expected_monthly_income_cents ?? null
-
-  // Current month transactions — transfers excluded so Claude isn't confused
-  // by internal money moves showing up alongside real spend.
-  type RawTx = {
-    date: string
-    amount_cents: number
-    merchant_name: string | null
-    description: string
-    notes: string | null
-    category: { name: string; type: string } | null
-  }
-  const rawTx = (txResult.data ?? []) as unknown as RawTx[]
+  const { transactions, categories, budgets, household, bankLinks } = await getFinancialSnapshot(
+    firstDayOfMonth(trendMonths[0]!),
+    dateTo
+  )
+  const householdName = household.name
+  const expectedIncomeCents = household.expected_monthly_income_cents
+  const rawTx = transactions.filter((t) => t.date >= dateFrom)
   const currentTransactions = rawTx
     .filter((t) => t.category?.type !== 'transfer')
     .map((t) => ({
@@ -157,36 +76,28 @@ export async function getChatContext(month: string): Promise<ChatContext | null>
       note: t.notes && t.notes.trim().length > 0 ? t.notes : null,
     }))
 
-  // Received income = positive amounts in income-typed categories
+  // Received income is net of reversals in income-typed categories
   let receivedIncomeCents = 0
   for (const t of rawTx) {
-    if (t.amount_cents > 0 && t.category?.type === 'income') {
+    if (t.category?.type === 'income') {
       receivedIncomeCents += t.amount_cents
     }
   }
 
   // Budget vs actual — seed from all known categories so $0-activity ones are included
-  const allCategoryNames: string[] = (categoriesResult.data ?? []).map(
-    (c: { name: string }) => c.name
-  )
+  const allCategoryNames = categories.filter((c) => c.type === 'expense').map((c) => c.name)
 
   const actualMap = new Map<string, number>()
   for (const t of rawTx) {
-    if (t.amount_cents >= 0) continue
-    if (t.category?.type === 'transfer') continue
+    const spend = expenseCents(t.amount_cents, t.category?.type)
+    if (spend === 0) continue
     const name = t.category?.name ?? 'Uncategorised'
-    actualMap.set(name, (actualMap.get(name) ?? 0) + Math.abs(t.amount_cents))
+    actualMap.set(name, (actualMap.get(name) ?? 0) + spend)
   }
 
-  type RawBudget = {
-    category_id: string
-    amount_cents: number
-    category: { name: string } | null
-  }
-  const rawBudgets = (budgetsResult.data ?? []) as unknown as RawBudget[]
   const budgetMap = new Map<string, number>()
-  for (const b of rawBudgets) {
-    const name = b.category?.name
+  for (const b of budgets) {
+    const name = categories.find((c) => c.id === b.category_id)?.name
     if (name) budgetMap.set(name, b.amount_cents)
   }
 
@@ -201,21 +112,17 @@ export async function getChatContext(month: string): Promise<ChatContext | null>
     .sort((a, b) => b.actual_cents - a.actual_cents)
 
   // Trend: aggregate by month + category (transfers excluded)
-  type RawTrend = {
-    date: string
-    amount_cents: number
-    category: { name: string; type: string } | null
-  }
-  const rawTrend = (trendTxResult.data ?? []) as unknown as RawTrend[]
+  const rawTrend = transactions.filter((t) => t.date < dateFrom)
   const trendMap = new Map<string, Map<string, number>>() // category → month → cents
 
   for (const t of rawTrend) {
-    if (t.category?.type === 'transfer') continue
+    const spend = expenseCents(t.amount_cents, t.category?.type)
+    if (spend === 0) continue
     const cat = t.category?.name ?? 'Uncategorised'
     const m = t.date.slice(0, 7) // YYYY-MM
     if (!trendMap.has(cat)) trendMap.set(cat, new Map())
     const monthMap = trendMap.get(cat)!
-    monthMap.set(m, (monthMap.get(m) ?? 0) + Math.abs(t.amount_cents))
+    monthMap.set(m, (monthMap.get(m) ?? 0) + spend)
   }
 
   const trends = Array.from(trendMap.entries())
@@ -230,24 +137,20 @@ export async function getChatContext(month: string): Promise<ChatContext | null>
     })
 
   // Recurring (transfers excluded — e.g. a recurring savings move isn't a "fixed cost")
-  type RawRecurring = {
-    merchant_name: string | null
-    description: string
-    amount_cents: number
-    category: { type: string } | null
-  }
-  const rawRecurring = (recurringResult.data ?? []) as unknown as RawRecurring[]
+  const rawRecurring = rawTx.filter((t) => t.is_recurring)
   const recurringMap = new Map<string, number>()
   for (const r of rawRecurring) {
-    if (r.category?.type === 'transfer') continue
+    const spend = expenseCents(r.amount_cents, r.category?.type)
+    if (spend === 0) continue
     const key = r.merchant_name ?? r.description
-    recurringMap.set(key, (recurringMap.get(key) ?? 0) + Math.abs(r.amount_cents))
+    recurringMap.set(key, (recurringMap.get(key) ?? 0) + spend)
   }
   const recurring = Array.from(recurringMap.entries())
     .map(([merchant, amount_cents]) => ({ merchant, amount_cents }))
     .sort((a, b) => b.amount_cents - a.amount_cents)
 
   return {
+    bankNotice: bankContext(bankLinks),
     householdName,
     month,
     expectedIncomeCents,
@@ -256,7 +159,8 @@ export async function getChatContext(month: string): Promise<ChatContext | null>
     budgetsVsActual,
     trends,
     recurring,
-    budgetCategories,
+    // Same snapshot as the figures above, so the id list and caps agree with them.
+    budgetCategories: capTargets(categories, budgets),
   }
 }
 
@@ -265,14 +169,17 @@ export function formatChatContext(ctx: ChatContext): string {
     day: 'numeric',
     month: 'long',
     year: 'numeric',
+    timeZone: 'Pacific/Auckland',
   })
   const monthLabel = formatMonthLabel(ctx.month)
 
   const lines: string[] = [
     `<financial_data>`,
     `Household: ${ctx.householdName}`,
+    ctx.bankNotice ?? '',
     `Today: ${today}`,
     `Current month: ${monthLabel}`,
+    'Expense credits reduce spending. Uncategorised credits need review; do not assume they are earned income. Trends include full prior months; compare partial current months cautiously.',
     '',
   ]
 
@@ -324,7 +231,7 @@ export function formatChatContext(ctx: ChatContext): string {
       const sign = t.amount_cents < 0 ? '-' : '+'
       const noteSuffix = t.note ? ` — note: ${t.note}` : ''
       lines.push(
-        `${t.date} | ${t.merchant} | ${t.category} | ${sign}${centsToNZD(t.amount_cents)}${noteSuffix}`
+        `${t.date} | ${t.merchant} | ${t.category} | ${sign}${centsToNZD(Math.abs(t.amount_cents))}${noteSuffix}`
       )
     }
   }
@@ -349,7 +256,7 @@ export function formatChatContext(ctx: ChatContext): string {
         lines.push(
           `${r.category}: budget ${centsToNZD(r.budget_cents)} | spent ${actual} | ${status}`
         )
-      } else if (r.actual_cents > 0) {
+      } else if (r.actual_cents !== 0) {
         lines.push(`${r.category}: spent ${actual} (no budget set)`)
       } else {
         lines.push(`${r.category}: $0 spent, no budget`)

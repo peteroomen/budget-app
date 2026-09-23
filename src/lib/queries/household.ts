@@ -14,12 +14,13 @@ export async function getHouseholdSettings(): Promise<HouseholdSettings | null> 
   } = await supabase.auth.getUser()
   if (!user) return null
 
-  const { data: profile } = await supabase
+  const { data: profile, error: profileError } = await supabase
     .from('profiles')
     .select('household_id')
     .eq('id', user.id)
     .maybeSingle()
 
+  if (profileError) throw new Error('Household is unavailable. Please retry.')
   if (!profile?.household_id) return null
 
   const { data, error } = await supabase
@@ -29,8 +30,7 @@ export async function getHouseholdSettings(): Promise<HouseholdSettings | null> 
     .maybeSingle()
 
   if (error) {
-    console.error('getHouseholdSettings:', error.message)
-    return null
+    throw new Error('Household is unavailable. Please retry.')
   }
   return data
 }

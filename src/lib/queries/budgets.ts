@@ -1,4 +1,6 @@
-import { createClient } from '@/lib/supabase/server'
+import { getFinancialSnapshot } from './financial-snapshot'
+import { currentMonth, monthDateRange } from '@/lib/utils/month'
+import { expenseCents } from '@/lib/finance/amounts'
 import type { Category, Budget } from '@/types'
 
 export interface BudgetWithActual {
@@ -7,59 +9,26 @@ export interface BudgetWithActual {
   actual_cents: number
 }
 
-function firstDayOfNextMonth(month: string): string {
-  const parts = month.split('-').map(Number)
-  // JS months are 0-based; passing the 1-based month value directly yields the next month
-  const next = new Date(parts[0]!, parts[1]!, 1)
-  return `${next.getFullYear()}-${String(next.getMonth() + 1).padStart(2, '0')}-01`
-}
-
-/**
- * Budget caps are global — one standing value per category. `month` scopes only the
- * actuals, so the same caps are compared against whichever month is being viewed.
- */
+/** Standing expense caps compared with signed expense activity, including refunds. */
 export async function getBudgetsWithActuals(month: string): Promise<BudgetWithActual[]> {
-  const supabase = await createClient()
-
-  const [categoriesResult, budgetsResult, actualsResult] = await Promise.all([
-    supabase
-      .from('categories')
-      .select('*')
-      .eq('type', 'expense')
-      .order('name', { ascending: true }),
-    supabase.from('budgets').select('*'),
-    supabase
-      .from('transactions')
-      .select('category_id, amount_cents')
-      .gte('date', `${month}-01`)
-      .lt('date', firstDayOfNextMonth(month))
-      .lt('amount_cents', 0),
-  ])
-
-  if (categoriesResult.error)
-    console.error('getBudgetsWithActuals/categories:', categoriesResult.error.message)
-  if (budgetsResult.error)
-    console.error('getBudgetsWithActuals/budgets:', budgetsResult.error.message)
-  if (actualsResult.error)
-    console.error('getBudgetsWithActuals/actuals:', actualsResult.error.message)
-
-  const categories: Category[] = categoriesResult.data ?? []
-  const budgets: Budget[] = budgetsResult.data ?? []
-  const actuals: { category_id: string | null; amount_cents: number }[] = actualsResult.data ?? []
-
-  const budgetMap = new Map<string, Budget>(budgets.map((b) => [b.category_id, b]))
-
+  const { dateFrom, dateTo } = monthDateRange(month)
+  const { categories, budgets, transactions } = await getFinancialSnapshot(dateFrom, dateTo)
+  const budgetMap = new Map(budgets.map((b) => [b.category_id, b]))
   const actualMap = new Map<string, number>()
-  for (const row of actuals) {
+  for (const row of transactions) {
     if (!row.category_id) continue
-    actualMap.set(row.category_id, (actualMap.get(row.category_id) ?? 0) + row.amount_cents)
+    actualMap.set(
+      row.category_id,
+      (actualMap.get(row.category_id) ?? 0) + expenseCents(row.amount_cents, row.category?.type)
+    )
   }
-
-  return categories.map((category) => ({
-    category,
-    budget: budgetMap.get(category.id) ?? null,
-    actual_cents: Math.abs(actualMap.get(category.id) ?? 0),
-  }))
+  return categories
+    .filter((c) => c.type === 'expense')
+    .map((category) => ({
+      category,
+      budget: budgetMap.get(category.id) ?? null,
+      actual_cents: actualMap.get(category.id) ?? 0,
+    }))
 }
 
 /** A category a budget cap can be set on, plus its current standing cap. */
@@ -80,32 +49,20 @@ export interface BudgetCapTarget {
  *    to offer "Apply" for an id that is not in the list.
  */
 export async function getBudgetCapTargets(): Promise<BudgetCapTarget[]> {
-  const supabase = await createClient()
+  // A one-day window keeps the transaction payload empty; categories and caps are global.
+  const { dateTo } = monthDateRange(currentMonth())
+  const { categories, budgets } = await getFinancialSnapshot(dateTo, dateTo)
+  return capTargets(categories, budgets)
+}
 
-  const [categoriesResult, budgetsResult] = await Promise.all([
-    supabase
-      .from('categories')
-      .select('id, name')
-      .eq('type', 'expense')
-      .order('name', { ascending: true }),
-    supabase.from('budgets').select('category_id, amount_cents'),
-  ])
-
-  if (categoriesResult.error)
-    console.error('getBudgetCapTargets/categories:', categoriesResult.error.message)
-  if (budgetsResult.error)
-    console.error('getBudgetCapTargets/budgets:', budgetsResult.error.message)
-
-  const capMap = new Map<string, number>(
-    (budgetsResult.data ?? []).map((b: { category_id: string; amount_cents: number }) => [
-      b.category_id,
-      b.amount_cents,
-    ])
-  )
-
-  return (categoriesResult.data ?? []).map((c: { id: string; name: string }) => ({
-    id: c.id,
-    name: c.name,
-    capCents: capMap.get(c.id) ?? null,
-  }))
+/** Expense categories with their standing caps, from one snapshot. */
+export function capTargets(
+  categories: Pick<Category, 'id' | 'name' | 'type'>[],
+  budgets: Pick<Budget, 'category_id' | 'amount_cents'>[]
+): BudgetCapTarget[] {
+  const capMap = new Map(budgets.map((b) => [b.category_id, b.amount_cents]))
+  return categories
+    .filter((c) => c.type === 'expense')
+    .sort((a, b) => a.name.localeCompare(b.name))
+    .map((c) => ({ id: c.id, name: c.name, capCents: capMap.get(c.id) ?? null }))
 }

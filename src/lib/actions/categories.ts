@@ -56,7 +56,7 @@ export async function createCategory(
     return { error: error.message }
   }
 
-  revalidatePath('/categories')
+  revalidatePath('/', 'layout')
   return { error: null }
 }
 
@@ -93,7 +93,7 @@ export async function updateCategory(
     return { error: error.message }
   }
 
-  revalidatePath('/categories')
+  revalidatePath('/', 'layout')
   return { error: null }
 }
 
@@ -119,6 +119,6 @@ export async function deleteCategory(id: string): Promise<ActionResult> {
 
   if (error) return { error: error.message }
 
-  revalidatePath('/categories')
+  revalidatePath('/', 'layout')
   return { error: null }
 }

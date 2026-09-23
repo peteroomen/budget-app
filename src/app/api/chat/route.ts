@@ -19,6 +19,7 @@ Guidelines:
 - When comparing periods, use the trend data provided
 
 Income reasoning:
+- When bank feeds are stale, paused or incomplete, qualify conclusions and do not interpret missing transactions as savings, good budget performance or an income shortfall. This takes priority over the following normal income assumptions.
 - For the current (in-progress) month, treat expected income as the working assumption. If pay hasn't arrived yet but timing is normal, don't alarm the user — pending income is the normal mid-month state. Don't celebrate income that has arrived either; getting expected income is just expected.
 - For past (closed) months, if income met plan and spending stayed within budget, present it as the expected outcome without congratulation. If income fell short of plan, or spending exceeded plan or income, be realistic and honest about what went wrong — don't soften the analysis.
 - Mid-month overspending is worth flagging directly even if income is on track.
@@ -54,7 +55,7 @@ export async function POST(req: Request) {
     // These tools have no `execute` on purpose: the call streams to the browser, the user
     // approves it in a card, and the write runs client-side through the budget server
     // actions. Nothing here touches the database. See src/lib/ai/budget-tools.ts and
-    // docs/decisions/004-chat-write-actions-confirmation-gate.md.
+    // docs/decisions/006-chat-write-actions-confirmation-gate.md.
     tools: budgetWriteTools,
   })
 
