@@ -1,3 +1,4 @@
+import { isValidDate, parseMoney, validDescription } from '../import/validation'
 // Defines how to extract date/amount/description from each supported NZ bank CSV format.
 // Detection is by required header presence — order doesn't matter.
 
@@ -24,6 +25,7 @@ function col(row: RawRecord, key: string): string {
 
 function parseDMY(s: string): string {
   // DD/MM/YYYY → YYYY-MM-DD
+  if (!/^\d{1,2}\/\d{1,2}\/[1-9]\d{3}$/.test(s.trim())) return ''
   const parts = s.trim().split('/')
   const d = parts[0] ?? ''
   const m = parts[1] ?? ''
@@ -37,7 +39,7 @@ function parseYMD(s: string): string {
 }
 
 function parseAmount(s: string): number {
-  return Math.round(parseFloat(s.replace(/,/g, '')) * 100)
+  return parseMoney(s) ?? NaN
 }
 
 function joinParts(parts: string[]): string {
@@ -64,7 +66,8 @@ const anz: BankFormat = {
         col(row, 'Code'),
         col(row, 'Reference'),
       ]) || col(row, 'Details')
-    if (!date || isNaN(amount_cents)) return null
+    if (!isValidDate(date) || !Number.isFinite(amount_cents) || !validDescription(description))
+      return null
     return { date, amount_cents, description }
   },
 }
@@ -76,12 +79,13 @@ const anz: BankFormat = {
 
 const asb: BankFormat = {
   name: 'ASB',
-  requiredHeaders: ['Unique Id', 'Tran Type', 'Payee', 'Amount'],
+  requiredHeaders: ['Date', 'Unique Id', 'Tran Type', 'Payee', 'Amount'],
   parse(row) {
     const date = parseYMD(col(row, 'Date'))
     const amount_cents = parseAmount(col(row, 'Amount'))
     const description = joinParts([col(row, 'Payee'), col(row, 'Memo')]) || col(row, 'Payee')
-    if (!date || isNaN(amount_cents)) return null
+    if (!isValidDate(date) || !Number.isFinite(amount_cents) || !validDescription(description))
+      return null
     return { date, amount_cents, description }
   },
 }
@@ -93,21 +97,26 @@ const asb: BankFormat = {
 
 const westpac: BankFormat = {
   name: 'Westpac',
-  requiredHeaders: ['Narration', 'Debit', 'Credit', 'Balance'],
+  requiredHeaders: ['Date', 'Narration', 'Debit', 'Credit', 'Balance'],
   parse(row) {
     const date = parseDMY(col(row, 'Date'))
     const debit = col(row, 'Debit').trim()
     const credit = col(row, 'Credit').trim()
-    let amount_cents: number
-    if (credit !== '') {
-      amount_cents = parseAmount(credit)
-    } else if (debit !== '') {
-      amount_cents = -parseAmount(debit)
-    } else {
+    const debitCents = debit === '' ? 0 : parseMoney(debit)
+    const creditCents = credit === '' ? 0 : parseMoney(credit)
+    if (
+      debitCents === null ||
+      creditCents === null ||
+      debitCents < 0 ||
+      creditCents < 0 ||
+      (debitCents > 0 && creditCents > 0) ||
+      (debit === '' && credit === '')
+    )
       return null
-    }
+    const amount_cents = creditCents - debitCents
     const description = col(row, 'Narration').trim()
-    if (!date || isNaN(amount_cents)) return null
+    if (!isValidDate(date) || !Number.isFinite(amount_cents) || !validDescription(description))
+      return null
     return { date, amount_cents, description }
   },
 }
@@ -118,7 +127,7 @@ const westpac: BankFormat = {
 
 const bnz: BankFormat = {
   name: 'BNZ',
-  requiredHeaders: ['Amount', 'Payee', 'Particulars', 'Account number'],
+  requiredHeaders: ['Date', 'Amount', 'Payee', 'Particulars', 'Account number'],
   parse(row) {
     const date = parseDMY(col(row, 'Date'))
     const amount_cents = parseAmount(col(row, 'Amount'))
@@ -129,7 +138,8 @@ const bnz: BankFormat = {
         col(row, 'Code'),
         col(row, 'Reference'),
       ]) || col(row, 'Payee')
-    if (!date || isNaN(amount_cents)) return null
+    if (!isValidDate(date) || !Number.isFinite(amount_cents) || !validDescription(description))
+      return null
     return { date, amount_cents, description }
   },
 }

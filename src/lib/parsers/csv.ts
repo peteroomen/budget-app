@@ -1,3 +1,4 @@
+import { MAX_IMPORT_ROWS } from '../import/validation'
 import Papa from 'papaparse'
 import { BANK_FORMATS, type BankFormat, type ParsedRow } from './bank-formats'
 
@@ -11,7 +12,7 @@ export function parseCsv(csvText: string): CsvParseResult {
     skipEmptyLines: true,
   })
 
-  if (result.errors.length > 0 && result.data.length === 0) {
+  if (result.errors.length > 0) {
     const msg = result.errors[0]?.message ?? 'Unknown parse error'
     return { ok: false, error: `CSV parse error: ${msg}` }
   }
@@ -25,10 +26,19 @@ export function parseCsv(csvText: string): CsvParseResult {
     }
   }
 
+  if (result.data.length > MAX_IMPORT_ROWS)
+    return { ok: false, error: `Maximum ${MAX_IMPORT_ROWS} transactions per file.` }
   const rows: ParsedRow[] = []
+  let rowNumber = 1
   for (const raw of result.data) {
+    rowNumber++
     const parsed = format.parse(raw)
-    if (parsed) rows.push(parsed)
+    if (!parsed)
+      return {
+        ok: false,
+        error: `Invalid date, amount or description on CSV row ${rowNumber}. No transactions were imported.`,
+      }
+    rows.push(parsed)
   }
 
   if (rows.length === 0) {

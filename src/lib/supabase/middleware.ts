@@ -12,6 +12,9 @@ type AuthWithGetUser = {
 }
 
 export async function updateSession(request: NextRequest) {
+  // This exact endpoint authenticates its own cron secret; it must not use browser cookies.
+  if (request.nextUrl.pathname === '/api/cron/bank-sync') return NextResponse.next({ request })
+
   let supabaseResponse = NextResponse.next({
     request,
   })

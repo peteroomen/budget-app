@@ -1,5 +1,6 @@
+import { isValidMonth } from '@/lib/utils/month'
 import { Suspense } from 'react'
-import { createClient } from '@/lib/supabase/server'
+import { getFinancialSnapshot } from '@/lib/queries/financial-snapshot'
 import { currentMonth, formatMonthLabel, monthDateRange } from '@/lib/utils/month'
 import { DashboardContent } from './DashboardContent'
 import { DashboardContentSkeleton } from './loading'
@@ -10,22 +11,13 @@ interface DashboardPageProps {
 
 export default async function DashboardPage({ searchParams }: DashboardPageProps) {
   const { month: monthParam } = await searchParams
-  const month = monthParam && /^\d{4}-\d{2}$/.test(monthParam) ? monthParam : currentMonth()
+  const month = monthParam && isValidMonth(monthParam) ? monthParam : currentMonth()
 
-  const supabase = await createClient()
   const { dateFrom, dateTo } = monthDateRange(month)
 
-  const [{ data: household }, { count: transactionCount }] = await Promise.all([
-    supabase.from('households').select('name').maybeSingle(),
-    supabase
-      .from('transactions')
-      .select('id', { count: 'exact', head: true })
-      .gte('date', dateFrom)
-      .lte('date', dateTo),
-  ])
-
-  const householdName = household?.name ?? 'My Household'
-  const txCount = transactionCount ?? 0
+  const { household, transactions } = await getFinancialSnapshot(dateFrom, dateTo)
+  const householdName = household.name
+  const txCount = transactions.length
 
   return (
     <div className="space-y-6">
@@ -35,6 +27,11 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
           {householdName} · {txCount} {txCount === 1 ? 'Transaction' : 'Transactions'}
         </p>
       </div>
+
+      <p className="text-body-sm text-muted-foreground">
+        Refunds reduce spending. Uncategorised credits are included provisionally in net cashflow
+        and need review.
+      </p>
 
       {/* key={month} resets the Suspense boundary so the skeleton shows on month change */}
       <Suspense key={month} fallback={<DashboardContentSkeleton />}>

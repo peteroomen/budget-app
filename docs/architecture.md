@@ -6,27 +6,27 @@
 
 ## Tech Stack
 
-| Layer           | Choice                               | Reason                                                           |
-| --------------- | ------------------------------------ | ---------------------------------------------------------------- |
-| Framework       | Next.js 15 (App Router)              | File-based routing, server components, API routes, Vercel-native |
-| Language        | TypeScript (strict)                  | Catch errors early, better DX, required for this stack           |
-| Database        | Supabase (Postgres)                  | Auth + DB + Storage + RLS in one, generous free tier             |
-| Auth            | Supabase Auth                        | Built-in, handles sessions, pairs with RLS cleanly               |
-| Hosting         | Vercel                               | Zero-config Next.js deploys, preview URLs per PR                 |
-| UI Components   | shadcn/ui                            | Copy-owned components, Tailwind-based, highly customisable       |
-| Styling         | Tailwind CSS v4                      | Utility-first, co-located with shadcn                            |
-| Charts          | shadcn Charts (Recharts)             | Already in the shadcn ecosystem                                  |
-| AI SDK          | Vercel AI SDK                        | Streaming, `useChat` hook, Next.js API route helpers             |
-| Chat UI         | Assistant UI                         | shadcn-compatible chat components built on Vercel AI SDK         |
-| AI Model        | Anthropic Claude (claude-sonnet-4-6) | Categorisation + chat + PDF parsing                              |
-| CSV Parsing     | papaparse                            | Best-in-class browser/Node CSV parser                            |
-| PDF Parsing     | pdfjs-dist                           | Mozilla's PDF.js — extract raw text from bank PDFs               |
-| Package Manager | pnpm                                 | Faster installs, better disk usage than npm/yarn                 |
-| Linting         | ESLint + Prettier                    | Code quality + consistent formatting                             |
-| Pre-commit      | Husky + lint-staged                  | Enforce lint/format before every commit                          |
-| Version Control | Git + GitHub                         | Standard; enables Vercel GitHub integration                      |
-| CI/CD           | Vercel (auto)                        | Push to main → production deploy. PRs → preview deploy.          |
-| Future CI       | GitHub Actions                       | Add later for running tests, type checks on PR                   |
+| Layer           | Choice                               | Reason                                                                      |
+| --------------- | ------------------------------------ | --------------------------------------------------------------------------- |
+| Framework       | Next.js 15 (App Router)              | File-based routing, server components, API routes, Vercel-native            |
+| Language        | TypeScript (strict)                  | Catch errors early, better DX, required for this stack                      |
+| Database        | Supabase (Postgres)                  | Auth + DB + Storage + RLS in one, generous free tier                        |
+| Auth            | Supabase Auth                        | Built-in, handles sessions, pairs with RLS cleanly                          |
+| Hosting         | Vercel                               | Zero-config Next.js deploys, preview URLs per PR                            |
+| UI Components   | shadcn/ui                            | Copy-owned components, Tailwind-based, highly customisable                  |
+| Styling         | Tailwind CSS v4                      | Utility-first, co-located with shadcn                                       |
+| Charts          | shadcn Charts (Recharts)             | Already in the shadcn ecosystem                                             |
+| AI SDK          | Vercel AI SDK                        | Streaming, `useChat` hook, Next.js API route helpers                        |
+| Chat UI         | Assistant UI                         | shadcn-compatible chat components built on Vercel AI SDK                    |
+| AI Model        | Anthropic Claude (claude-sonnet-4-6) | Categorisation + chat + PDF parsing                                         |
+| CSV Parsing     | papaparse                            | Best-in-class browser/Node CSV parser                                       |
+| PDF Parsing     | pdfjs-dist                           | Mozilla's PDF.js — extract raw text from bank PDFs                          |
+| Package Manager | pnpm                                 | Faster installs, better disk usage than npm/yarn                            |
+| Linting         | ESLint + Prettier                    | Code quality + consistent formatting                                        |
+| Pre-commit      | Husky + lint-staged                  | Enforce lint/format before every commit                                     |
+| Version Control | Git + GitHub                         | Standard; enables Vercel GitHub integration                                 |
+| CI/CD           | Vercel (auto)                        | Push to main → production deploy. PRs → preview deploy.                     |
+| CI              | GitHub Actions                       | Reliability regression tests, lint, type checks and production build on PRs |
 
 ---
 

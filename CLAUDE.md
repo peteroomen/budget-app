@@ -31,7 +31,7 @@ Core loop: import bank statements → AI categorises transactions → set budget
 > **Update this section at the end of every session.**
 
 - **Current phase:** Phase 5 — Polish (in progress). Phases 1–4 fully complete.
-- **Last session:** 2026-09-01 — Category cap strip on the transactions screen (branch
+- **Cap strip, 2026-09-01 (PR #38):** — Category cap strip on the transactions screen (branch
   `claude/tx-category-cap-strip`). When `/transactions` is filtered to a category (`?cat=…`), a new
   server component `CategoryCapStrip` (`src/components/transactions/CategoryCapStrip.tsx`) shows
   that category's standing cap, the month's spend against it, a `Progress` bar and a % badge —
@@ -42,7 +42,9 @@ Core loop: import bank statements → AI categorises transactions → set budget
   with no cap and for income/transfer categories (`getBudgetsWithActuals` is expense-only). No
   migration. See `docs/work/2026-09-01-tx-category-cap-strip.md`.
   ⚠️ Not manually tested — no Supabase data in the build container.
-- **Previous session:** 2026-08-31 — Global budget caps (branch `claude/budget-caps-global-monthly-bli79e`).
+- **ANZ completion, 2026-09-18:** PR #41 now includes Settings → Accounts linking/cutover, sync/pause/resume and Akahu reconnect access; global bank freshness warnings; same-snapshot recap/chat notices; fair resumable worker scheduling and integration coverage. Local 39 tests, lint/types and production build pass; mobile/desktop component flows checked with synthetic actions. See `docs/anz-setup.md` and the work log. Ready-for-review transition follows remote CI. BANK_SYNC_ENABLED stays false until production migration/configuration and the first manual statement comparison are approved. No live bank, paid AI or email calls made. Weekly emails remain after transaction catch-up.
+- **Reliability session:** 2026-09-07 — branch `fix/financial-data-integrity`; approved by the user after the audit. Atomic staged imports, household boundary enforcement, consistent full financial snapshots and refund accounting, manual override protection, NZ dates, visible error states, strict parsing and local PostgreSQL regression tests. See `docs/work/2026-09-07-financial-data-integrity.md` and ADR 004. Migration `20260907000000` is **not applied to production** and requires the preceding global-caps migration. Existing recurring flags are conservatively preserved as manual; new activity remains eligible for detection. Bank feeds, catch-up and weekly emails remain separate stages.
+- **Last session:** 2026-08-31 — Global budget caps (branch `claude/budget-caps-global-monthly-bli79e`).
   Dropped `budgets.month`; caps are now one standing value per category applying to every month.
   Migration `20260831000000` archives the per-month rows to `archive.budgets_monthly`, collapses to
   one row per `(household_id, category_id)`, and re-keys the unique constraint. Removed the
@@ -89,7 +91,7 @@ Core loop: import bank statements → AI categorises transactions → set budget
   - Multi-household membership + profile-chip switcher (PR #30) — `household_members` join table, `create_household` RPC, `switchHousehold` action, sidebar/drawer profile chip
   - Month picker enhancement (PR #31) — `MonthJumpPopover`, `DashboardMonthNav`, year+month grid popover on dashboard/budgets/summary
   - Import summary preview/confirm (PR #32, build order #17) — `import_history` table, `analyseImport` + `commitImport` actions, 3-step UI, "Recent imports" card
-- **Open PRs:** none.
+- **Open PRs at session start:** #38 transaction category cap strip, #39 chat budget write tool. Reliability PR being opened from `fix/financial-data-integrity`.
 - **Vercel / build config (main branch):**
   - `vercel.json`: `buildCommand: "pnpm run build"`, `outputDirectory: ".next"` (resolves to `src/.next` from Vercel's `src/` framework root)
   - `next.config.ts`: `distDir: 'src/.next'` + `NormalModuleReplacementPlugin` replacing `testmode/context.js` with noop for edge runtime
@@ -286,7 +288,7 @@ What are the trade-offs? What does this make easier or harder?
 - Don't add new dependencies without checking `docs/architecture.md` first
 - Don't build features outside the current phase — check the roadmap
 - Don't persist chat history to the DB (session-only by design — see roadmap)
-- Don't implement direct bank API integration (far future — see roadmap)
+- Bank integration is now approved in the roadmap: ANZ through a single-user Akahu Personal App only. Additional banks and broader access remain deferred.
 - Don't add Axiom or other observability tooling yet
 - Don't add tests in Phase 1–2 — add Vitest at Phase 3 for parsing/categorisation logic
 - Don't bypass Husky hooks

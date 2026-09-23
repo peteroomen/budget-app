@@ -1,4 +1,10 @@
 {
   "buildCommand": "pnpm run build",
-  "outputDirectory": ".next"
+  "outputDirectory": ".next",
+  "crons": [
+    {
+      "path": "/api/cron/bank-sync",
+      "schedule": "0 17 * * *"
+    }
+  ]
 }

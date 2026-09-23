@@ -22,7 +22,7 @@ export async function DashboardContent({ month }: { month: string }) {
 
   return (
     <>
-      {data.summary.income_cents === 0 && data.summary.spend_cents === 0 && (
+      {data.transactionCount === 0 && (
         <div className="rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground">
           No transactions for {formatMonthLabel(month)}.{' '}
           <Link href="/import" className="underline underline-offset-4 hover:text-foreground">
@@ -41,6 +41,7 @@ export async function DashboardContent({ month }: { month: string }) {
         <SpendVsBudgetedCard
           spend_cents={data.summary.spend_cents}
           budgeted_cents={data.summary.total_budgeted_cents}
+          hasBudget={data.budgetCount > 0}
         />
         <NetCard
           income_cents={data.summary.income_cents}

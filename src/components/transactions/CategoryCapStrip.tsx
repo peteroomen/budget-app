@@ -2,6 +2,7 @@ import { Progress } from '@/components/ui/progress'
 import { Badge } from '@/components/ui/badge'
 import type { BadgeProps } from '@/components/ui/badge'
 import type { Budget, Category } from '@/types'
+import { budgetState } from '@/lib/finance/amounts'
 
 const nzd = new Intl.NumberFormat('en-NZ', {
   style: 'currency',
@@ -26,8 +27,8 @@ interface CategoryCapStripProps {
 /**
  * Cap + progress for the single category the transactions list is filtered to.
  *
- * Thresholds and colours mirror `BudgetList` on the Budgets page so the two screens
- * tell the same story. The page renders this only when the category has a cap, so
+ * Uses the same `budgetState` thresholds and colours as `BudgetList` on the Budgets page
+ * so the two screens tell the same story. The page renders this only when the category has a cap, so
  * there is no "no budget set" state here.
  */
 export function CategoryCapStrip({
@@ -37,10 +38,9 @@ export function CategoryCapStrip({
   monthLabel,
 }: CategoryCapStripProps) {
   const budgetCents = budget.amount_cents
-  const ratio = budgetCents > 0 ? actualCents / budgetCents : 0
-  const pct = Math.min(ratio * 100, 100)
-  const isOver = ratio >= 1
-  const isApproaching = ratio >= 0.8
+  const state = budgetState(actualCents, budgetCents)
+  const isOver = state.over
+  const isApproaching = state.approaching
 
   const indicatorClassName = isOver ? 'bg-destructive' : isApproaching ? 'bg-warning' : 'bg-success'
 
@@ -65,11 +65,21 @@ export function CategoryCapStrip({
           </span>
         </p>
         <Badge variant={badgeVariant} className="ml-auto font-mono tabular-nums">
-          {Math.round(ratio * 100)}%
+          {state.percent === null
+            ? isOver
+              ? 'Over'
+              : state.at
+                ? 'At cap'
+                : 'Under'
+            : `${state.percent}%`}
         </Badge>
       </div>
 
-      <Progress value={pct} className="mt-2.5 h-1.5" indicatorClassName={indicatorClassName} />
+      <Progress
+        value={state.progress}
+        className="mt-2.5 h-1.5"
+        indicatorClassName={indicatorClassName}
+      />
 
       <p className="mt-1.5 text-[11px] text-muted-foreground">
         All {category.name} spend in {monthLabel} — the filters above don&apos;t change this figure.
