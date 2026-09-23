@@ -11,6 +11,20 @@ import { MarkdownTextPrimitive } from '@assistant-ui/react-markdown'
 import { ArrowUpIcon, SparklesIcon } from 'lucide-react'
 import remarkGfm from 'remark-gfm'
 import { cn } from '@/lib/utils'
+import { SET_BUDGET_CAP, CLEAR_BUDGET_CAP } from '@/lib/ai/budget-tool-contract'
+import { SetBudgetCapToolUI, ClearBudgetCapToolUI } from './BudgetCapToolUI'
+
+// Every write the assistant can propose renders here as a confirmation card. The tools
+// behind them have no server-side `execute`, so a card on screen is as far as the model
+// can get on its own — the write runs on the click, not on the tool call.
+const TOOL_COMPONENTS = {
+  by_name: {
+    [SET_BUDGET_CAP]: SetBudgetCapToolUI,
+    [CLEAR_BUDGET_CAP]: ClearBudgetCapToolUI,
+  },
+  // Anything else the model tries to call renders as nothing rather than as a control.
+  Fallback: () => null,
+}
 
 const PROMPT_CHIPS = [
   'How much have we spent on groceries this month?',
@@ -93,7 +107,7 @@ function AssistantMessage() {
       </div>
       {/* Plain text — no bubble */}
       <div className="min-w-0 flex-1 max-w-[80%]">
-        <MessagePrimitive.Parts components={{ Text: AssistantText }} />
+        <MessagePrimitive.Parts components={{ Text: AssistantText, tools: TOOL_COMPONENTS }} />
       </div>
     </MessagePrimitive.Root>
   )
@@ -128,7 +142,7 @@ function Composer() {
         </ComposerPrimitive.Send>
       </ComposerPrimitive.Root>
       <p className="mt-1.5 text-center text-[10.5px] text-muted-foreground">
-        Financial data only · doesn&apos;t make purchases or transfers
+        Budget changes need your approval · doesn&apos;t make purchases or transfers
       </p>
     </div>
   )

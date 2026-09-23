@@ -31,9 +31,31 @@ Core loop: import bank statements → AI categorises transactions → set budget
 > **Update this section at the end of every session.**
 
 - **Current phase:** Phase 5 — Polish (in progress). Phases 1–4 fully complete.
-- **Production audit, 2026-09-23 (read-only):** PR #41 merged and deployed (`3db1a6b`), but the production DB is at `20260528000001` — **four** migrations unapplied (`20260529` import_history, `20260831` global caps, `20260907` reliability, `20260918` ANZ), so most data pages are expected to fail. Supabase free plan had auto-paused the project; it was restored during the session. `schema_migrations` is not reliable (also holds other apps' migrations) — inspect the schema. Migrations rehearsed cleanly on a production-shaped PGlite DB. Next steps (backup → apply → verify → env check → link/sync → statement compare → enable flag) in `docs/work/2026-09-23-production-setup.md`; awaiting approval for production writes.
+- **Production audit, 2026-09-23 (backup + migrations applied):** PR #41 merged and deployed (`3db1a6b`), the production DB was at `20260528000001` with **four** migrations unapplied (`20260529` import_history, `20260831` global caps, `20260907` reliability, `20260918` ANZ), — **all four applied 2026-09-23 after backup** (`backup.*_20260923`), verified by SQL. Supabase free plan had auto-paused the project; it was restored during the session. `schema_migrations` is not reliable (also holds other apps' migrations) — inspect the schema. Migrations rehearsed cleanly on a production-shaped PGlite DB. Remaining steps (page smoke test → env check → link/sync → statement compare → enable flag) in `docs/work/2026-09-23-production-setup.md`. PRs #38 and #39 merged the same day after merging main and CI.
+- **Chat write actions, 2026-09-01 (PR #39):** Chat write actions: budget caps (branch `claude/chat-budget-write-tool`).
+  The chat assistant can now propose setting or clearing a category's cap. Two AI SDK tools
+  (`setBudgetCap`, `clearBudgetCap` in `src/lib/ai/budget-tools.ts`) declared **without an
+  `execute` function** — the call streams to the client, Assistant UI renders a confirmation card,
+  and the write only runs on click through the existing `upsertBudget` / `deleteBudget` server
+  actions. ⚠️ **Do not add `execute` to those tools** — that removes the safety gate. The chat
+  context injects statement-derived text (merchant names, descriptions), so a prompted "always
+  confirm" rule would not hold; the UI gate is the mechanism. Chat model moved from
+  `claude-sonnet-4-5` to **`claude-opus-5`**. `zod` promoted to a direct dependency (it was already
+  `ai`'s resolved peer at 4.4.3 but not resolvable under pnpm's strict layout). No migration.
+  See `docs/work/2026-09-01-chat-budget-write-tool.md` + ADR 006.
+- **Cap strip, 2026-09-01 (PR #38):** — Category cap strip on the transactions screen (branch
+  `claude/tx-category-cap-strip`). When `/transactions` is filtered to a category (`?cat=…`), a new
+  server component `CategoryCapStrip` (`src/components/transactions/CategoryCapStrip.tsx`) shows
+  that category's standing cap, the month's spend against it, a `Progress` bar and a % badge —
+  same thresholds/colours as `BudgetList` so the two screens agree. The page calls
+  `getBudgetsWithActuals(month)` only when `cat` is set. Two decisions carried over from triage:
+  the strip shows the **full-month** spend (not the filtered subtotal, which a search term would
+  change and put it out of step with the Budgets page), and it renders **nothing** for categories
+  with no cap and for income/transfer categories (`getBudgetsWithActuals` is expense-only). No
+  migration. See `docs/work/2026-09-01-tx-category-cap-strip.md`.
+  ⚠️ Not manually tested — no Supabase data in the build container.
 - **ANZ completion, 2026-09-18:** PR #41 now includes Settings → Accounts linking/cutover, sync/pause/resume and Akahu reconnect access; global bank freshness warnings; same-snapshot recap/chat notices; fair resumable worker scheduling and integration coverage. Local 39 tests, lint/types and production build pass; mobile/desktop component flows checked with synthetic actions. See `docs/anz-setup.md` and the work log. Ready-for-review transition follows remote CI. BANK_SYNC_ENABLED stays false until production migration/configuration and the first manual statement comparison are approved. No live bank, paid AI or email calls made. Weekly emails remain after transaction catch-up.
-- **Reliability session:** 2026-09-07 — branch `fix/financial-data-integrity`; approved by the user after the audit. Atomic staged imports, household boundary enforcement, consistent full financial snapshots and refund accounting, manual override protection, NZ dates, visible error states, strict parsing and local PostgreSQL regression tests. See `docs/work/2026-09-07-financial-data-integrity.md` and ADR 004. Migration `20260907000000` is **not applied to production** and requires the preceding global-caps migration. Existing recurring flags are conservatively preserved as manual; new activity remains eligible for detection. Bank feeds, catch-up and weekly emails remain separate stages.
+- **Reliability session:** 2026-09-07 — branch `fix/financial-data-integrity`; approved by the user after the audit. Atomic staged imports, household boundary enforcement, consistent full financial snapshots and refund accounting, manual override protection, NZ dates, visible error states, strict parsing and local PostgreSQL regression tests. See `docs/work/2026-09-07-financial-data-integrity.md` and ADR 004. Migration `20260907000000` applied to production 2026-09-23. Existing recurring flags are conservatively preserved as manual; new activity remains eligible for detection. Bank feeds, catch-up and weekly emails remain separate stages.
 - **Last session:** 2026-08-31 — Global budget caps (branch `claude/budget-caps-global-monthly-bli79e`).
   Dropped `budgets.month`; caps are now one standing value per category applying to every month.
   Migration `20260831000000` archives the per-month rows to `archive.budgets_monthly`, collapses to
@@ -42,8 +64,8 @@ Core loop: import bank statements → AI categorises transactions → set budget
   the write-during-server-render it caused. Added `deleteBudget` + "Remove budget". Also applied a
   one-off **production data patch** copying June's 16 caps into July/August (backup:
   `backup.budgets_20260831`). See `docs/work/2026-08-31-global-budget-caps.md` + ADR 003.
-  ⚠️ **The migration has not been applied to production** — it must run with the deploy, not before.
-- **Previous session:** 2026-06-02 — UX polish, issues #33/#34/#35 (PR #36). `GlobalMonthPicker` in
+  Migration applied to production 2026-09-23.
+- **Session before that:** 2026-06-02 — UX polish, issues #33/#34/#35 (PR #36). `GlobalMonthPicker` in
   the app header (month now persists across pages via month-aware nav links + Suspense-wrapped
   `SidebarNavLinks` / `BottomTabBar`); per-page month selectors deleted (`MonthSelector`,
   `SummaryMonthSelector`, `MonthPicker`); system categories can now be deleted; budget rows drill
@@ -81,7 +103,7 @@ Core loop: import bank statements → AI categorises transactions → set budget
   - Multi-household membership + profile-chip switcher (PR #30) — `household_members` join table, `create_household` RPC, `switchHousehold` action, sidebar/drawer profile chip
   - Month picker enhancement (PR #31) — `MonthJumpPopover`, `DashboardMonthNav`, year+month grid popover on dashboard/budgets/summary
   - Import summary preview/confirm (PR #32, build order #17) — `import_history` table, `analyseImport` + `commitImport` actions, 3-step UI, "Recent imports" card
-- **Open PRs at session start:** #38 transaction category cap strip, #39 chat budget write tool. Reliability PR being opened from `fix/financial-data-integrity`.
+- **Open PRs:** none (#38 and #39 merged 2026-09-23).
 - **Vercel / build config (main branch):**
   - `vercel.json`: `buildCommand: "pnpm run build"`, `outputDirectory: ".next"` (resolves to `src/.next` from Vercel's `src/` framework root)
   - `next.config.ts`: `distDir: 'src/.next'` + `NormalModuleReplacementPlugin` replacing `testmode/context.js` with noop for edge runtime
@@ -97,7 +119,7 @@ Core loop: import bank statements → AI categorises transactions → set budget
   - Header search, notification bell (roadmapped, not built yet)
   - Set `TIDE_ANTHROPIC_API_KEY` in Vercel project env before deploying to production
 - **Known issues:** Node 22 required. On a local Mac: `source ~/.nvm/nvm.sh && nvm use 22` before pnpm scripts. In the Claude Code remote container there is no nvm — Node 22 is already on PATH at `/opt/node22/bin`, so skip that step. `next lint` rewrites `tsconfig.json` as a side effect; revert it before committing.
-- **Components available:** `Skeleton`, `Tooltip`, `Avatar`, `Sheet`, `Badge`, `Switch`, `Popover`, `MonthJumpPopover` (all in `src/components/ui/`). `Textarea` is **not** installed — single-line `Input` is used for notes.
+- **Components available:** `Skeleton`, `Tooltip`, `Avatar`, `Sheet`, `Badge`, `Switch`, `Popover`, `MonthJumpPopover` (all in `src/components/ui/`). Chat write confirmations: `BudgetCapCard` / `BudgetCapToolUI` in `src/components/chat/`. `Textarea` is **not** installed — single-line `Input` is used for notes.
 - **Prop convention:** `SummaryMonthSelector`, `MonthPicker`, and `MonthJumpPopover` use `allowFuture` (not `isAdmin`) — the page passes `allowFuture={isAdmin}` so the selector stays role-agnostic. `DashboardMonthNav` still accepts `isAdmin` (converts internally to `allowFuture`).
 - **Theme:** `font-display` = Fraunces (serif, use on H1s + CardTitles + hero metrics). `font-mono` = JetBrains Mono (use on tabular numerics). Badge variants: `accent` (sage wash), `warn` (gold), `danger` (rust), `outline`.
 - **Env vars:** Use `TIDE_ANTHROPIC_API_KEY` (not `ANTHROPIC_API_KEY`) — Claude Desktop shadows the standard name with an empty value on macOS. See `docs/decisions/002-tide-anthropic-api-key-env-var.md`.

@@ -7,7 +7,7 @@
 ## Goal
 
 Establish the real production state after PR #41 and list the exact, ordered actions that remain before the first
-manual ANZ sync. Read-only: no production writes were made in this session.
+manual ANZ sync. The first half was read-only; after user approval, steps 2–4 were run in production (see below).
 
 ## Verified findings (2026-09-23, ~00:45–01:05 UTC)
 
@@ -57,15 +57,23 @@ exist in production under exactly those names. No `uploads` row has a null accou
 The August row wins for all 16 categories, since it was the latest written. It differs from June for Fuel ($400 vs
 $300), Health ($400 vs $200) and Subscriptions ($210 vs $200). All 64 rows go to `archive.budgets_monthly`.
 
+## Production changes made (2026-09-23, after approval)
+
+- **Backup**: `backup.{transactions,budgets,merchant_category_map,categories,accounts,uploads,household_members,profiles,households}_20260923`. Counts: 652 transactions, 64 budgets, 461 mappings, 18 categories, 35 uploads.
+- **Migrations applied in order** via `apply_migration`: `import_history`, `global_budget_caps`, `financial_reliability`, `anz_bank_sync`. The reliability and ANZ bodies were applied verbatim minus their own `begin;`/`commit;`, because `apply_migration` wraps each one in a transaction. All succeeded.
+- **Verified**: `import_history` exists (0 rows); `archive.budgets_monthly` = 64; `budgets` = 16; 652 transactions, all `recurring_source='manual'` and `bank_revision=0`; `financial_snapshot` includes `bankLinks`; `commit_import` has the `bank_removed_at` filter. `financial_snapshot` run as Peter's user (in a rolled-back transaction) returned 652 transactions, 16 budgets, 18 categories, 0 bank links.
+- **Security advisors**: no new problems. The flagged SECURITY DEFINER RPCs are intentional; RLS without policies on `import_drafts` and `bank_sync_*`/`bank_records` is intentional (server/service-role only). Pre-existing: `handle_updated_at` mutable search_path, `pg_trgm` in public, `handle_new_user` executable by anon, leaked-password protection off.
+- **PRs #38 and #39** merged after merging `main` into each, fixing conflicts, and green CI. See their merge commits.
+
 ## Remaining actions before the first manual import
 
-1. **Approve production writes** (user). Nothing below runs until then.
-2. **Back up** (in SQL, before any DDL). Free plan: no PITR, so snapshot to the `backup` schema:
+1. ~~Approve production writes~~ — approved.
+2. ~~**Back up**~~ done (in SQL, before any DDL). Free plan: no PITR, so snapshot to the `backup` schema:
    `transactions`, `budgets`, `merchant_category_map`, `categories`, `accounts`, `uploads`, `household_members`,
    `profiles`, `households`, all suffixed `_20260923`.
-3. **Apply the four migrations in order** with `apply_migration`, using the repo file names. Stop on the first error.
+3. ~~**Apply the four migrations in order**~~ done with `apply_migration`, using the repo file names. Stop on the first error.
    The reliability and ANZ files carry their own `begin/commit`.
-4. **Verify the schema**: `import_history`, `archive.budgets_monthly` (64 rows), 16 budgets, `financial_snapshot`,
+4. ~~**Verify the schema**~~ done: `import_history`, `archive.budgets_monthly` (64 rows), 16 budgets, `financial_snapshot`,
    `bank_links`, `bank_revision`, 652 transactions all with `recurring_source='manual'`. Run `get_advisors security`.
 5. **Smoke-test production pages** as a signed-in user: dashboard, transactions, budgets, summary, import.
    Watch Vercel runtime errors.
@@ -101,7 +109,7 @@ Production writes, `BANK_SYNC_ENABLED=true`, catch-up review, weekly emails, PRs
 
 ## What actually happened
 
-Read-only audit. The database was paused on arrival and restored during the session (not by this session).
+Read-only audit, then backup + migrations after approval. The database was paused on arrival and restored during the session (not by this session).
 The migration gap is four files, not the three assumed in the handoff. Rehearsed the migrations locally.
 
 ## Files created / modified
@@ -111,7 +119,7 @@ The migration gap is four files, not the three assumed in the handoff. Rehearsed
 
 ## Deferred to next session
 
-Steps 1–9 above, pending approval of production writes.
+Steps 5–9 above: page smoke test, Vercel env confirmation, link/sync, statement comparison, then enabling the flag.
 
 ## Status
 
